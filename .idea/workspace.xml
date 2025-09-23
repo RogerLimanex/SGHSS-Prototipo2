@@ -4,12 +4,33 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Primeiro commit - Servidor funcionando">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/patients.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/patients.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sg_hss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sg_hss.db" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "RogerLimanex"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/RogerLimanex/SGHSS-Prototipo.git",
+    "accountId": "a0e79320-46ea-4cf5-b166-c43e8ef76136"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -24,7 +45,8 @@
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "settings.editor.selected.configurable": "proofread"
+    "git-widget-placeholder": "master",
+    "settings.editor.selected.configurable": "reference.settings.ide.settings.spelling"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -42,6 +64,30 @@
       <option name="presentableId" value="Default" />
       <updated>1758626286611</updated>
     </task>
+    <task id="LOCAL-00001" summary="Primeiro commit - Servidor funcionando">
+      <option name="closed" value="true" />
+      <created>1758630803611</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1758630803611</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Primeiro commit - Servidor funcionando" />
+    <option name="LAST_COMMIT_MESSAGE" value="Primeiro commit - Servidor funcionando" />
   </component>
 </project>
