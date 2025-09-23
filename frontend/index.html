@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SGHSS - Painel</title>
+  <link rel="stylesheet" href="/frontend/css/styles.css">
+</head>
+<body>
+  <header class="header"><h1>SGHSS - Painel</h1></header>
+  <main class="container">
+    <button id="btnLista">Listar Pacientes</button>
+    <pre id="out"></pre>
+  </main>
+  <script>
+    document.getElementById('btnLista').addEventListener('click', async ()=>{
+      const token = localStorage.getItem('access_token');
+      const res = await fetch('/api/v1/pacientes', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const out = document.getElementById('out');
+      if(res.ok){
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+      } else {
+        out.textContent = 'Erro: ' + res.status;
+      }
+    });
+  </script>
+</body>
+</html>
