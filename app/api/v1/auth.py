@@ -28,13 +28,17 @@ def login(payload: LoginIn):
     finally:
         db.close()
 
+
 @router.post('/_create_test_admin', status_code=201)
 def create_test_admin():
     db = session.get_db_session()
-    if db.query(m.User).filter(m.User.email=='admin@vidaplus.com').first():  # ← Mude aqui
+    if db.query(m.User).filter(m.User.email == 'admin@vidaplus.com').first():  # ← Mude aqui
         raise HTTPException(status_code=400, detail='Já existe')
-    user = m.User(email='admin@vidaplus.com', hashed_password=security.hash_password('adminpass'), role='ADMIN')  # ← E aqui
-    db.add(user); db.commit(); db.refresh(user)
+    user = m.User(email='admin@vidaplus.com', hashed_password=security.hash_password('adminpass'),
+                  role='ADMIN')  # ← E aqui
+    db.add(user);
+    db.commit();
+    db.refresh(user)
     db.close()
     return {'id': user.id, 'email': user.email}
 

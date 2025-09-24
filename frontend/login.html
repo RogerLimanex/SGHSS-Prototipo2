@@ -1,24 +1,24 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SGHSS - Login</title>
-  <link rel="stylesheet" href="/frontend/css/styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SGHSS - Login</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
 </head>
 <body>
-  <main class="login-container">
+<main class="login-container">
     <form id="loginForm">
-      <h1>VidaPlus - SGHSS</h1>
-      <label>Email</label>
-      <input type="email" id="email" required>
-      <label>Senha</label>
-      <input type="password" id="password" required>
-      <button type="submit">Entrar</button>
-      <p class="info">Usuário de teste: <strong>admin@vidaplus.test / senha: adminpass</strong></p>
+        <h1>VidaPlus - SGHSS</h1>
+        <label>Email</label>
+        <input type="email" id="email" required>
+        <label>Senha</label>
+        <input type="password" id="password" required>
+        <button type="submit">Entrar</button>
+        <p class="info">Usuário de teste: <strong>admin@vidaplus.test / senha: adminpass</strong></p>
     </form>
-  </main>
-  <script>
+</main>
+<script>
     document.getElementById('loginForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -36,6 +36,6 @@
         alert(data.detail || 'Falha no login');
       }
     });
-  </script>
+</script>
 </body>
 </html>
