@@ -1,45 +1,48 @@
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from app.api.v1 import auth, patients
-# from app.db import models, session
-# from scripts import seed
-import warnings
 from contextlib import asynccontextmanager
+from fastapi import FastAPI
+import os
 
-# Suprimir warnings do passlib sem import desnecessário
-warnings.filterwarnings("ignore",
-                        message=".*bcrypt version.*",
-                        category=UserWarning)
-
-app = FastAPI(title='SGHSS - Protótipo')
-
-app.mount('/frontend', StaticFiles(directory='frontend'), name='frontend')
-
-app.include_router(auth.router, prefix='/api/v1/auth', tags=['auth'])
-app.include_router(patients.router, prefix='/api/v1/pacientes', tags=['pacientes'])
+# Importe os routers
+from app.api.v1.auth import router as auth_router
+from app.api.v1.patients import router as patients_router
+from app.db.migrations import create_tables, seed_data
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    print("Seed concluído")
+    print("🔧 Iniciando migrações...")
+
+    # DEBUG: Verificar se o arquivo do banco existe
+    db_path = "./sghss.db"
+    print(f"📁 Caminho do banco: {os.path.abspath(db_path)}")
+    print(f"📁 Existe: {os.path.exists(db_path)}")
+
+    # DEBUG: Verificar tamanho do arquivo
+    if os.path.exists(db_path):
+        size = os.path.getsize(db_path)
+        print(f"📁 Tamanho do arquivo: {size} bytes")
+
+    # Executar migrações
+    try:
+        create_tables()
+        seed_data()
+        print("✅ Migrações concluídas com sucesso!")
+    except Exception as e:
+        print(f"❌ ERRO nas migrações: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+
     yield
 
 
 app = FastAPI(title='SGHSS - Protótipo', lifespan=lifespan)
 
-# Include routers - ESTAS LINHAS SÃO ESSENCIAIS!
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(patients.router, prefix="/api/v1/patients", tags=["patients"])
+# Include routers
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(patients_router, prefix="/api/v1/patients", tags=["patients"])
 
 
 @app.get("/")
 def read_root():
     return {"message": "Bem-vindo à API SGHSS"}
-
-# @app.on_event('startup')
-# def startup():
-#     models.Base.metadata.create_all(bind=session.engine)
-#     try:
-#         seed.seed()
-#     except Exception as e:
-#         print('seed error', e)
