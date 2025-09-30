@@ -4,12 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger">
-      <change afterPath="$PROJECT_DIR$/app/api/v1/appointments.py" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado.">
+      <change afterPath="$PROJECT_DIR$/app/schemas/appointment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/appointments.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/create_appointment.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/edit_appointment.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/appointments.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/appointments.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
@@ -22,6 +25,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -53,6 +57,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -119,7 +124,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758888234552</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado.">
+      <option name="closed" value="true" />
+      <created>1759190743347</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1759190743347</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -139,6 +152,18 @@
     <MESSAGE value="Terceiro commit - Indentação" />
     <MESSAGE value="Quarto commit: * GET /api/v1/patients/ - 200 OK (listar)&#10;* POST /api/v1/patients/ - 201 Created (criar)&#10;* GET /api/v1/patients/1 - 200 OK (obter por ID)&#10;* PUT /api/v1/patients/1 - 200 OK (atualizar)&#10;* DELETE /api/v1/patients/1 - 204 No Content (deletar)&#10;&#10;Resumo:&#10;* FastAPI configurado e rodando&#10;* Autenticação JWT com roles&#10;* Banco de dados SQLite com migrações automáticas&#10;* CRUD COMPLETO para Patients&#10;* Validações e segurança implementadas&#10;* Documentação Swagger interativa&#10;* Paginação funcionando&#10;* Hot reload para desenvolvimento" />
     <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
-    <option name="LAST_COMMIT_MESSAGE" value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
+    <MESSAGE value="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado." />
+    <option name="LAST_COMMIT_MESSAGE" value="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="NONE" type="python-line">
+          <url>file://$PROJECT_DIR$/app/api/v1/auth.py</url>
+          <log-expression expression="## app/api/v1/auth.py&#10;&#10;from fastapi import APIRouter, Depends, HTTPException, status&#10;from fastapi.security import OAuth2PasswordRequestForm&#10;from sqlalchemy.orm import Session&#10;from typing import Optional&#10;from datetime import timedelta&#10;from fastapi import Body&#10;from app.db import get_db_session&#10;from app import models as m&#10;from app.core import security&#10;&#10;router = APIRouter()&#10;&#10;&#10;## ----------------------------&#10;## Login - retorna JWT&#10;## ----------------------------&#10;@router.post(&quot;/login&quot;)&#10;def login(&#10;        form_data: OAuth2PasswordRequestForm = Depends(),&#10;        db: Session = Depends(get_db_session)&#10;):&#10;    user = db.query(m.User).filter(m.User.email == form_data.username).first()&#10;    if not user or not security.verify_password(form_data.password, user.hashed_password):&#10;        raise HTTPException(status_code=401, detail=&quot;Email ou senha inválidos&quot;)&#10;&#10;    if not user.active:&#10;        raise HTTPException(status_code=403, detail=&quot;Usuário inativo&quot;)&#10;&#10;    ## Inclui id (sub) e role no token&#10;    token_data = {&quot;sub&quot;: str(user.id), &quot;role&quot;: user.role}&#10;    access_token = security.create_access_token(token_data, expires_delta=timedelta(hours=1))&#10;&#10;    return {&quot;access_token&quot;: access_token, &quot;token_type&quot;: &quot;bearer&quot;, &quot;role&quot;: user.role}&#10;&#10;&#10;## ----------------------------&#10;## Registrar usuário&#10;## ----------------------------&#10;@router.post(&quot;/register&quot;, status_code=status.HTTP_201_CREATED)&#10;def register(&#10;        email: str,&#10;        password: str,&#10;        role: Optional[str] = &quot;PATIENT&quot;,&#10;        db: Session = Depends(get_db_session),&#10;        current_user=Depends(security.get_current_user)&#10;):&#10;    ## Verifica se já existe usuário com este email&#10;    if db.query(m.User).filter(m.User.email == email).first():&#10;        raise HTTPException(status_code=400, detail=&quot;Email já cadastrado&quot;)&#10;&#10;    ## Se o usuário tentar criar PROFESSIONAL ou ADMIN&#10;    if role in [&quot;PROFESSIONAL&quot;, &quot;ADMIN&quot;]:&#10;        if not current_user or current_user.get(&quot;role&quot;) != &quot;ADMIN&quot;:&#10;            raise HTTPException(status_code=403, detail=&quot;Apenas ADMIN pode criar usuários PROFESSIONAL ou ADMIN&quot;)&#10;&#10;    ## Sempre força PATIENT para usuários comuns&#10;    if role not in [&quot;PATIENT&quot;, &quot;PROFESSIONAL&quot;, &quot;ADMIN&quot;]:&#10;        role = &quot;PATIENT&quot;&#10;&#10;    hashed_password = security.hash_password(password)&#10;    user = m.User(email=email, hashed_password=hashed_password, role=role)&#10;&#10;    db.add(user)&#10;    db.commit()&#10;    db.refresh(user)&#10;    return {&quot;id&quot;: user.id, &quot;email&quot;: user.email, &quot;role&quot;: user.role}&#10;&#10;&#10;## ----------------------------&#10;## Listar todos os usuários (somente ADMIN)&#10;## ----------------------------&#10;@router.get(&quot;/users&quot;)&#10;def listar_usuarios(&#10;        current_user=Depends(security.get_current_user),&#10;        db: Session = Depends(get_db_session)&#10;):&#10;    if current_user.get(&quot;role&quot;) != &quot;ADMIN&quot;:&#10;        raise HTTPException(status_code=403, detail=&quot;Acesso negado: apenas ADMIN pode listar usuários&quot;)&#10;&#10;    usuarios = db.query(m.User).all()&#10;    return [&#10;        {&#10;            &quot;id&quot;: u.id,&#10;            &quot;email&quot;: u.email,&#10;            &quot;role&quot;: u.role,&#10;            &quot;active&quot;: u.active,&#10;            &quot;created_at&quot;: u.created_at&#10;        }&#10;        for u in usuarios&#10;    ]&#10;&#10;&#10;## ----------------------------&#10;## Dados do usuário logado&#10;## ----------------------------&#10;@router.get(&quot;/me&quot;)&#10;def get_me(current_user=Depends(security.get_current_user), db: Session = Depends(get_db_session)):&#10;    user = db.query(m.User).filter(m.User.id == current_user.get(&quot;sub&quot;)).first()&#10;    if not user:&#10;        raise HTTPException(status_code=404, detail=&quot;Usuário não encontrado&quot;)&#10;&#10;    return {&#10;        &quot;id&quot;: user.id,&#10;        &quot;email&quot;: user.email,&#10;        &quot;role&quot;: user.role,&#10;        &quot;active&quot;: user.active,&#10;        &quot;created_at&quot;: user.created_at&#10;    }" language="Python" />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

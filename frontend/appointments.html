@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SGHSS - Consultas</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+</head>
+<body>
+<header class="header"><h1>Consultas</h1></header>
+<main class="container">
+    <button id="btnCreate">Nova Consulta</button>
+    <pre id="out"></pre>
+</main>
+
+<script>
+    const token = localStorage.getItem('access_token');
+
+    document.getElementById('btnCreate').addEventListener('click', ()=>{
+        window.location.href = '/frontend/create_appointment.html';
+    });
+
+    async function fetchAppointments(){
+        const res = await fetch('/api/v1/appointments/', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const out = document.getElementById('out');
+        if(res.ok){
+            const data = await res.json();
+            out.textContent = JSON.stringify(data, null, 2);
+        } else {
+            out.textContent = 'Erro: ' + res.status;
+        }
+    }
+
+    fetchAppointments();
+</script>
+</body>
+</html>
