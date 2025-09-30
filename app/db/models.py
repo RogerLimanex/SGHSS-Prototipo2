@@ -1,20 +1,37 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
-from app.db.session import Base
-import datetime
+# app/models.py
 
-class User(Base):
-    __tablename__ = 'users'
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Date, Time, Text, ForeignKey, Enum
+from sqlalchemy.orm import relationship
+from datetime import datetime
+import enum
+from app.db import Base
+
+
+class AppointmentStatus(str, enum.Enum):
+    AGENDADA = "agendada"
+    CONFIRMADA = "confirmada"
+    REALIZADA = "realizada"
+    CANCELADA = "cancelada"
+
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(String, nullable=False)
-    active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
 
-class Patient(Base):
-    __tablename__ = 'patients'
-    id = Column(Integer, primary_key=True)
-    nome = Column(String)
-    cpf_encrypted = Column(String, nullable=True)
-    data_nascimento = Column(DateTime, nullable=True)
-    contact = Column(JSON, nullable=True)
+    # Separar data e hora corretamente
+    data_consulta = Column(Date, nullable=False)
+    hora_consulta = Column(Time, nullable=False)
+
+    duracao_minutos = Column(Integer, default=30)
+    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.AGENDADA, nullable=False)
+    observacoes = Column(Text)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relacionamentos
+    paciente = relationship("Patient")
+    medico = relationship("Doctor", back_populates="consultas")

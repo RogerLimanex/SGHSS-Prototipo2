@@ -4,17 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado.">
-      <change afterPath="$PROJECT_DIR$/app/schemas/appointment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/appointments.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/create_appointment.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/edit_appointment.html" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Sétimo commit: &#10;&#10;*Todos os endpoints agora respeitam perfil do usuário (Admin, Professional, Patient).&#10;&#10;*Pacientes só podem ver, criar, atualizar e deletar suas próprias consultas.&#10;&#10;*Profissionais só podem alterar consultas atribuídas a eles.&#10;&#10;*Admins têm acesso total.&#10;&#10;*status da consulta só pode ser alterado por Profissionais e Admins.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.">
+      <change afterPath="$PROJECT_DIR$/frontend/dashboard.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/appointments.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/appointments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,7 +127,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759190743347</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Sétimo commit: &#10;&#10;*Todos os endpoints agora respeitam perfil do usuário (Admin, Professional, Patient).&#10;&#10;*Pacientes só podem ver, criar, atualizar e deletar suas próprias consultas.&#10;&#10;*Profissionais só podem alterar consultas atribuídas a eles.&#10;&#10;*Admins têm acesso total.&#10;&#10;*status da consulta só pode ser alterado por Profissionais e Admins.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.">
+      <option name="closed" value="true" />
+      <created>1759242976838</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1759242976838</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -153,7 +156,8 @@
     <MESSAGE value="Quarto commit: * GET /api/v1/patients/ - 200 OK (listar)&#10;* POST /api/v1/patients/ - 201 Created (criar)&#10;* GET /api/v1/patients/1 - 200 OK (obter por ID)&#10;* PUT /api/v1/patients/1 - 200 OK (atualizar)&#10;* DELETE /api/v1/patients/1 - 204 No Content (deletar)&#10;&#10;Resumo:&#10;* FastAPI configurado e rodando&#10;* Autenticação JWT com roles&#10;* Banco de dados SQLite com migrações automáticas&#10;* CRUD COMPLETO para Patients&#10;* Validações e segurança implementadas&#10;* Documentação Swagger interativa&#10;* Paginação funcionando&#10;* Hot reload para desenvolvimento" />
     <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
     <MESSAGE value="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado." />
-    <option name="LAST_COMMIT_MESSAGE" value="Sexto commit: &#10;&#10;Regras do /register agora:&#10;&#10;* Se não estiver autenticado → só cria PATIENT.&#10;&#10;* Se estiver logado como ADMIN → pode criar PROFESSIONAL ou ADMIN.&#10;&#10;* Se tentar criar ADMIN sem ser ADMIN → 403 Acesso negado." />
+    <MESSAGE value="Sétimo commit: &#10;&#10;*Todos os endpoints agora respeitam perfil do usuário (Admin, Professional, Patient).&#10;&#10;*Pacientes só podem ver, criar, atualizar e deletar suas próprias consultas.&#10;&#10;*Profissionais só podem alterar consultas atribuídas a eles.&#10;&#10;*Admins têm acesso total.&#10;&#10;*status da consulta só pode ser alterado por Profissionais e Admins.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend." />
+    <option name="LAST_COMMIT_MESSAGE" value="Sétimo commit: &#10;&#10;*Todos os endpoints agora respeitam perfil do usuário (Admin, Professional, Patient).&#10;&#10;*Pacientes só podem ver, criar, atualizar e deletar suas próprias consultas.&#10;&#10;*Profissionais só podem alterar consultas atribuídas a eles.&#10;&#10;*Admins têm acesso total.&#10;&#10;*status da consulta só pode ser alterado por Profissionais e Admins.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend.&#10;&#10;*Frontend separado para listar, criar e editar consultas.&#10;&#10;*Formulários usam campos separados data_consulta e hora_consulta.&#10;&#10;*Envio via JSON no corpo da requisição (não mais Body separado por parâmetro).&#10;&#10;*Compatível com controle de perfis do backend." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

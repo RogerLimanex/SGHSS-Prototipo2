@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SGHSS - Dashboard de Consultas</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <style>
+        table {width: 100%; border-collapse: collapse; margin-top: 1rem;}
+        th, td {border: 1px solid #ccc; padding: 0.5rem; text-align: left;}
+        th {background: #007bff; color: #fff;}
+        button {margin: 0.2rem;}
+    </style>
+</head>
+<body>
+<header class="header"><h1>Dashboard de Consultas</h1></header>
+<main class="container">
+    <div>
+        <button id="btnCreate">Nova Consulta</button>
+        <select id="statusFilter">
+            <option value="">Todos os Status</option>
+            <option value="agendada">Agendada</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="realizada">Realizada</option>
+            <option value="cancelada">Cancelada</option>
+        </select>
+    </div>
+    <table id="appointmentsTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Duração</th>
+            <th>Status</th>
+            <th>Observações</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</main>
+
+<script>
+    const token = localStorage.getItem('access_token');
+    const tableBody = document.querySelector('#appointmentsTable tbody');
+    const statusFilter = document.getElementById('statusFilter');
+
+    // Redirecionar para criar consulta
+    document.getElementById('btnCreate').addEventListener('click', ()=>{
+        window.location.href = '/frontend/create_appointment.html';
+    });
+
+    // Buscar consultas
+    async function fetchAppointments(){
+        const res = await fetch('/api/v1/appointments/', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if(!res.ok) return alert('Erro ao buscar consultas: ' + res.status);
+        const data = await res.json();
+        renderTable(data);
+    }
+
+    // Renderizar tabela
+    function renderTable(data){
+        const filterStatus = statusFilter.value;
+        tableBody.innerHTML = '';
+        data.forEach(a => {
+            if(filterStatus && a.status !== filterStatus) return;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${a.id}</td>
+                <td>${a.paciente?.nome || a.patient_id}</td>
+                <td>${a.medico?.nome || a.doctor_id}</td>
+                <td>${a.data_consulta}</td>
+                <td>${a.hora_consulta}</td>
+                <td>${a.duracao_minutos}</td>
+                <td>${a.status}</td>
+                <td>${a.observacoes || ''}</td>
+                <td>
+                    <button onclick="editAppointment(${a.id})">Editar</button>
+                    <button onclick="deleteAppointment(${a.id})">Excluir</button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // Filtrar por status
+    statusFilter.addEventListener('change', fetchAppointments);
+
+    // Editar consulta (redireciona para edit_appointment.html)
+    function editAppointment(id){
+        window.location.href = `/frontend/edit_appointment.html?id=${id}`;
+    }
+
+    // Excluir consulta
+    async function deleteAppointment(id){
+        if(!confirm('Deseja realmente excluir esta consulta?')) return;
+        const res = await fetch(`/api/v1/appointments/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if(res.ok){
+            alert('Consulta excluída');
+            fetchAppointments();
+        } else {
+            const data = await res.json();
+            alert('Erro: ' + (data.detail || res.status));
+        }
+    }
+
+    // Inicializar
+    fetchAppointments();
+</script>
+</body>
+</html>
