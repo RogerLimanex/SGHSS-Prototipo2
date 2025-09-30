@@ -2,6 +2,18 @@ from app.db import Base
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy import Enum
+import enum
+
+
+# -------------------
+# ENUM de Status
+# -------------------
+class AppointmentStatus(str, enum.Enum):
+    AGENDADA = "agendada"
+    CONFIRMADA = "confirmada"
+    REALIZADA = "realizada"
+    CANCELADA = "cancelada"
 
 
 class User(Base):
@@ -50,11 +62,14 @@ class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    medico_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
-    data_consulta = Column(DateTime, nullable=False)
-    duracao_minutos = Column(Integer, default=30)  # Duração padrão de 30min
-    status = Column(String(20), default='agendada')  # agendada, confirmada, realizada, cancelada
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
+    data_hora = Column(DateTime, nullable=False)
+    duracao_minutos = Column(Integer, default=30)
+
+    # Agora usa o Enum
+    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.AGENDADA, nullable=False)
+
     observacoes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

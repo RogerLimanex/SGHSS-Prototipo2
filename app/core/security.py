@@ -1,14 +1,26 @@
+# app/core/security.py
+
 import os
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import jwt, JWTError
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+# ----------------------------
+# Configurações de segurança
+# ----------------------------
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 JWT_SECRET = os.getenv('JWT_SECRET', 'CHANGE_ME')
 JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
+security_scheme = HTTPBearer()
 
+
+# ----------------------------
+# Funções de senha e token
+# ----------------------------
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -28,5 +40,15 @@ def decode_token(token: str):
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
-    except JWTError as e:
-        raise Exception('Token inválido') from e
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+
+# ----------------------------
+# Função para obter usuário atual
+# ----------------------------
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Token ausente")
+    token = credentials.credentials
+    return decode_token(token)
