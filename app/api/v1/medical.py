@@ -6,101 +6,226 @@ from datetime import datetime
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from app.schemas.teleconsultation import TeleconsultationCreate, TeleconsultationResponse
-from app.schemas.prescription import PrescriptionCreate, PrescriptionResponse
-from app.schemas.medical_record import MedicalRecordCreate, MedicalRecordResponse
+from app.schemas import (
+    TeleconsultationCreate, TeleconsultationResponse,
+    PrescriptionCreate, PrescriptionResponse,
+    MedicalRecordCreate, MedicalRecordResponse,
+    AppointmentCreate, AppointmentResponse
+)
 
 router = APIRouter()
 
 
-def get_current_user(current_user=Depends(security.get_current_user)):
-    return current_user
+# ----------------------------
+# Consultas (Atendimentos presenciais ou online)
+# ----------------------------
+@router.post("/consultas", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)
+def criar_consulta(
+        data: AppointmentCreate,
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    consulta = m.Appointment(
+        patient_id=data.patient_id,
+        doctor_id=data.doctor_id,
+        data_hora=data.data_hora,
+        duracao_minutos=data.duracao_minutos,
+        observacoes=data.observacoes,
+        status=m.AppointmentStatus.AGENDADA
+    )
+    db.add(consulta)
+    db.commit()
+    db.refresh(consulta)
+    return consulta
+
+
+@router.get("/consultas", response_model=List[AppointmentResponse])
+def listar_consultas(
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return db.query(m.Appointment).all()
+
+
+@router.post("/consultas/{consulta_id}/cancelar", response_model=AppointmentResponse)
+def cancelar_consulta(
+        consulta_id: int,
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    consulta = db.query(m.Appointment).filter(m.Appointment.id == consulta_id).first()
+    if not consulta:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+
+    consulta.status = m.AppointmentStatus.CANCELADA
+    db.commit()
+    db.refresh(consulta)
+    return consulta
 
 
 # ----------------------------
 # Teleconsultas
 # ----------------------------
-@router.post("/teleconsultations", response_model=TeleconsultationResponse, status_code=status.HTTP_201_CREATED)
-def create_teleconsultation(
+@router.post("/teleconsultas", response_model=TeleconsultationResponse, status_code=status.HTTP_201_CREATED)
+def criar_teleconsulta(
         data: TeleconsultationCreate,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
-    if current_user.get("role") != "MEDICO":
-        raise HTTPException(status_code=403, detail="Apenas MEDICO pode criar teleconsultas")
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
 
-    tele = m.Teleconsultation(**data.dict())
+    tele = m.Teleconsultation(
+        appointment_id=data.appointment_id,
+        link_video=data.link_video,
+        data_hora=datetime.now(),
+        status=m.AppointmentStatus.AGENDADA
+    )
     db.add(tele)
     db.commit()
     db.refresh(tele)
     return tele
 
 
-@router.get("/teleconsultations", response_model=List[TeleconsultationResponse])
-def list_teleconsultations(
+@router.get("/teleconsultas", response_model=List[TeleconsultationResponse])
+def listar_teleconsultas(
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
     if current_user.get("role") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     return db.query(m.Teleconsultation).all()
 
 
-# ----------------------------
-# Prescrições
-# ----------------------------
-@router.post("/prescriptions", response_model=PrescriptionResponse, status_code=status.HTTP_201_CREATED)
-def create_prescription(
-        data: PrescriptionCreate,
+@router.post("/teleconsultas/{teleconsulta_id}/cancelar", response_model=TeleconsultationResponse)
+def cancelar_teleconsulta(
+        teleconsulta_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
     if current_user.get("role") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    presc = m.Prescription(**data.dict())
-    presc.data_hora = datetime.utcnow()
+    tele = db.query(m.Teleconsultation).filter(m.Teleconsultation.id == teleconsulta_id).first()
+    if not tele:
+        raise HTTPException(status_code=404, detail="Teleconsulta não encontrada")
+
+    tele.status = m.AppointmentStatus.CANCELADA
+    db.commit()
+    db.refresh(tele)
+    return tele
+
+
+# ----------------------------
+# Prescrições
+# ----------------------------
+@router.post("/prescricoes", response_model=PrescriptionResponse, status_code=status.HTTP_201_CREATED)
+def criar_prescricao(
+        data: PrescriptionCreate,
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    presc = m.Prescription(
+        patient_id=data.patient_id,
+        doctor_id=data.doctor_id,
+        medicamento=data.medicamento,
+        dosagem=data.dosagem,
+        instrucoes=data.instrucoes,
+        data_hora=datetime.now()
+    )
     db.add(presc)
     db.commit()
     db.refresh(presc)
     return presc
 
 
-@router.get("/prescriptions", response_model=List[PrescriptionResponse])
-def list_prescriptions(
+@router.get("/prescricoes", response_model=List[PrescriptionResponse])
+def listar_prescricoes(
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
     if current_user.get("role") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     return db.query(m.Prescription).all()
 
 
-# ----------------------------
-# Prontuários médicos
-# ----------------------------
-@router.post("/medicalrecords", response_model=MedicalRecordResponse, status_code=status.HTTP_201_CREATED)
-def create_medical_record(
-        data: MedicalRecordCreate,
+@router.post("/prescricoes/{prescricao_id}/cancelar", response_model=PrescriptionResponse)
+def cancelar_prescricao(
+        prescricao_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
     if current_user.get("role") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    record = m.MedicalRecord(**data.dict())
-    record.data_hora = datetime.utcnow()
+    presc = db.query(m.Prescription).filter(m.Prescription.id == prescricao_id).first()
+    if not presc:
+        raise HTTPException(status_code=404, detail="Prescrição não encontrada")
+
+    # Não tem status, então podemos simplesmente deletar ou marcar como inválida
+    db.delete(presc)
+    db.commit()
+    return presc
+
+
+# ----------------------------
+# Prontuários
+# ----------------------------
+@router.post("/prontuarios", response_model=MedicalRecordResponse, status_code=status.HTTP_201_CREATED)
+def criar_prontuario(
+        data: MedicalRecordCreate,
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    record = m.MedicalRecord(
+        patient_id=data.patient_id,
+        doctor_id=data.doctor_id,
+        descricao=data.descricao,
+        data_hora=datetime.now()
+    )
     db.add(record)
     db.commit()
     db.refresh(record)
     return record
 
 
-@router.get("/medicalrecords", response_model=List[MedicalRecordResponse])
-def list_medical_records(
+@router.get("/prontuarios", response_model=List[MedicalRecordResponse])
+def listar_prontuarios(
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(security.get_current_user)
 ):
     if current_user.get("role") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     return db.query(m.MedicalRecord).all()
+
+
+@router.post("/prontuarios/{prontuario_id}/cancelar", response_model=MedicalRecordResponse)
+def cancelar_prontuario(
+        prontuario_id: int,
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
+):
+    if current_user.get("role") not in ["MEDICO", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    record = db.query(m.MedicalRecord).filter(m.MedicalRecord.id == prontuario_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Prontuário não encontrado")
+
+    db.delete(record)
+    db.commit()
+    return record
