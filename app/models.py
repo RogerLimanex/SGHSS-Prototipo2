@@ -19,9 +19,9 @@ class AppointmentStatus(str, enum.Enum):
 
 
 class UserRole(str, enum.Enum):
-    ADMIN = "admin"
-    MEDICO = "medico"
-    PACIENTE = "paciente"
+    ADMIN = "ADMIN"
+    MEDICO = "MEDICO"
+    PACIENTE = "PACIENTE"
 
 
 # -------------------
@@ -54,7 +54,7 @@ class Patient(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamento
+    # Relacionamentos
     appointments = relationship("Appointment", back_populates="paciente")
     medical_records = relationship("MedicalRecord", back_populates="patient")
     prescriptions = relationship("Prescription", back_populates="patient")
@@ -73,7 +73,7 @@ class Doctor(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamento
+    # Relacionamentos
     appointments = relationship("Appointment", back_populates="medico")
     medical_records = relationship("MedicalRecord", back_populates="doctor")
     prescriptions = relationship("Prescription", back_populates="doctor")
@@ -95,6 +95,7 @@ class Appointment(Base):
     # Relacionamentos
     paciente = relationship("Patient", back_populates="appointments")
     medico = relationship("Doctor", back_populates="appointments")
+    teleconsultations = relationship("Teleconsultation", back_populates="appointment")
 
 
 class MedicalRecord(Base):
@@ -137,7 +138,7 @@ class Teleconsultation(Base):
     status = Column(Enum(AppointmentStatus), default=AppointmentStatus.AGENDADA, nullable=False)
 
     # Relacionamentos
-    appointment = relationship("Appointment")
+    appointment = relationship("Appointment", back_populates="teleconsultations")
 
 
 class AuditLog(Base):

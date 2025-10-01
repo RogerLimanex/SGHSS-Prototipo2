@@ -1,5 +1,3 @@
-# app/api/v1/auth.py
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -42,7 +40,7 @@ def login(
 def register(
         email: str,
         password: str,
-        role: Optional[str] = "PATIENT",
+        role: Optional[str] = "PACIENTE",
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
@@ -50,14 +48,14 @@ def register(
     if db.query(m.User).filter(m.User.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
-    # Se o usuário tentar criar PROFESSIONAL ou ADMIN
-    if role in ["PROFESSIONAL", "ADMIN"]:
+    # Apenas ADMIN pode criar MEDICO ou ADMIN
+    if role in ["MEDICO", "ADMIN"]:
         if not current_user or current_user.get("role") != "ADMIN":
-            raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários PROFESSIONAL ou ADMIN")
+            raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários MEDICO ou ADMIN")
 
-    # Sempre força PATIENT para usuários comuns
-    if role not in ["PATIENT", "PROFESSIONAL", "ADMIN"]:
-        role = "PATIENT"
+    # Força PACIENTE como default para usuários comuns
+    if role not in ["PACIENTE", "MEDICO", "ADMIN"]:
+        role = "PACIENTE"
 
     hashed_password = security.hash_password(password)
     user = m.User(email=email, hashed_password=hashed_password, role=role)
