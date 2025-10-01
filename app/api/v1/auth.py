@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+# app/api/v1/auth.py
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -38,13 +40,24 @@ def login(
 # ----------------------------
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(
-        email: str = Body(...),
-        password: str = Body(...),
-        role: Optional[str] = Body(default="USER"),
-        db: Session = Depends(get_db_session)
+        email: str,
+        password: str,
+        role: Optional[str] = "PATIENT",
+        db: Session = Depends(get_db_session),
+        current_user=Depends(security.get_current_user)
 ):
+    # Verifica se já existe usuário com este email
     if db.query(m.User).filter(m.User.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
+
+    # Se o usuário tentar criar PROFESSIONAL ou ADMIN
+    if role in ["PROFESSIONAL", "ADMIN"]:
+        if not current_user or current_user.get("role") != "ADMIN":
+            raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários PROFESSIONAL ou ADMIN")
+
+    # Sempre força PATIENT para usuários comuns
+    if role not in ["PATIENT", "PROFESSIONAL", "ADMIN"]:
+        role = "PATIENT"
 
     hashed_password = security.hash_password(password)
     user = m.User(email=email, hashed_password=hashed_password, role=role)
@@ -56,101 +69,42 @@ def register(
 
 
 # ----------------------------
-# Listar usuários (apenas ADMIN)
+# Listar todos os usuários (somente ADMIN)
 # ----------------------------
 @router.get("/users")
 def listar_usuarios(
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
 ):
     if current_user.get("role") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Apenas administradores podem listar usuários")
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode listar usuários")
 
-    users = db.query(m.User).all()
+    usuarios = db.query(m.User).all()
     return [
         {
             "id": u.id,
             "email": u.email,
             "role": u.role,
-            "active": u.active
+            "active": u.active,
+            "created_at": u.created_at
         }
-        for u in users
+        for u in usuarios
     ]
 
 
 # ----------------------------
-# Atualizar usuário (ADMIN)
+# Dados do usuário logado
 # ----------------------------
-@router.put("/users/{user_id}")
-def update_user(
-        user_id: int,
-        email: str | None = Body(default=None),
-        password: str | None = Body(default=None),
-        role: str | None = Body(default=None),
-        active: bool | None = Body(default=None),
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
-):
-    if current_user.get("role") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Apenas administradores podem atualizar usuários")
-
-    user = db.query(m.User).filter(m.User.id == user_id).first()
+@router.get("/me")
+def get_me(current_user=Depends(security.get_current_user), db: Session = Depends(get_db_session)):
+    user = db.query(m.User).filter(m.User.id == current_user.get("sub")).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
-    if email:
-        if db.query(m.User).filter(m.User.email == email, m.User.id != user.id).first():
-            raise HTTPException(status_code=400, detail="Email já em uso")
-        user.email = email
-
-    if password:
-        user.hashed_password = security.hash_password(password)
-
-    if role:
-        user.role = role
-
-    if active is not None:
-        user.active = active
-
-    db.commit()
-    db.refresh(user)
 
     return {
         "id": user.id,
         "email": user.email,
         "role": user.role,
-        "active": user.active
-    }
-
-
-# ----------------------------
-# Atualizar o próprio usuário (/me)
-# ----------------------------
-@router.put("/me")
-def update_me(
-        email: str | None = Body(default=None),
-        password: str | None = Body(default=None),
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
-):
-    user = db.query(m.User).filter(m.User.id == int(current_user["sub"])).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
-    if email:
-        if db.query(m.User).filter(m.User.email == email, m.User.id != user.id).first():
-            raise HTTPException(status_code=400, detail="Email já em uso")
-        user.email = email
-
-    if password:
-        user.hashed_password = security.hash_password(password)
-
-    db.commit()
-    db.refresh(user)
-
-    return {
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-        "active": user.active
+        "active": user.active,
+        "created_at": user.created_at
     }

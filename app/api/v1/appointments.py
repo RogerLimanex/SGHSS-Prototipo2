@@ -1,162 +1,299 @@
-# app/api/v1/appointments.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime, time, date
+from typing import Optional
+from datetime import datetime, timedelta, time, date
 
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from pydantic import BaseModel
 
 router = APIRouter()
+security_scheme = HTTPBearer()
 
 
-# ----------------------------
-# Schemas
-# ----------------------------
-class AppointmentBase(BaseModel):
-    patient_id: int
-    doctor_id: int
-    data_consulta: date
-    hora_consulta: time
-    duracao_minutos: Optional[int] = 30
-    observacoes: Optional[str] = None
+# --------------------------
+# Função para pegar usuário logado via token
+# --------------------------
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Token ausente")
+    token = credentials.credentials
+    try:
+        return security.decode_token(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido")
 
 
-class AppointmentCreate(AppointmentBase):
-    pass
+# --------------------------
+# Funções auxiliares
+# --------------------------
+def parse_data(data_consulta: str) -> date:
+    """Converte data no formato dd/mm/yyyy ou yyyy-mm-dd para date"""
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(data_consulta, fmt).date()
+        except ValueError:
+            continue
+    raise HTTPException(status_code=400, detail="Data inválida")
 
 
-class AppointmentUpdate(BaseModel):
-    data_consulta: Optional[date] = None
-    hora_consulta: Optional[time] = None
-    duracao_minutos: Optional[int] = None
-    observacoes: Optional[str] = None
-    status: Optional[m.AppointmentStatus] = None
+def parse_hora(hora_consulta: str) -> time:
+    """Converte hora no formato HH:MM"""
+    try:
+        return datetime.strptime(hora_consulta, "%H:%M").time()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Hora inválida")
 
 
-class AppointmentResponse(AppointmentBase):
-    id: int
-    status: m.AppointmentStatus
-
-    class Config:
-        orm_mode = True
+def combine_data_hora(data: date, hora: time) -> datetime:
+    """Combina data e hora em um datetime"""
+    return datetime.combine(data, hora)
 
 
-# ----------------------------
-# Criar agendamento
-# ----------------------------
-@router.post("/", response_model=AppointmentResponse, status_code=201)
-def create_appointment(
-        appointment_in: AppointmentCreate,
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
+# --------------------------
+# GET ALL - Listar consultas
+# --------------------------
+@router.get("/")
+def listar_consultas(
+        page: int = 1,
+        size: int = 20,
+        status_filter: Optional[str] = None,
+        doctor_id: Optional[int] = None,
+        patient_id: Optional[int] = None,
+        current=Depends(get_current_user),
+        db: Session = Depends(get_db_session)
 ):
-    # Apenas Admin ou Profissional podem criar
-    if current_user.get("role") not in ["ADMIN", "PROFESSIONAL"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
+    role = current.get("role")
+    user_id = current.get("sub")
 
-    # Verificar se paciente e médico existem
-    patient = db.query(m.Patient).filter(m.Patient.id == appointment_in.patient_id).first()
-    doctor = db.query(m.Doctor).filter(m.Doctor.id == appointment_in.doctor_id).first()
-    if not patient or not doctor:
-        raise HTTPException(status_code=404, detail="Paciente ou médico não encontrado")
-
-    appointment = m.Appointment(
-        patient_id=appointment_in.patient_id,
-        doctor_id=appointment_in.doctor_id,
-        data_consulta=appointment_in.data_consulta,
-        hora_consulta=appointment_in.hora_consulta,
-        duracao_minutos=appointment_in.duracao_minutos,
-        observacoes=appointment_in.observacoes
-    )
-
-    db.add(appointment)
-    db.commit()
-    db.refresh(appointment)
-    return appointment
-
-
-# ----------------------------
-# Listar agendamentos do usuário
-# ----------------------------
-@router.get("/", response_model=List[AppointmentResponse])
-def list_appointments(
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
-):
-    # Admin vê todos, Profissional vê apenas consultas dele, paciente vê só as suas
     query = db.query(m.Appointment)
-    role = current_user.get("role")
-    user_id = int(current_user["sub"])
 
-    if role == "PROFESSIONAL":
-        # Encontrar id do doctor vinculado ao usuário
-        doctor = db.query(m.Doctor).filter(m.Doctor.email == current_user.get("email")).first()
-        if doctor:
-            query = query.filter(m.Appointment.doctor_id == doctor.id)
-        else:
-            return []
-    elif role == "USER":
+    if role == "PATIENT":
         query = query.filter(m.Appointment.patient_id == user_id)
 
-    return query.all()
-
-
-# ----------------------------
-# Atualizar agendamento
-# ----------------------------
-@router.put("/{appointment_id}", response_model=AppointmentResponse)
-def update_appointment(
-        appointment_id: int,
-        appointment_in: AppointmentUpdate,
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
-):
-    appointment = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
-
-    # Controle de perfil
-    role = current_user.get("role")
-    if role == "USER" and appointment.patient_id != int(current_user["sub"]):
-        raise HTTPException(status_code=403, detail="Sem permissão")
     if role == "PROFESSIONAL":
-        doctor = db.query(m.Doctor).filter(m.Doctor.email == current_user.get("email")).first()
-        if not doctor or doctor.id != appointment.doctor_id:
-            raise HTTPException(status_code=403, detail="Sem permissão")
+        query = query.filter(m.Appointment.doctor_id == user_id)
 
-    # Atualizar campos fornecidos
-    for field, value in appointment_in.dict(exclude_unset=True).items():
-        setattr(appointment, field, value)
+    if status_filter:
+        try:
+            status_enum = m.AppointmentStatus(status_filter.lower())
+            query = query.filter(m.Appointment.status == status_enum)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Status inválido")
+
+    if doctor_id:
+        query = query.filter(m.Appointment.doctor_id == doctor_id)
+    if patient_id:
+        query = query.filter(m.Appointment.patient_id == patient_id)
+
+    total = query.count()
+    items = query.offset((page - 1) * size).limit(size).all()
+
+    result = []
+    for c in items:
+        # Extrai data e hora do campo data_hora
+        data_formatada = c.data_hora.strftime("%d/%m/%Y")
+        hora_formatada = c.data_hora.strftime("%H:%M")
+
+        appt = {
+            "id": c.id,
+            "patient_id": c.patient_id,
+            "doctor_id": c.doctor_id,
+            "data_consulta": data_formatada,
+            "hora_consulta": hora_formatada,
+            "duracao_minutos": c.duracao_minutos,
+            "status": c.status.value,
+            "observacoes": c.observacoes
+        }
+        result.append(appt)
+
+    return {"items": result, "total": total}
+
+
+# --------------------------
+# GET BY ID
+# --------------------------
+@router.get("/{appointment_id}")
+def obter_consulta(
+        appointment_id: int,
+        current=Depends(get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
+    if not consulta:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+
+    role = current.get("role")
+    user_id = current.get("sub")
+
+    if role == "PATIENT" and consulta.patient_id != user_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    if role == "PROFESSIONAL" and consulta.doctor_id != user_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    # Extrai data e hora do campo data_hora
+    data_formatada = consulta.data_hora.strftime("%d/%m/%Y")
+    hora_formatada = consulta.data_hora.strftime("%H:%M")
+
+    return {
+        "id": consulta.id,
+        "patient_id": consulta.patient_id,
+        "doctor_id": consulta.doctor_id,
+        "data_consulta": data_formatada,
+        "hora_consulta": hora_formatada,
+        "duracao_minutos": consulta.duracao_minutos,
+        "status": consulta.status.value,
+        "observacoes": consulta.observacoes
+    }
+
+
+# --------------------------
+# CREATE
+# --------------------------
+@router.post("/", status_code=status.HTTP_201_CREATED)
+def criar_consulta(
+        patient_id: int,
+        doctor_id: int,
+        data_consulta: str,
+        hora_consulta: str,
+        duracao_minutos: int = 30,
+        observacoes: Optional[str] = None,
+        current=Depends(get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    if current.get("role") not in ["ADMIN", "PROFESSIONAL"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
+
+    data_obj = parse_data(data_consulta)
+    hora_obj = parse_hora(hora_consulta)
+    data_hora_obj = combine_data_hora(data_obj, hora_obj)
+
+    paciente = db.query(m.Patient).filter(m.Patient.id == patient_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
+    medico = db.query(m.Doctor).filter(m.Doctor.id == doctor_id, m.Doctor.active == True).first()
+    if not medico:
+        raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
+
+    # Verificar conflito
+    inicio_nova = data_hora_obj
+    fim_nova = inicio_nova + timedelta(minutes=duracao_minutos)
+
+    consultas_existentes = db.query(m.Appointment).filter(
+        m.Appointment.doctor_id == doctor_id,
+        m.Appointment.status != m.AppointmentStatus.CANCELADA
+    ).all()
+
+    for c in consultas_existentes:
+        inicio_existente = c.data_hora
+        fim_existente = inicio_existente + timedelta(minutes=c.duracao_minutos)
+
+        if inicio_nova < fim_existente and fim_nova > inicio_existente:
+            raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
+
+    consulta = m.Appointment(
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        data_hora=data_hora_obj,  # ← CORRIGIDO: usa data_hora
+        duracao_minutos=duracao_minutos,
+        observacoes=observacoes,
+        status=m.AppointmentStatus.AGENDADA
+    )
+
+    db.add(consulta)
+    db.commit()
+    db.refresh(consulta)
+
+    return {
+        "id": consulta.id,
+        "patient_id": consulta.patient_id,
+        "doctor_id": consulta.doctor_id,
+        "data_consulta": consulta.data_hora.strftime("%d/%m/%Y"),
+        "hora_consulta": consulta.data_hora.strftime("%H:%M"),
+        "duracao_minutos": consulta.duracao_minutos,
+        "status": consulta.status.value,
+        "observacoes": consulta.observacoes
+    }
+
+
+# --------------------------
+# UPDATE
+# --------------------------
+@router.put("/{appointment_id}")
+def atualizar_consulta(
+        appointment_id: int,
+        data_consulta: Optional[str] = None,
+        hora_consulta: Optional[str] = None,
+        status_update: Optional[str] = None,
+        observacoes: Optional[str] = None,
+        current=Depends(get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
+    if not consulta:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+
+    role = current.get("role")
+    user_id = current.get("sub")
+
+    if role == "PATIENT":
+        raise HTTPException(status_code=403, detail="Pacientes não podem alterar consultas")
+
+    if role == "PROFESSIONAL" and consulta.doctor_id != user_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    if status_update:
+        try:
+            consulta.status = m.AppointmentStatus(status_update.lower())
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Status inválido")
+
+    if data_consulta and hora_consulta:
+        data_obj = parse_data(data_consulta)
+        hora_obj = parse_hora(hora_consulta)
+        consulta.data_hora = combine_data_hora(data_obj, hora_obj)
+
+    if observacoes is not None:
+        consulta.observacoes = observacoes
 
     db.commit()
-    db.refresh(appointment)
-    return appointment
+    db.refresh(consulta)
+
+    return {
+        "id": consulta.id,
+        "patient_id": consulta.patient_id,
+        "doctor_id": consulta.doctor_id,
+        "data_consulta": consulta.data_hora.strftime("%d/%m/%Y"),
+        "hora_consulta": consulta.data_hora.strftime("%H:%M"),
+        "duracao_minutos": consulta.duracao_minutos,
+        "status": consulta.status.value,
+        "observacoes": consulta.observacoes
+    }
 
 
-# ----------------------------
-# Deletar agendamento
-# ----------------------------
-@router.delete("/{appointment_id}", status_code=204)
-def delete_appointment(
+# --------------------------
+# DELETE (cancelar consulta)
+# --------------------------
+@router.delete("/{appointment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cancelar_consulta(
         appointment_id: int,
-        db: Session = Depends(get_db_session),
-        current_user=Depends(security.get_current_user)
+        current=Depends(get_current_user),
+        db: Session = Depends(get_db_session)
 ):
-    appointment = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
+    consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
+    if not consulta:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    role = current_user.get("role")
-    if role == "USER" and appointment.patient_id != int(current_user["sub"]):
+    role = current.get("role")
+    user_id = current.get("sub")
+
+    if role == "PATIENT" and consulta.patient_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
-    if role == "PROFESSIONAL":
-        doctor = db.query(m.Doctor).filter(m.Doctor.email == current_user.get("email")).first()
-        if not doctor or doctor.id != appointment.doctor_id:
-            raise HTTPException(status_code=403, detail="Sem permissão")
+    if role == "PROFESSIONAL" and consulta.doctor_id != user_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
 
-    db.delete(appointment)
+    consulta.status = m.AppointmentStatus.CANCELADA
     db.commit()
     return None

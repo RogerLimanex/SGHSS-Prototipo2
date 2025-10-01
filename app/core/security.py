@@ -52,11 +52,3 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         raise HTTPException(status_code=401, detail="Token ausente")
     token = credentials.credentials
     return decode_token(token)
-
-
-# ----------------------------
-# Função dependência para perfil
-# ----------------------------
-def require_role(current_user: dict, allowed_roles: list):
-    if current_user.get("role") not in allowed_roles:
-        raise HTTPException(status_code=403, detail="Sem permissão")
