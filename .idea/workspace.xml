@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medical.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759330346138</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais.">
+      <option name="closed" value="true" />
+      <created>1759333346527</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1759333346527</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -180,6 +189,7 @@
     <MESSAGE value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
     <MESSAGE value="Segundo commit:&#10;&#10;O que esse models.py cobre:&#10;&#10;Usuários (User) com role e logs (AuditLog)&#10;&#10;Pacientes (Patient) com histórico (MedicalRecord) e prescrições (Prescription)&#10;&#10;Médicos (Doctor) com agenda (Appointment), prontuários e prescrições&#10;&#10;Consultas (Appointment) e teleconsultas (Teleconsultation)&#10;&#10;Auditoria de ações do usuário (AuditLog)&#10;&#10;Enumerações (AppointmentStatus, UserRole) para controle de status e perfis" />
     <MESSAGE value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
-    <option name="LAST_COMMIT_MESSAGE" value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
+    <MESSAGE value="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais." />
+    <option name="LAST_COMMIT_MESSAGE" value="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais." />
   </component>
 </project>

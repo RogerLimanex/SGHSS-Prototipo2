@@ -1,4 +1,4 @@
-# SGHSS - Protótipo (FastAPI + Frontend)
+# SGHSS - Protótipo (FastAPI)
 
 Este repositório contém um protótipo mínimo do SGHSS (Sistema de Gestão Hospitalar e de Serviços de Saúde).
 Inclui um backend em FastAPI (SQLite para desenvolvimento) e um frontend simples (HTML/CSS).
