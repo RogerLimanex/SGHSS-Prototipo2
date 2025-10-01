@@ -7,6 +7,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.patients import router as patients_router
 from app.api.v1.doctors import router as doctors_router
 from app.api.v1.appointments import router as appointments_router
+from app.api.v1.medical import router as medical_router  # ← adicionando medical
 from app.db.migrations import create_tables, seed_data
 
 
@@ -43,6 +44,7 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(patients_router, prefix="/api/v1/patients", tags=["patients"])
 app.include_router(doctors_router, prefix="/api/v1/doctors", tags=["doctors"])
 app.include_router(appointments_router, prefix="/api/v1/appointments", tags=["appointments"])
+app.include_router(medical_router, prefix="/api/v1/medical", tags=["medical"])  # ← adicionando medical
 
 
 @app.get("/")
