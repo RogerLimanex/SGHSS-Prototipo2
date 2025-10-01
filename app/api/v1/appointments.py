@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
-from datetime import datetime, timedelta, time, date
+from datetime import datetime, timedelta
 
-from app.db import get_db_session
 from app import models as m
 from app.core import security
+from app.db.session import get_db
 
 router = APIRouter()
 security_scheme = HTTPBearer()
@@ -26,29 +26,26 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 
 # --------------------------
-# Funções auxiliares
+# Funções auxiliares de parsing
 # --------------------------
-def parse_data(data_consulta: str) -> date:
-    """Converte data no formato dd/mm/yyyy ou yyyy-mm-dd para date"""
-    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+def parse_data_hora(data_consulta: str, hora_consulta: str) -> datetime:
+    """Converte data_consulta e hora_consulta para datetime."""
+    for sep in ("/", "-"):
         try:
-            return datetime.strptime(data_consulta, fmt).date()
+            data_formatada = datetime.strptime(data_consulta, f"%d{sep}%m{sep}%Y")
+            hora_formatada = datetime.strptime(hora_consulta, "%H:%M").time()
+            return datetime.combine(data_formatada, hora_formatada)
         except ValueError:
             continue
-    raise HTTPException(status_code=400, detail="Data inválida")
+    raise HTTPException(status_code=400, detail="Data ou hora inválida")
 
 
-def parse_hora(hora_consulta: str) -> time:
-    """Converte hora no formato HH:MM"""
-    try:
-        return datetime.strptime(hora_consulta, "%H:%M").time()
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Hora inválida")
-
-
-def combine_data_hora(data: date, hora: time) -> datetime:
-    """Combina data e hora em um datetime"""
-    return datetime.combine(data, hora)
+def format_data_hora(dt: datetime):
+    """Retorna dict com data_consulta e hora_consulta"""
+    return {
+        "data_consulta": dt.strftime("%d/%m/%Y"),
+        "hora_consulta": dt.strftime("%H:%M"),
+    }
 
 
 # --------------------------
@@ -62,7 +59,7 @@ def listar_consultas(
         doctor_id: Optional[int] = None,
         patient_id: Optional[int] = None,
         current=Depends(get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db),
 ):
     role = current.get("role")
     user_id = current.get("sub")
@@ -71,7 +68,6 @@ def listar_consultas(
 
     if role == "PATIENT":
         query = query.filter(m.Appointment.patient_id == user_id)
-
     if role == "PROFESSIONAL":
         query = query.filter(m.Appointment.doctor_id == user_id)
 
@@ -92,19 +88,14 @@ def listar_consultas(
 
     result = []
     for c in items:
-        # Extrai data e hora do campo data_hora
-        data_formatada = c.data_hora.strftime("%d/%m/%Y")
-        hora_formatada = c.data_hora.strftime("%H:%M")
-
         appt = {
             "id": c.id,
             "patient_id": c.patient_id,
             "doctor_id": c.doctor_id,
-            "data_consulta": data_formatada,
-            "hora_consulta": hora_formatada,
+            **format_data_hora(c.data_hora),
             "duracao_minutos": c.duracao_minutos,
             "status": c.status.value,
-            "observacoes": c.observacoes
+            "observacoes": c.observacoes,
         }
         result.append(appt)
 
@@ -118,7 +109,7 @@ def listar_consultas(
 def obter_consulta(
         appointment_id: int,
         current=Depends(get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db),
 ):
     consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
     if not consulta:
@@ -132,19 +123,14 @@ def obter_consulta(
     if role == "PROFESSIONAL" and consulta.doctor_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    # Extrai data e hora do campo data_hora
-    data_formatada = consulta.data_hora.strftime("%d/%m/%Y")
-    hora_formatada = consulta.data_hora.strftime("%H:%M")
-
     return {
         "id": consulta.id,
         "patient_id": consulta.patient_id,
         "doctor_id": consulta.doctor_id,
-        "data_consulta": data_formatada,
-        "hora_consulta": hora_formatada,
+        **format_data_hora(consulta.data_hora),
         "duracao_minutos": consulta.duracao_minutos,
         "status": consulta.status.value,
-        "observacoes": consulta.observacoes
+        "observacoes": consulta.observacoes,
     }
 
 
@@ -160,14 +146,12 @@ def criar_consulta(
         duracao_minutos: int = 30,
         observacoes: Optional[str] = None,
         current=Depends(get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db),
 ):
     if current.get("role") not in ["ADMIN", "PROFESSIONAL"]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
-    data_obj = parse_data(data_consulta)
-    hora_obj = parse_hora(hora_consulta)
-    data_hora_obj = combine_data_hora(data_obj, hora_obj)
+    data_hora = parse_data_hora(data_consulta, hora_consulta)
 
     paciente = db.query(m.Patient).filter(m.Patient.id == patient_id).first()
     if not paciente:
@@ -177,29 +161,23 @@ def criar_consulta(
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
 
-    # Verificar conflito
-    inicio_nova = data_hora_obj
-    fim_nova = inicio_nova + timedelta(minutes=duracao_minutos)
-
-    consultas_existentes = db.query(m.Appointment).filter(
+    fim = data_hora + timedelta(minutes=duracao_minutos)
+    conflito = db.query(m.Appointment).filter(
         m.Appointment.doctor_id == doctor_id,
-        m.Appointment.status != m.AppointmentStatus.CANCELADA
-    ).all()
-
-    for c in consultas_existentes:
-        inicio_existente = c.data_hora
-        fim_existente = inicio_existente + timedelta(minutes=c.duracao_minutos)
-
-        if inicio_nova < fim_existente and fim_nova > inicio_existente:
-            raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
+        m.Appointment.data_hora < fim,
+        (m.Appointment.data_hora + m.Appointment.duracao_minutos * timedelta(minutes=1)) > data_hora,
+        m.Appointment.status != m.AppointmentStatus.CANCELADA,
+    ).first()
+    if conflito:
+        raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
 
     consulta = m.Appointment(
         patient_id=patient_id,
         doctor_id=doctor_id,
-        data_hora=data_hora_obj,  # ← CORRIGIDO: usa data_hora
+        data_hora=data_hora,
         duracao_minutos=duracao_minutos,
         observacoes=observacoes,
-        status=m.AppointmentStatus.AGENDADA
+        status=m.AppointmentStatus.AGENDADA,
     )
 
     db.add(consulta)
@@ -210,11 +188,10 @@ def criar_consulta(
         "id": consulta.id,
         "patient_id": consulta.patient_id,
         "doctor_id": consulta.doctor_id,
-        "data_consulta": consulta.data_hora.strftime("%d/%m/%Y"),
-        "hora_consulta": consulta.data_hora.strftime("%H:%M"),
+        **format_data_hora(consulta.data_hora),
         "duracao_minutos": consulta.duracao_minutos,
         "status": consulta.status.value,
-        "observacoes": consulta.observacoes
+        "observacoes": consulta.observacoes,
     }
 
 
@@ -229,7 +206,7 @@ def atualizar_consulta(
         status_update: Optional[str] = None,
         observacoes: Optional[str] = None,
         current=Depends(get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db),
 ):
     consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
     if not consulta:
@@ -240,7 +217,6 @@ def atualizar_consulta(
 
     if role == "PATIENT":
         raise HTTPException(status_code=403, detail="Pacientes não podem alterar consultas")
-
     if role == "PROFESSIONAL" and consulta.doctor_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -251,9 +227,7 @@ def atualizar_consulta(
             raise HTTPException(status_code=400, detail="Status inválido")
 
     if data_consulta and hora_consulta:
-        data_obj = parse_data(data_consulta)
-        hora_obj = parse_hora(hora_consulta)
-        consulta.data_hora = combine_data_hora(data_obj, hora_obj)
+        consulta.data_hora = parse_data_hora(data_consulta, hora_consulta)
 
     if observacoes is not None:
         consulta.observacoes = observacoes
@@ -265,11 +239,10 @@ def atualizar_consulta(
         "id": consulta.id,
         "patient_id": consulta.patient_id,
         "doctor_id": consulta.doctor_id,
-        "data_consulta": consulta.data_hora.strftime("%d/%m/%Y"),
-        "hora_consulta": consulta.data_hora.strftime("%H:%M"),
+        **format_data_hora(consulta.data_hora),
         "duracao_minutos": consulta.duracao_minutos,
         "status": consulta.status.value,
-        "observacoes": consulta.observacoes
+        "observacoes": consulta.observacoes,
     }
 
 
@@ -280,7 +253,7 @@ def atualizar_consulta(
 def cancelar_consulta(
         appointment_id: int,
         current=Depends(get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db),
 ):
     consulta = db.query(m.Appointment).filter(m.Appointment.id == appointment_id).first()
     if not consulta:

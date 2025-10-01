@@ -4,30 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger">
-      <change beforePath="$PROJECT_DIR$/.idea/ProjectSGHSS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ProjectSGHSS.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando">
+      <change afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/appointments.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/appointments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/doctors.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/doctors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/appointment.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/patient.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/patient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/appointments.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/create_appointment.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/dashboard.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/edit_appointment.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/login.html" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -51,12 +33,12 @@
     &quot;assignee&quot;: &quot;RogerLimanex&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/RogerLimanex/SGHSS-Prototipo.git&quot;,
-    &quot;accountId&quot;: &quot;a0e79320-46ea-4cf5-b166-c43e8ef76136&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/RogerLimanex/SGHSS-Prototipo2.git",
+    "accountId": "a0e79320-46ea-4cf5-b166-c43e8ef76136"
   }
-}</component>
+}]]></component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -139,7 +121,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758888234552</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando">
+      <option name="closed" value="true" />
+      <created>1759279831342</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1759279831342</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -159,6 +149,7 @@
     <MESSAGE value="Terceiro commit - Indentação" />
     <MESSAGE value="Quarto commit: * GET /api/v1/patients/ - 200 OK (listar)&#10;* POST /api/v1/patients/ - 201 Created (criar)&#10;* GET /api/v1/patients/1 - 200 OK (obter por ID)&#10;* PUT /api/v1/patients/1 - 200 OK (atualizar)&#10;* DELETE /api/v1/patients/1 - 204 No Content (deletar)&#10;&#10;Resumo:&#10;* FastAPI configurado e rodando&#10;* Autenticação JWT com roles&#10;* Banco de dados SQLite com migrações automáticas&#10;* CRUD COMPLETO para Patients&#10;* Validações e segurança implementadas&#10;* Documentação Swagger interativa&#10;* Paginação funcionando&#10;* Hot reload para desenvolvimento" />
     <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
-    <option name="LAST_COMMIT_MESSAGE" value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
+    <MESSAGE value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
+    <option name="LAST_COMMIT_MESSAGE" value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
   </component>
 </project>
