@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Segundo commit:&#10;&#10;O que esse models.py cobre:&#10;&#10;Usuários (User) com role e logs (AuditLog)&#10;&#10;Pacientes (Patient) com histórico (MedicalRecord) e prescrições (Prescription)&#10;&#10;Médicos (Doctor) com agenda (Appointment), prontuários e prescrições&#10;&#10;Consultas (Appointment) e teleconsultas (Teleconsultation)&#10;&#10;Auditoria de ações do usuário (AuditLog)&#10;&#10;Enumerações (AppointmentStatus, UserRole) para controle de status e perfis">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medical.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/doctor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/doctor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -152,7 +149,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759327237860</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos">
+      <option name="closed" value="true" />
+      <created>1759330346138</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1759330346138</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -174,6 +179,7 @@
     <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
     <MESSAGE value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
     <MESSAGE value="Segundo commit:&#10;&#10;O que esse models.py cobre:&#10;&#10;Usuários (User) com role e logs (AuditLog)&#10;&#10;Pacientes (Patient) com histórico (MedicalRecord) e prescrições (Prescription)&#10;&#10;Médicos (Doctor) com agenda (Appointment), prontuários e prescrições&#10;&#10;Consultas (Appointment) e teleconsultas (Teleconsultation)&#10;&#10;Auditoria de ações do usuário (AuditLog)&#10;&#10;Enumerações (AppointmentStatus, UserRole) para controle de status e perfis" />
-    <option name="LAST_COMMIT_MESSAGE" value="Segundo commit:&#10;&#10;O que esse models.py cobre:&#10;&#10;Usuários (User) com role e logs (AuditLog)&#10;&#10;Pacientes (Patient) com histórico (MedicalRecord) e prescrições (Prescription)&#10;&#10;Médicos (Doctor) com agenda (Appointment), prontuários e prescrições&#10;&#10;Consultas (Appointment) e teleconsultas (Teleconsultation)&#10;&#10;Auditoria de ações do usuário (AuditLog)&#10;&#10;Enumerações (AppointmentStatus, UserRole) para controle de status e perfis" />
+    <MESSAGE value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
+    <option name="LAST_COMMIT_MESSAGE" value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
   </component>
 </project>

@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas import (
-    TeleconsultationCreate, TeleconsultationResponse,
-    PrescriptionCreate, PrescriptionResponse,
-    MedicalRecordCreate, MedicalRecordResponse,
-    AppointmentCreate, AppointmentResponse
+    TeleconsultationResponse,
+    PrescriptionResponse,
+    MedicalRecordResponse,
+    AppointmentResponse
 )
 
 router = APIRouter()
@@ -21,7 +21,11 @@ router = APIRouter()
 # ----------------------------
 @router.post("/consultas", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)
 def criar_consulta(
-        data: AppointmentCreate,
+        patient_id: int,
+        doctor_id: int,
+        data_hora: datetime,
+        duracao_minutos: int = 30,
+        observacoes: Optional[str] = None,
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
@@ -29,11 +33,11 @@ def criar_consulta(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     consulta = m.Appointment(
-        patient_id=data.patient_id,
-        doctor_id=data.doctor_id,
-        data_hora=data.data_hora,
-        duracao_minutos=data.duracao_minutos,
-        observacoes=data.observacoes,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        data_hora=data_hora,
+        duracao_minutos=duracao_minutos,
+        observacoes=observacoes,
         status=m.AppointmentStatus.AGENDADA
     )
     db.add(consulta)
@@ -76,7 +80,8 @@ def cancelar_consulta(
 # ----------------------------
 @router.post("/teleconsultas", response_model=TeleconsultationResponse, status_code=status.HTTP_201_CREATED)
 def criar_teleconsulta(
-        data: TeleconsultationCreate,
+        appointment_id: int,
+        link_video: Optional[str] = None,
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
@@ -84,8 +89,8 @@ def criar_teleconsulta(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     tele = m.Teleconsultation(
-        appointment_id=data.appointment_id,
-        link_video=data.link_video,
+        appointment_id=appointment_id,
+        link_video=link_video,
         data_hora=datetime.now(),
         status=m.AppointmentStatus.AGENDADA
     )
@@ -129,7 +134,11 @@ def cancelar_teleconsulta(
 # ----------------------------
 @router.post("/prescricoes", response_model=PrescriptionResponse, status_code=status.HTTP_201_CREATED)
 def criar_prescricao(
-        data: PrescriptionCreate,
+        patient_id: int,
+        doctor_id: int,
+        medicamento: str,
+        dosagem: str,
+        instrucoes: Optional[str] = None,
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
@@ -137,11 +146,11 @@ def criar_prescricao(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     presc = m.Prescription(
-        patient_id=data.patient_id,
-        doctor_id=data.doctor_id,
-        medicamento=data.medicamento,
-        dosagem=data.dosagem,
-        instrucoes=data.instrucoes,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        medicamento=medicamento,
+        dosagem=dosagem,
+        instrucoes=instrucoes,
         data_hora=datetime.now()
     )
     db.add(presc)
@@ -173,7 +182,6 @@ def cancelar_prescricao(
     if not presc:
         raise HTTPException(status_code=404, detail="Prescrição não encontrada")
 
-    # Não tem status, então podemos simplesmente deletar ou marcar como inválida
     db.delete(presc)
     db.commit()
     return presc
@@ -184,7 +192,9 @@ def cancelar_prescricao(
 # ----------------------------
 @router.post("/prontuarios", response_model=MedicalRecordResponse, status_code=status.HTTP_201_CREATED)
 def criar_prontuario(
-        data: MedicalRecordCreate,
+        patient_id: int,
+        doctor_id: int,
+        descricao: str,
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
@@ -192,9 +202,9 @@ def criar_prontuario(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     record = m.MedicalRecord(
-        patient_id=data.patient_id,
-        doctor_id=data.doctor_id,
-        descricao=data.descricao,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        descricao=descricao,
         data_hora=datetime.now()
     )
     db.add(record)
