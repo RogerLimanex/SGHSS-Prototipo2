@@ -1,9 +1,11 @@
-from pydantic import BaseModel  # BaseModel para schemas
-from datetime import datetime  # Para campos de data/hora
-from typing import Optional  # Para campos opcionais
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
 
-# Classe base de Prescrição, usada para validação e herança
+# ----------------------------
+# Classe base de Prescrição
+# ----------------------------
 class PrescricaoBase(BaseModel):
     paciente_id: int  # ID do paciente que receberá a prescrição
     medico_id: int  # ID do médico que prescreveu
@@ -12,15 +14,20 @@ class PrescricaoBase(BaseModel):
     instrucoes: Optional[str] = None  # Instruções adicionais (opcional)
 
 
+# ----------------------------
 # Schema usado para criar uma nova prescrição
+# ----------------------------
 class PrescricaoCreate(PrescricaoBase):
     pass  # Mantém a mesma estrutura do base
 
 
-# Schema usado para resposta de prescrição (inclui campos do banco)
+# ----------------------------
+# Schema usado para resposta de prescrição
+# ----------------------------
 class PrescricaoResponse(PrescricaoBase):
     id: int  # ID único da prescrição no banco
     data_hora: datetime  # Data e hora de criação da prescrição
+    status: str  # Status da prescrição (ex: ATIVA, CANCELADA)
 
     class Config:
-        orm_mode = True  # Compatibilidade com objetos ORM (SQLAlchemy)
+        from_attributes = True  # Compatibilidade com objetos ORM (SQLAlchemy)

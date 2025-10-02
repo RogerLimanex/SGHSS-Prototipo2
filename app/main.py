@@ -1,14 +1,13 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import os
-from app.db import Base, engine  # necessário para criar as tabelas
 from app.api.v1.auth import roteador as roteador_auth
 from app.api.v1.pacientes import roteador as roteador_pacientes
 from app.api.v1.medicos import roteador as roteador_medicos
 from app.api.v1.consultas import roteador as roteador_consultas
 from app.api.v1.prescricoes import roteador as roteador_prescricoes
 from app.api.v1.teleconsultas import roteador as roteador_teleconsultas
-from app.db.migrations import popular_dados
+from app.db.migrations import criar_tabelas, popular_dados
 
 
 @asynccontextmanager
@@ -26,12 +25,11 @@ async def ciclo_vida(_app: FastAPI):
 
     try:
         # Cria todas as tabelas definidas nos modelos
-        Base.metadata.create_all(bind=engine)
-        print("✅ Todas as tabelas foram criadas (se ainda não existiam)")
+        criar_tabelas()
 
-        # Popula dados iniciais (usuário admin, etc.)
+        # Popula dados iniciais (usuário admin, médicos, pacientes)
         popular_dados()
-        print("✅ Dados iniciais populados com sucesso!")
+
     except Exception as e:
         print(f"❌ ERRO nas migrações: {e}")
         import traceback
@@ -51,7 +49,6 @@ app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["Médicos"]
 app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["Consultas"])
 app.include_router(roteador_prescricoes, prefix="/api/v1/prescriptions", tags=["Prescrições"])
 app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultations", tags=["Teleconsultas"])
-
 
 
 @app.get("/")

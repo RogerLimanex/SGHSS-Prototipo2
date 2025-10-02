@@ -205,7 +205,7 @@ def criar_consulta(
 # --------------------------
 # ATUALIZAR CONSULTA
 # --------------------------
-@roteador.put("/{consulta_id}")
+@roteador.patch("/{consulta_id}")
 def atualizar_consulta(
         consulta_id: int,
         data_consulta: Optional[str] = None,
@@ -266,14 +266,14 @@ def atualizar_consulta(
 # --------------------------
 # CANCELAR CONSULTA
 # --------------------------
-@roteador.delete("/{consulta_id}", status_code=status.HTTP_204_NO_CONTENT)
+@roteador.patch("/{consulta_id}/cancelar", response_model=dict)
 def cancelar_consulta(
         consulta_id: int,
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
     """
-    Cancela uma consulta.
+    Cancela uma consulta (soft delete).
     Pacientes só podem cancelar suas próprias consultas.
     Médicos só podem cancelar suas próprias consultas.
     """
@@ -291,9 +291,10 @@ def cancelar_consulta(
 
     consulta.status = StatusConsulta.CANCELADA
     db.commit()
+    db.refresh(consulta)
 
-    # Auditoria
     log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Cancelou consulta")
     db.add(log)
     db.commit()
-    return None
+
+    return {"id": consulta.id, "status": consulta.status.value}

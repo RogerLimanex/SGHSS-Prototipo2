@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
+import bcrypt  # usamos apenas bcrypt agora
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -8,7 +8,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 # ----------------------------
 # Configurações de segurança
 # ----------------------------
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 JWT_SECRET = os.getenv('JWT_SECRET', 'CHANGE_ME')
 JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -17,14 +16,17 @@ security_scheme = HTTPBearer()
 
 
 # ----------------------------
-# Funções de senha e token
+# Funções de senha e token usando bcrypt puro
 # ----------------------------
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    # gera salt e hash da senha
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
