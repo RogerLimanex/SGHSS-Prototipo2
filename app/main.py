@@ -2,17 +2,18 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-# Import routers
-from app.api.v1.auth import router as auth_router
-from app.api.v1.patients import router as patients_router
-from app.api.v1.doctors import router as doctors_router
-from app.api.v1.appointments import router as appointments_router
-from app.api.v1.medical import router as medical_router  # ← adicionando medical
-from app.db.migrations import create_tables, seed_data
+# Importa os roteadores traduzidos
+from app.api.v1.auth import roteador as roteador_auth
+from app.api.v1.pacientes import roteador as roteador_pacientes
+from app.api.v1.medicos import roteador as roteador_medicos
+from app.api.v1.consultas import roteador as roteador_consultas
+from app.api.v1.medical import roteador as roteador_medical  # este arquivo já tinha funcionalidades médicas
+from app.db.migrations import criar_tabelas, popular_dados
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def ciclo_vida(_app: FastAPI):
+    # Mensagens de inicialização / migração
     print("🔧 Iniciando migrações...")
 
     db_path = "./sghss.db"
@@ -24,8 +25,8 @@ async def lifespan(_app: FastAPI):
         print(f"📁 Tamanho do arquivo: {size} bytes")
 
     try:
-        create_tables()
-        seed_data()
+        criar_tabelas()
+        popular_dados()
         print("✅ Migrações concluídas com sucesso!")
     except Exception as e:
         print(f"❌ ERRO nas migrações: {e}")
@@ -37,16 +38,17 @@ async def lifespan(_app: FastAPI):
 
 
 # ←←← Aplicação FastAPI
-app = FastAPI(title="SGHSS - Protótipo", lifespan=lifespan)
+app = FastAPI(title="SGHSS - Protótipo", lifespan=ciclo_vida)
 
-# Include routers
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(patients_router, prefix="/api/v1/patients", tags=["patients"])
-app.include_router(doctors_router, prefix="/api/v1/doctors", tags=["doctors"])
-app.include_router(appointments_router, prefix="/api/v1/appointments", tags=["appointments"])
-app.include_router(medical_router, prefix="/api/v1/medical", tags=["medical"])  # ← adicionando medical
+# Inclui os roteadores traduzidos com os mesmos prefixes originais
+app.include_router(roteador_auth, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(roteador_pacientes, prefix="/api/v1/patients", tags=["patients"])
+app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["doctors"])
+app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["appointments"])
+app.include_router(roteador_medical, prefix="/api/v1/medical", tags=["medical"])  # manter tag para compatibilidade
 
 
 @app.get("/")
-def read_root():
+def ler_raiz():
+    # Rota raiz com mensagem de boas-vindas
     return {"message": "Bem-vindo à API SGHSS"}

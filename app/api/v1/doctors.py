@@ -7,43 +7,44 @@ from app import models as m
 from app.core import security
 from app.schemas.doctor import DoctorCreate, DoctorUpdate, DoctorResponse
 
-router = APIRouter()
+roteador = APIRouter()
 
 
-def get_current_user(current_user=Depends(security.get_current_user)):
+def obter_usuario_atual(current_user=Depends(security.get_current_user)):
+    # Dependência simples para recuperar o usuário atual
     return current_user
 
 
 # ----------------------------
 # Listar médicos
 # ----------------------------
-@router.get("/", response_model=List[DoctorResponse])
+@roteador.get("/", response_model=List[DoctorResponse])
 def listar_medicos(
         page: int = 1,
         size: int = 20,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    medicos = db.query(m.Doctor).offset((page - 1) * size).limit(size).all()
+    medicos = db.query(m.Medico).offset((page - 1) * size).limit(size).all()
     return medicos
 
 
 # ----------------------------
 # Obter médico por ID
 # ----------------------------
-@router.get("/{doctor_id}", response_model=DoctorResponse)
+@roteador.get("/{medico_id}", response_model=DoctorResponse)
 def obter_medico(
-        doctor_id: int,
+        medico_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    medico = db.query(m.Doctor).filter(m.Doctor.id == doctor_id).first()
+    medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
     return medico
@@ -52,21 +53,21 @@ def obter_medico(
 # ----------------------------
 # Criar médico
 # ----------------------------
-@router.post("/", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED)
+@roteador.post("/", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED)
 def criar_medico(
         medico: DoctorCreate,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
 
-    if db.query(m.Doctor).filter(m.Doctor.email == medico.email).first():
+    if db.query(m.Medico).filter(m.Medico.email == medico.email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    if db.query(m.Doctor).filter(m.Doctor.crm == medico.crm).first():
+    if db.query(m.Medico).filter(m.Medico.crm == medico.crm).first():
         raise HTTPException(status_code=400, detail="CRM já cadastrado")
 
-    novo_medico = m.Doctor(**medico.dict())
+    novo_medico = m.Medico(**medico.dict())
     db.add(novo_medico)
     db.commit()
     db.refresh(novo_medico)
@@ -76,17 +77,17 @@ def criar_medico(
 # ----------------------------
 # Atualizar médico
 # ----------------------------
-@router.put("/{doctor_id}", response_model=DoctorResponse)
+@roteador.put("/{medico_id}", response_model=DoctorResponse)
 def atualizar_medico(
-        doctor_id: int,
+        medico_id: int,
         medico: DoctorUpdate,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode atualizar médicos")
 
-    db_medico = db.query(m.Doctor).filter(m.Doctor.id == doctor_id).first()
+    db_medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
@@ -99,22 +100,22 @@ def atualizar_medico(
 
 
 # ----------------------------
-# Deletar médico
+# Deletar médico (soft-delete)
 # ----------------------------
-@router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
+@roteador.delete("/{medico_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_medico(
-        doctor_id: int,
+        medico_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir médicos")
 
-    db_medico = db.query(m.Doctor).filter(m.Doctor.id == doctor_id).first()
+    db_medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
     # Soft delete
-    db_medico.active = False
+    db_medico.ativo = False
     db.commit()
     return None

@@ -5,20 +5,20 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 
-from app.db import Base  # Seu declarative_base
+from app.db import Base  # declarative_base do projeto
 
 
 # -------------------
 # ENUMs
 # -------------------
-class AppointmentStatus(str, enum.Enum):
+class StatusConsulta(str, enum.Enum):
     AGENDADA = "agendada"
     CONFIRMADA = "confirmada"
     REALIZADA = "realizada"
     CANCELADA = "cancelada"
 
 
-class UserRole(str, enum.Enum):
+class PapelUsuario(str, enum.Enum):
     ADMIN = "ADMIN"
     MEDICO = "MEDICO"
     PACIENTE = "PACIENTE"
@@ -27,22 +27,22 @@ class UserRole(str, enum.Enum):
 # -------------------
 # MODELOS
 # -------------------
-class User(Base):
-    __tablename__ = "users"
+class Usuario(Base):
+    __tablename__ = "usuarios"  # tabela em português
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.PACIENTE, nullable=False)
-    active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    papel = Column(Enum(PapelUsuario), default=PapelUsuario.PACIENTE, nullable=False)
+    ativo = Column(Boolean, default=True)
+    criado_em = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamento com logs
-    audit_logs = relationship("AuditLog", back_populates="user")
+    # Relacionamento com logs (relação um-para-muitos)
+    logs_auditoria = relationship("LogAuditoria", back_populates="usuario")
 
 
-class Patient(Base):
-    __tablename__ = "patients"
+class Paciente(Base):
+    __tablename__ = "pacientes"
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
@@ -51,17 +51,17 @@ class Patient(Base):
     cpf = Column(String(14), unique=True, index=True)
     data_nascimento = Column(Date)
     endereco = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relacionamentos
-    appointments = relationship("Appointment", back_populates="paciente")
-    medical_records = relationship("MedicalRecord", back_populates="patient")
-    prescriptions = relationship("Prescription", back_populates="patient")
+    consultas = relationship("Consulta", back_populates="paciente")
+    prontuarios = relationship("Prontuario", back_populates="paciente")
+    prescricoes = relationship("Receita", back_populates="paciente")
 
 
-class Doctor(Base):
-    __tablename__ = "doctors"
+class Medico(Base):
+    __tablename__ = "medicos"
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
@@ -69,85 +69,85 @@ class Doctor(Base):
     telefone = Column(String(20))
     crm = Column(String(20), unique=True, index=True)
     especialidade = Column(String(50))
-    active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    ativo = Column(Boolean, default=True)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relacionamentos
-    appointments = relationship("Appointment", back_populates="medico")
-    medical_records = relationship("MedicalRecord", back_populates="doctor")
-    prescriptions = relationship("Prescription", back_populates="doctor")
+    consultas = relationship("Consulta", back_populates="medico")
+    prontuarios = relationship("Prontuario", back_populates="medico")
+    prescricoes = relationship("Receita", back_populates="medico")
 
 
-class Appointment(Base):
-    __tablename__ = "appointments"
+class Consulta(Base):
+    __tablename__ = "consultas"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
+    medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=False)
     data_hora = Column(DateTime, nullable=False)
     duracao_minutos = Column(Integer, default=30)
-    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.AGENDADA, nullable=False)
+    status = Column(Enum(StatusConsulta), default=StatusConsulta.AGENDADA, nullable=False)
     observacoes = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relacionamentos
-    paciente = relationship("Patient", back_populates="appointments")
-    medico = relationship("Doctor", back_populates="appointments")
-    teleconsultations = relationship("Teleconsultation", back_populates="appointment")
+    paciente = relationship("Paciente", back_populates="consultas")
+    medico = relationship("Medico", back_populates="consultas")
+    teleconsultas = relationship("Teleconsulta", back_populates="consulta")
 
 
-class MedicalRecord(Base):
-    __tablename__ = "medical_records"
+class Prontuario(Base):
+    __tablename__ = "prontuarios"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
+    medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
     data_hora = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
-    patient = relationship("Patient", back_populates="medical_records")
-    doctor = relationship("Doctor", back_populates="medical_records")
+    paciente = relationship("Paciente", back_populates="prontuarios")
+    medico = relationship("Medico", back_populates="prontuarios")
 
 
-class Prescription(Base):
-    __tablename__ = "prescriptions"
+class Receita(Base):
+    __tablename__ = "prescricoes"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
+    medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=False)
     medicamento = Column(String(255), nullable=False)
     dosagem = Column(String(100), nullable=False)
     instrucoes = Column(Text)
     data_hora = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
-    patient = relationship("Patient", back_populates="prescriptions")
-    doctor = relationship("Doctor", back_populates="prescriptions")
+    paciente = relationship("Paciente", back_populates="prescricoes")
+    medico = relationship("Medico", back_populates="prescricoes")
 
 
-class Teleconsultation(Base):
-    __tablename__ = "teleconsultations"
+class Teleconsulta(Base):
+    __tablename__ = "teleconsultas"
 
     id = Column(Integer, primary_key=True, index=True)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=False)
+    consulta_id = Column(Integer, ForeignKey("consultas.id"), nullable=False)
     link_video = Column(String(255))
     data_hora = Column(DateTime, default=datetime.utcnow)
-    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.AGENDADA, nullable=False)
+    status = Column(Enum(StatusConsulta), default=StatusConsulta.AGENDADA, nullable=False)
 
     # Relacionamentos
-    appointment = relationship("Appointment", back_populates="teleconsultations")
+    consulta = relationship("Consulta", back_populates="teleconsultas")
 
 
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
+class LogAuditoria(Base):
+    __tablename__ = "logs_auditoria"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    action = Column(String(255), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    acao = Column(String(255), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamento
-    user = relationship("User", back_populates="audit_logs")
+    usuario = relationship("Usuario", back_populates="logs_auditoria")

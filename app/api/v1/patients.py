@@ -7,44 +7,44 @@ from app import models as m
 from app.core import security
 from app.schemas.patient import PatientCreate, PatientUpdate, PatientResponse
 
-router = APIRouter()
+roteador = APIRouter()
 
 
 # Dependência para obter o usuário atual
-def get_current_user(current_user=Depends(security.get_current_user)):
+def obter_usuario_atual(current_user=Depends(security.get_current_user)):
     return current_user
 
 
 # ----------------------------
 # Listar pacientes
 # ----------------------------
-@router.get("/", response_model=List[PatientResponse])
+@roteador.get("/", response_model=List[PatientResponse])
 def listar_pacientes(
         page: int = 1,
         size: int = 20,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    pacientes = db.query(m.Patient).offset((page - 1) * size).limit(size).all()
+    pacientes = db.query(m.Paciente).offset((page - 1) * size).limit(size).all()
     return pacientes
 
 
 # ----------------------------
 # Obter paciente por ID
 # ----------------------------
-@router.get("/{patient_id}", response_model=PatientResponse)
+@roteador.get("/{paciente_id}", response_model=PatientResponse)
 def obter_paciente(
-        patient_id: int,
+        paciente_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    paciente = db.query(m.Patient).filter(m.Patient.id == patient_id).first()
+    paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
     return paciente
@@ -53,19 +53,19 @@ def obter_paciente(
 # ----------------------------
 # Criar paciente
 # ----------------------------
-@router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
+@roteador.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
 def criar_paciente(
         paciente: PatientCreate,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    if db.query(m.Patient).filter(m.Patient.email == paciente.email).first():
+    if db.query(m.Paciente).filter(m.Paciente.email == paciente.email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
-    novo_paciente = m.Patient(**paciente.dict())
+    novo_paciente = m.Paciente(**paciente.dict())
     db.add(novo_paciente)
     db.commit()
     db.refresh(novo_paciente)
@@ -75,17 +75,17 @@ def criar_paciente(
 # ----------------------------
 # Atualizar paciente
 # ----------------------------
-@router.put("/{patient_id}", response_model=PatientResponse)
+@roteador.put("/{paciente_id}", response_model=PatientResponse)
 def atualizar_paciente(
-        patient_id: int,
+        paciente_id: int,
         paciente: PatientUpdate,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    db_paciente = db.query(m.Patient).filter(m.Patient.id == patient_id).first()
+    db_paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
@@ -100,16 +100,16 @@ def atualizar_paciente(
 # ----------------------------
 # Deletar paciente
 # ----------------------------
-@router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+@roteador.delete("/{paciente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_paciente(
-        patient_id: int,
+        paciente_id: int,
         db: Session = Depends(get_db_session),
-        current_user=Depends(get_current_user)
+        current_user=Depends(obter_usuario_atual)
 ):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir")
 
-    db_paciente = db.query(m.Patient).filter(m.Patient.id == patient_id).first()
+    db_paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 

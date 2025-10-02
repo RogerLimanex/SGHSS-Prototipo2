@@ -1,32 +1,36 @@
-from pydantic import BaseModel, EmailStr
-from datetime import date, datetime
-from typing import Optional
+from pydantic import BaseModel, EmailStr  # BaseModel e EmailStr para validação
+from datetime import date, datetime  # date para data de nascimento, datetime para registros
+from typing import Optional  # Para campos opcionais
 
 
-class PatientBase(BaseModel):
-    nome: str
-    email: EmailStr
-    telefone: Optional[str] = None
-    cpf: str
-    data_nascimento: date
-    endereco: Optional[str] = None
+# Classe base de Paciente, usada para validação e herança
+class PacienteBase(BaseModel):
+    nome: str  # Nome completo do paciente
+    email: EmailStr  # Email do paciente
+    telefone: Optional[str] = None  # Telefone opcional
+    cpf: str  # CPF do paciente
+    data_nascimento: date  # Data de nascimento
+    endereco: Optional[str] = None  # Endereço opcional
 
 
-class PatientCreate(PatientBase):
-    pass
+# Schema usado para criar um novo paciente
+class PacienteCreate(PacienteBase):
+    pass  # Mantém a mesma estrutura do base
 
 
-class PatientUpdate(BaseModel):
+# Schema usado para atualizar dados do paciente
+class PacienteUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[EmailStr] = None
     telefone: Optional[str] = None
     endereco: Optional[str] = None
 
 
-class PatientResponse(PatientBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
+# Schema usado para resposta de paciente (inclui campos do banco)
+class PacienteResponse(PacienteBase):
+    id: int  # ID único do paciente no banco
+    criado_em: datetime  # Data e hora de criação do registro
+    atualizado_em: datetime  # Data e hora da última atualização
 
     class Config:
-        orm_mode = True
+        orm_mode = True  # Compatibilidade com objetos ORM (SQLAlchemy)
