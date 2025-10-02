@@ -13,20 +13,25 @@ roteador = APIRouter()
 # --------------------------
 # Função para converter data e hora
 # --------------------------
-def parse_data_hora(data_consulta: str, hora_consulta: str) -> datetime:
-    # tenta diferentes separadores (/, -) para aceitar formatos comuns
+def parse_data_hora(data: str, hora: str) -> datetime:
+    """
+    Converte strings de data e hora em um objeto datetime.
+    Aceita separadores '/' ou '-' na data.
+    """
     for sep in ('/', '-'):
         try:
-            data_formatada = datetime.strptime(data_consulta, f"%d{sep}%m{sep}%Y")
-            hora_formatada = datetime.strptime(hora_consulta, "%H:%M").time()
+            data_formatada = datetime.strptime(data, f"%d{sep}%m{sep}%Y")
+            hora_formatada = datetime.strptime(hora, "%H:%M").time()
             return datetime.combine(data_formatada, hora_formatada)
         except ValueError:
             continue
     raise HTTPException(status_code=400, detail="Data ou hora inválida")
 
 
-def formatar_data_hora(dt: datetime):
-    # retorna dicionário com data e hora formatadas
+def formatar_data_hora(dt: datetime) -> dict:
+    """
+    Retorna um dicionário com data e hora formatadas.
+    """
     return {
         "data_consulta": dt.strftime("%d/%m/%Y"),
         "hora_consulta": dt.strftime("%H:%M")
@@ -38,17 +43,20 @@ def formatar_data_hora(dt: datetime):
 # --------------------------
 @roteador.get("/")
 def listar_consultas(
-        page: int = 1,
-        size: int = 20,
-        status_filter: Optional[str] = None,
+        pagina: int = 1,
+        tamanho: int = 20,
+        status_filtro: Optional[str] = None,
         medico_id: Optional[int] = None,
         paciente_id: Optional[int] = None,
-        current=Depends(get_current_user),
+        usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    # recupera papel e id do usuário atual a partir do token
-    papel = current.get("role")
-    user_id = int(current.get("sub")) if current.get("sub") else None
+    """
+    Lista consultas com paginação, filtro por status, médico ou paciente.
+    Apenas ADMIN, MEDICO ou o próprio PACIENTE podem acessar suas consultas.
+    """
+    papel = usuario_atual.get("role")
+    user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     query = db.query(Consulta)
 
@@ -57,9 +65,9 @@ def listar_consultas(
     elif papel == PapelUsuario.MEDICO.value:
         query = query.filter(Consulta.medico_id == user_id)
 
-    if status_filter:
+    if status_filtro:
         try:
-            status_enum = StatusConsulta(status_filter.lower())
+            status_enum = StatusConsulta(status_filtro.lower())
             query = query.filter(Consulta.status == status_enum)
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
@@ -70,10 +78,10 @@ def listar_consultas(
         query = query.filter(Consulta.paciente_id == paciente_id)
 
     total = query.count()
-    items = query.offset((page - 1) * size).limit(size).all()
+    itens = query.offset((pagina - 1) * tamanho).limit(tamanho).all()
 
     resultado = []
-    for c in items:
+    for c in itens:
         resultado.append({
             "id": c.id,
             "paciente_id": c.paciente_id,
@@ -91,13 +99,21 @@ def listar_consultas(
 # OBTER CONSULTA POR ID
 # --------------------------
 @roteador.get("/{consulta_id}")
-def obter_consulta(consulta_id: int, current=Depends(get_current_user), db: Session = Depends(get_db)):
+def obter_consulta(
+        consulta_id: int,
+        usuario_atual=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    Obtém detalhes de uma consulta pelo ID.
+    Valida permissão do usuário (paciente ou médico).
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = current.get("role")
-    user_id = int(current.get("sub")) if current.get("sub") else None
+    papel = usuario_atual.get("role")
+    user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value and consulta.paciente_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -126,11 +142,15 @@ def criar_consulta(
         hora_consulta: str,
         duracao_minutos: int = 30,
         observacoes: Optional[str] = None,
-        current=Depends(get_current_user),
+        usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    # somente ADMIN e MEDICO podem criar consultas
-    if current.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
+    """
+    Cria uma nova consulta.
+    Apenas ADMIN ou MEDICO podem criar consultas.
+    Valida conflitos de horários do médico.
+    """
+    if usuario_atual.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
     data_hora = parse_data_hora(data_consulta, hora_consulta)
@@ -153,7 +173,7 @@ def criar_consulta(
     if conflito:
         raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
 
-    consulta = Consulta(
+    nova_consulta = Consulta(
         paciente_id=paciente_id,
         medico_id=medico_id,
         data_hora=data_hora,
@@ -162,23 +182,23 @@ def criar_consulta(
         status=StatusConsulta.AGENDADA
     )
 
-    db.add(consulta)
+    db.add(nova_consulta)
     db.commit()
-    db.refresh(consulta)
+    db.refresh(nova_consulta)
 
     # Auditoria
-    log = LogAuditoria(usuario_id=current.get("sub"), acao="Criou consulta")
+    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Criou consulta")
     db.add(log)
     db.commit()
 
     return {
-        "id": consulta.id,
-        "paciente_id": consulta.paciente_id,
-        "medico_id": consulta.medico_id,
-        **formatar_data_hora(consulta.data_hora),
-        "duracao_minutos": consulta.duracao_minutos,
-        "status": consulta.status.value,
-        "observacoes": consulta.observacoes
+        "id": nova_consulta.id,
+        "paciente_id": nova_consulta.paciente_id,
+        "medico_id": nova_consulta.medico_id,
+        **formatar_data_hora(nova_consulta.data_hora),
+        "duracao_minutos": nova_consulta.duracao_minutos,
+        "status": nova_consulta.status.value,
+        "observacoes": nova_consulta.observacoes
     }
 
 
@@ -192,19 +212,23 @@ def atualizar_consulta(
         hora_consulta: Optional[str] = None,
         status_update: Optional[str] = None,
         observacoes: Optional[str] = None,
-        current=Depends(get_current_user),
+        usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
+    """
+    Atualiza dados de uma consulta.
+    Pacientes não podem atualizar consultas.
+    Médicos só podem atualizar suas próprias consultas.
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = current.get("role")
-    user_id = int(current.get("sub")) if current.get("sub") else None
+    papel = usuario_atual.get("role")
+    user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value:
         raise HTTPException(status_code=403, detail="Pacientes não podem alterar consultas")
-
     if papel == PapelUsuario.MEDICO.value and consulta.medico_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -224,7 +248,7 @@ def atualizar_consulta(
     db.refresh(consulta)
 
     # Auditoria
-    log = LogAuditoria(usuario_id=current.get("sub"), acao="Atualizou consulta")
+    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Atualizou consulta")
     db.add(log)
     db.commit()
 
@@ -243,13 +267,22 @@ def atualizar_consulta(
 # CANCELAR CONSULTA
 # --------------------------
 @roteador.delete("/{consulta_id}", status_code=status.HTTP_204_NO_CONTENT)
-def cancelar_consulta(consulta_id: int, current=Depends(get_current_user), db: Session = Depends(get_db)):
+def cancelar_consulta(
+        consulta_id: int,
+        usuario_atual=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    Cancela uma consulta.
+    Pacientes só podem cancelar suas próprias consultas.
+    Médicos só podem cancelar suas próprias consultas.
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = current.get("role")
-    user_id = int(current.get("sub")) if current.get("sub") else None
+    papel = usuario_atual.get("role")
+    user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value and consulta.paciente_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -260,7 +293,7 @@ def cancelar_consulta(consulta_id: int, current=Depends(get_current_user), db: S
     db.commit()
 
     # Auditoria
-    log = LogAuditoria(usuario_id=current.get("sub"), acao="Cancelou consulta")
+    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Cancelou consulta")
     db.add(log)
     db.commit()
     return None

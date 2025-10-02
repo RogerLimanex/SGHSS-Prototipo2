@@ -1,17 +1,17 @@
 # Pacientes
-from .patient import PatientCreate, PatientUpdate, PatientResponse
+from .paciente import PacienteCreate, PacienteUpdate, PacienteResponse
 
 # Médicos
-from .doctor import DoctorCreate, DoctorUpdate, DoctorResponse
+from .medico import MedicoCreate, MedicoUpdate, MedicoResponse
 
 # Consultas (atendimentos presenciais)
-from .appointment import AppointmentCreate, AppointmentResponse
+from .consulta import ConsultaCreate, ConsultaResponse
 
 # Teleconsultas
-from .teleconsultation import TeleconsultationCreate, TeleconsultationResponse
+from .teleconsulta import TeleconsultaCreate, TeleconsultaResponse
 
 # Prescrições
-from .prescription import PrescriptionCreate, PrescriptionResponse
+from .prescricao import PrescricaoCreate, PrescricaoResponse
 
 # Prontuários
-from .medical_record import MedicalRecordCreate, MedicalRecordResponse
+from .registro_medico import ProntuarioMedicoCreate, ProntuarioMedicoResponse

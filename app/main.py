@@ -1,14 +1,14 @@
-import os
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
-
-# Importa os roteadores traduzidos
+from contextlib import asynccontextmanager
+import os
+from app.db import Base, engine  # necessário para criar as tabelas
 from app.api.v1.auth import roteador as roteador_auth
 from app.api.v1.pacientes import roteador as roteador_pacientes
 from app.api.v1.medicos import roteador as roteador_medicos
 from app.api.v1.consultas import roteador as roteador_consultas
-from app.api.v1.medical import roteador as roteador_medical  # este arquivo já tinha funcionalidades médicas
-from app.db.migrations import criar_tabelas, popular_dados
+from app.api.v1.prescricoes import roteador as roteador_prescricoes
+from app.api.v1.teleconsultas import roteador as roteador_teleconsultas
+from app.db.migrations import popular_dados
 
 
 @asynccontextmanager
@@ -25,9 +25,13 @@ async def ciclo_vida(_app: FastAPI):
         print(f"📁 Tamanho do arquivo: {size} bytes")
 
     try:
-        criar_tabelas()
+        # Cria todas as tabelas definidas nos modelos
+        Base.metadata.create_all(bind=engine)
+        print("✅ Todas as tabelas foram criadas (se ainda não existiam)")
+
+        # Popula dados iniciais (usuário admin, etc.)
         popular_dados()
-        print("✅ Migrações concluídas com sucesso!")
+        print("✅ Dados iniciais populados com sucesso!")
     except Exception as e:
         print(f"❌ ERRO nas migrações: {e}")
         import traceback
@@ -40,12 +44,14 @@ async def ciclo_vida(_app: FastAPI):
 # ←←← Aplicação FastAPI
 app = FastAPI(title="SGHSS - Protótipo", lifespan=ciclo_vida)
 
-# Inclui os roteadores traduzidos com os mesmos prefixes originais
-app.include_router(roteador_auth, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(roteador_pacientes, prefix="/api/v1/patients", tags=["patients"])
-app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["doctors"])
-app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["appointments"])
-app.include_router(roteador_medical, prefix="/api/v1/medical", tags=["medical"])  # manter tag para compatibilidade
+# Inclui os roteadores traduzidos
+app.include_router(roteador_auth, prefix="/api/v1/auth", tags=["Autenticação"])
+app.include_router(roteador_pacientes, prefix="/api/v1/patients", tags=["Pacientes"])
+app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["Médicos"])
+app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["Consultas"])
+app.include_router(roteador_prescricoes, prefix="/api/v1/prescriptions", tags=["Prescrições"])
+app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultations", tags=["Teleconsultas"])
+
 
 
 @app.get("/")

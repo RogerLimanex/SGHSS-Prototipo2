@@ -4,25 +4,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Quinto commit:&#10;&#10;Backup antes da refatoração">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Sexto commit:&#10;&#10;Refatoração para português">
+      <change afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/appointments.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/appointments.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/appointments.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/doctors.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/doctors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medical.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/patients.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/patients.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/doctors.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/patients.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/medical.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/appointment.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/appointment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/doctor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/doctor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/medical_record.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/medical_record.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/patient.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/patient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/prescription.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prescription.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/teleconsultation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/teleconsultation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/seed.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/seed.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/appointment.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/consulta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/doctor.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/medico.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/medical_record.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/registro_medico.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/patient.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/paciente.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/prescription.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prescricao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/teleconsultation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/teleconsulta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -189,7 +187,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759334788146</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Sexto commit:&#10;&#10;Refatoração para português">
+      <option name="closed" value="true" />
+      <created>1759412072384</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1759412072384</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -214,6 +220,7 @@
     <MESSAGE value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
     <MESSAGE value="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais." />
     <MESSAGE value="Quinto commit:&#10;&#10;Backup antes da refatoração" />
-    <option name="LAST_COMMIT_MESSAGE" value="Quinto commit:&#10;&#10;Backup antes da refatoração" />
+    <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
+    <option name="LAST_COMMIT_MESSAGE" value="Sexto commit:&#10;&#10;Refatoração para português" />
   </component>
 </project>

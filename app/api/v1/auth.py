@@ -1,3 +1,4 @@
+# D:\ProjectSGHSS\app\api\v1\auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -26,11 +27,11 @@ def login(
     if not usuario.ativo:
         raise HTTPException(status_code=403, detail="Usuário inativo")
 
-    # Inclui id (sub) e role no token
-    token_data = {"sub": str(usuario.id),
-                  "role": usuario.papel.value if hasattr(usuario.papel, 'value') else usuario.papel}
+    token_data = {
+        "sub": str(usuario.id),
+        "role": usuario.papel.value if hasattr(usuario.papel, 'value') else usuario.papel
+    }
     access_token = security.create_access_token(token_data, expires_delta=timedelta(hours=1))
-
     return {"access_token": access_token, "token_type": "bearer", "role": usuario.papel}
 
 
@@ -45,16 +46,13 @@ def registrar(
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
-    # Verifica se já existe usuário com este email
     if db.query(m.Usuario).filter(m.Usuario.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
-    # Apenas ADMIN pode criar MEDICO ou ADMIN
     if papel in ["MEDICO", "ADMIN"]:
         if not current_user or current_user.get("role") != "ADMIN":
             raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários MEDICO ou ADMIN")
 
-    # Força PACIENTE como default para usuários comuns
     if papel not in ["PACIENTE", "MEDICO", "ADMIN"]:
         papel = "PACIENTE"
 
@@ -68,15 +66,15 @@ def registrar(
 
 
 # ----------------------------
-# Listar todos os usuários (somente ADMIN)
+# Listar todos os usuários (ADMIN)
 # ----------------------------
-@roteador.get("/users")
+@roteador.get("/usuarios")
 def listar_usuarios(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db_session)
 ):
     if current_user.get("role") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode listar usuários")
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
     usuarios = db.query(m.Usuario).all()
     return [
@@ -84,8 +82,8 @@ def listar_usuarios(
             "id": u.id,
             "email": u.email,
             "role": u.papel,
-            "active": u.ativo,
-            "created_at": u.criado_em
+            "ativo": u.ativo,
+            "criado_em": u.criado_em
         }
         for u in usuarios
     ]
@@ -99,11 +97,10 @@ def obter_me(current_user=Depends(security.get_current_user), db: Session = Depe
     usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
     return {
         "id": usuario.id,
         "email": usuario.email,
         "role": usuario.papel,
-        "active": usuario.ativo,
-        "created_at": usuario.criado_em
+        "ativo": usuario.ativo,
+        "criado_em": usuario.criado_em
     }
