@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import os
-from app.api.v1.auth import roteador as roteador_auth
+from app.api.v1.autenticacao import roteador as roteador_autenticacao
 from app.api.v1.pacientes import roteador as roteador_pacientes
 from app.api.v1.medicos import roteador as roteador_medicos
 from app.api.v1.consultas import roteador as roteador_consultas
@@ -43,7 +43,7 @@ async def ciclo_vida(_app: FastAPI):
 app = FastAPI(title="SGHSS - Protótipo", lifespan=ciclo_vida)
 
 # Inclui os roteadores traduzidos
-app.include_router(roteador_auth, prefix="/api/v1/auth", tags=["Autenticação"])
+app.include_router(roteador_autenticacao, prefix="/api/v1/autenticacao", tags=["Autenticação"])
 app.include_router(roteador_pacientes, prefix="/api/v1/patients", tags=["Pacientes"])
 app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["Médicos"])
 app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["Consultas"])

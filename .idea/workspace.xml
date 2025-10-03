@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +198,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759433907296</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login">
+      <option name="closed" value="true" />
+      <created>1759503161625</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1759503161625</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -225,6 +234,7 @@
     <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
     <MESSAGE value="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado" />
     <MESSAGE value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
+    <MESSAGE value="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login" />
+    <option name="LAST_COMMIT_MESSAGE" value="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login" />
   </component>
 </project>
