@@ -4,17 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado">
-      <change afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/prescricao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prescricao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auth.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +189,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759425182998</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)">
+      <option name="closed" value="true" />
+      <created>1759433907296</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1759433907296</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -224,6 +224,7 @@
     <MESSAGE value="Quinto commit:&#10;&#10;Backup antes da refatoração" />
     <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
     <MESSAGE value="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado" />
-    <option name="LAST_COMMIT_MESSAGE" value="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado" />
+    <MESSAGE value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
   </component>
 </project>

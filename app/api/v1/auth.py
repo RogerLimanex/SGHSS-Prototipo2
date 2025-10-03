@@ -1,10 +1,10 @@
 # D:\ProjectSGHSS\app\api\v1\auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import timedelta
-
+from pydantic import BaseModel
+from fastapi import Form
 from app.db import get_db_session
 from app import models as m
 from app.core import security
@@ -13,15 +13,24 @@ roteador = APIRouter()
 
 
 # ----------------------------
+# Schema para login
+# ----------------------------
+class LoginSchema(BaseModel):
+    username: str
+    password: str
+
+
+# ----------------------------
 # Login - retorna JWT
 # ----------------------------
 @roteador.post("/login")
 def login(
-        form_data: OAuth2PasswordRequestForm = Depends(),
+        username: str = Form(..., description="Email do usuário"),
+        password: str = Form(..., description="Senha do usuário"),
         db: Session = Depends(get_db_session)
 ):
-    usuario = db.query(m.Usuario).filter(m.Usuario.email == form_data.username).first()
-    if not usuario or not security.verify_password(form_data.password, usuario.hashed_password):
+    usuario = db.query(m.Usuario).filter(m.Usuario.email == username).first()
+    if not usuario or not security.verify_password(password, usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Email ou senha inválidos")
 
     if not usuario.ativo:
