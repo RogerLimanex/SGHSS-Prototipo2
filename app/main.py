@@ -7,6 +7,7 @@ from app.api.v1.medicos import roteador as roteador_medicos
 from app.api.v1.consultas import roteador as roteador_consultas
 from app.api.v1.prescricoes import roteador as roteador_prescricoes
 from app.api.v1.teleconsultas import roteador as roteador_teleconsultas
+from app.api.v1.prontuario import roteador as roteador_prontuario
 from app.db.migrations import criar_tabelas, popular_dados
 
 
@@ -44,11 +45,12 @@ app = FastAPI(title="SGHSS - Protótipo", lifespan=ciclo_vida)
 
 # Inclui os roteadores traduzidos
 app.include_router(roteador_autenticacao, prefix="/api/v1/autenticacao", tags=["Autenticação"])
-app.include_router(roteador_pacientes, prefix="/api/v1/patients", tags=["Pacientes"])
-app.include_router(roteador_medicos, prefix="/api/v1/doctors", tags=["Médicos"])
-app.include_router(roteador_consultas, prefix="/api/v1/appointments", tags=["Consultas"])
-app.include_router(roteador_prescricoes, prefix="/api/v1/prescriptions", tags=["Prescrições"])
-app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultations", tags=["Teleconsultas"])
+app.include_router(roteador_pacientes, prefix="/api/v1/pacientes", tags=["Pacientes"])
+app.include_router(roteador_medicos, prefix="/api/v1/medicos", tags=["Médicos"])
+app.include_router(roteador_consultas, prefix="/api/v1/consultas", tags=["Consultas"])
+app.include_router(roteador_prescricoes, prefix="/api/v1/prescricoes", tags=["Prescrições"])
+app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultas", tags=["Teleconsultas"])
+app.include_router(roteador_prontuario, prefix="/prontuario", tags=["Prontuários"])
 
 
 @app.get("/")

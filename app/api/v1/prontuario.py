@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from app.schemas import ProntuarioMedicoCreate, ProntuarioMedicoResponse
+from app.schemas import ProntuarioMedicoResponse
 
 roteador = APIRouter()
 
@@ -19,11 +19,13 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user)):
 
 
 # ----------------------------
-# Criar prontuário médico
+# Criar prontuário médico com campos separados
 # ----------------------------
 @roteador.post("/prontuarios", response_model=ProntuarioMedicoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prontuario(
-        prontuario: ProntuarioMedicoCreate,
+        paciente_id: int = Form(...),
+        medico_id: int = Form(...),
+        descricao: str = Form(...),
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -35,9 +37,9 @@ def criar_prontuario(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     novo_prontuario = m.Prontuario(
-        paciente_id=prontuario.paciente_id,
-        medico_id=prontuario.medico_id,
-        descricao=prontuario.descricao,
+        paciente_id=paciente_id,
+        medico_id=medico_id,
+        descricao=descricao,
         data_hora=datetime.now(),
         status="ATIVO"  # Mantém status inicial como ATIVO
     )

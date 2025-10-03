@@ -1,12 +1,11 @@
-# D:\ProjectSGHSS\app\api\v1\medicos.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from app.schemas.medico import MedicoCreate, MedicoUpdate, MedicoResponse
+from app.schemas.medico import MedicoResponse
 
 roteador = APIRouter()
 
@@ -49,22 +48,33 @@ def obter_medico(
 
 
 # ----------------------------
-# Criar médico
+# Criar médico com campos separados
 # ----------------------------
 @roteador.post("/", response_model=MedicoResponse, status_code=status.HTTP_201_CREATED)
 def criar_medico(
-        medico: MedicoCreate,
+        nome: str = Form(...),
+        email: str = Form(...),
+        telefone: Optional[str] = Form(None),
+        crm: str = Form(...),
+        especialidade: Optional[str] = Form(None),
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("role") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
-    if db.query(m.Medico).filter(m.Medico.email == medico.email).first():
+
+    if db.query(m.Medico).filter(m.Medico.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    if db.query(m.Medico).filter(m.Medico.crm == medico.crm).first():
+    if db.query(m.Medico).filter(m.Medico.crm == crm).first():
         raise HTTPException(status_code=400, detail="CRM já cadastrado")
 
-    novo_medico = m.Medico(**medico.dict())
+    novo_medico = m.Medico(
+        nome=nome,
+        email=email,
+        telefone=telefone,
+        crm=crm,
+        especialidade=especialidade
+    )
     db.add(novo_medico)
     db.commit()
     db.refresh(novo_medico)
@@ -72,12 +82,16 @@ def criar_medico(
 
 
 # ----------------------------
-# Atualizar médico
+# Atualizar médico com campos separados
 # ----------------------------
 @roteador.put("/{medico_id}", response_model=MedicoResponse)
 def atualizar_medico(
         medico_id: int,
-        medico: MedicoUpdate,
+        nome: Optional[str] = Form(None),
+        email: Optional[str] = Form(None),
+        telefone: Optional[str] = Form(None),
+        crm: Optional[str] = Form(None),
+        especialidade: Optional[str] = Form(None),
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -88,8 +102,16 @@ def atualizar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    for campo, valor in medico.dict(exclude_unset=True).items():
-        setattr(db_medico, campo, valor)
+    if nome is not None:
+        db_medico.nome = nome
+    if email is not None:
+        db_medico.email = email
+    if telefone is not None:
+        db_medico.telefone = telefone
+    if crm is not None:
+        db_medico.crm = crm
+    if especialidade is not None:
+        db_medico.especialidade = especialidade
 
     db.commit()
     db.refresh(db_medico)

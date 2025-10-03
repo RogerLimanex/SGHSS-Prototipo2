@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from app.schemas import TeleconsultaCreate, TeleconsultaResponse  # Corrigido para nomes em português
+from app.schemas import TeleconsultaResponse
 
 roteador = APIRouter()
 
@@ -19,7 +19,7 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user)):
 
 
 # ----------------------------
-# Criar teleconsulta
+# Criar teleconsulta com campos separados
 # ----------------------------
 @roteador.post(
     "/",
@@ -29,7 +29,8 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user)):
     operation_id="criarTeleconsulta"
 )
 def criar_teleconsulta(
-        teleconsulta: TeleconsultaCreate,
+        consulta_id: int = Form(...),
+        link_video: str = Form(...),
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -41,8 +42,8 @@ def criar_teleconsulta(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     nova_teleconsulta = m.Teleconsulta(
-        consulta_id=teleconsulta.consulta_id,
-        link_video=teleconsulta.link_video,
+        consulta_id=consulta_id,
+        link_video=link_video,
         data_hora=datetime.now(),
         status=m.StatusConsulta.AGENDADA
     )

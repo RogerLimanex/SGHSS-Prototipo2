@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from datetime import datetime
 
 from app.db import get_db_session
 from app import models as m
 from app.core import security
-from app.schemas import PrescricaoResponse, PrescricaoCreate
+from app.schemas import PrescricaoResponse
 
 roteador = APIRouter()
 
@@ -19,11 +19,15 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user)):
 
 
 # ----------------------------
-# Criar prescrição médica
+# Criar prescrição médica com campos separados
 # ----------------------------
 @roteador.post("/prescricoes", response_model=PrescricaoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prescricao(
-        prescricao: PrescricaoCreate,
+        paciente_id: int = Form(...),
+        medico_id: int = Form(...),
+        medicamento: str = Form(...),
+        dosagem: str = Form(...),
+        instrucoes: str = Form(...),
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -35,13 +39,13 @@ def criar_prescricao(
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     nova_prescricao = m.Receita(
-        paciente_id=prescricao.paciente_id,
-        medico_id=prescricao.medico_id,
-        medicamento=prescricao.medicamento,
-        dosagem=prescricao.dosagem,
-        instrucoes=prescricao.instrucoes,
+        paciente_id=paciente_id,
+        medico_id=medico_id,
+        medicamento=medicamento,
+        dosagem=dosagem,
+        instrucoes=instrucoes,
         data_hora=datetime.now(),
-        status="ATIVA"  # adiciona status inicial
+        status="ATIVA"  # status inicial
     )
     db.add(nova_prescricao)
     db.commit()
