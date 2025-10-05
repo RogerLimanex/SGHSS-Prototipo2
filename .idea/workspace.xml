@@ -4,14 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo commit:&#10;&#10;Renomeado módulo de autenticação de `auth.py` para `autenticacao.py` para padronização e tradução.  &#10;Atualizados todos os imports no projeto para refletir a mudança.">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo primeiro commit:&#10;&#10;Padroniza CRUDs para exibir campos separados no Swagger&#10;&#10;- Ajusta criação de Pacientes, Médicos, Prescrições, Teleconsultas e Prontuários para usar Formulários.&#10;- Substitui envio via body único por campos separados.&#10;- Permite que o Swagger mostre inputs individuais para cada atributo.&#10;- Mantida validação e permissões de acesso (ADMIN e MEDICO).">
+      <change afterPath="$PROJECT_DIR$/app/core/audit.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/audit.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ProjectSGHSS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ProjectSGHSS.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/consulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/consulta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/teleconsulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/teleconsulta.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,23 +64,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "settings.editor.selected.configurable": "http.proxy"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;http.proxy&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-b030e9c4a83c-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.26199.168" />
+        <option value="bundled-python-sdk-1f77c24022e5-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.26830.99" />
       </set>
     </attachedChunks>
   </component>
@@ -218,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759503670766</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Décimo primeiro commit:&#10;&#10;Padroniza CRUDs para exibir campos separados no Swagger&#10;&#10;- Ajusta criação de Pacientes, Médicos, Prescrições, Teleconsultas e Prontuários para usar Formulários.&#10;- Substitui envio via body único por campos separados.&#10;- Permite que o Swagger mostre inputs individuais para cada atributo.&#10;- Mantida validação e permissões de acesso (ADMIN e MEDICO).">
+      <option name="closed" value="true" />
+      <created>1759507328709</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1759507328709</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -248,6 +266,7 @@
     <MESSAGE value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
     <MESSAGE value="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login" />
     <MESSAGE value="Décimo commit:&#10;&#10;Renomeado módulo de autenticação de `auth.py` para `autenticacao.py` para padronização e tradução.  &#10;Atualizados todos os imports no projeto para refletir a mudança." />
-    <option name="LAST_COMMIT_MESSAGE" value="Décimo commit:&#10;&#10;Renomeado módulo de autenticação de `auth.py` para `autenticacao.py` para padronização e tradução.  &#10;Atualizados todos os imports no projeto para refletir a mudança." />
+    <MESSAGE value="Décimo primeiro commit:&#10;&#10;Padroniza CRUDs para exibir campos separados no Swagger&#10;&#10;- Ajusta criação de Pacientes, Médicos, Prescrições, Teleconsultas e Prontuários para usar Formulários.&#10;- Substitui envio via body único por campos separados.&#10;- Permite que o Swagger mostre inputs individuais para cada atributo.&#10;- Mantida validação e permissões de acesso (ADMIN e MEDICO)." />
+    <option name="LAST_COMMIT_MESSAGE" value="Décimo primeiro commit:&#10;&#10;Padroniza CRUDs para exibir campos separados no Swagger&#10;&#10;- Ajusta criação de Pacientes, Médicos, Prescrições, Teleconsultas e Prontuários para usar Formulários.&#10;- Substitui envio via body único por campos separados.&#10;- Permite que o Swagger mostre inputs individuais para cada atributo.&#10;- Mantida validação e permissões de acesso (ADMIN e MEDICO)." />
   </component>
 </project>

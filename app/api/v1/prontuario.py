@@ -7,6 +7,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas import ProntuarioMedicoResponse
+from app.utils.logs import registrar_log  # import do util de logs
 
 roteador = APIRouter()
 
@@ -46,6 +47,19 @@ def criar_prontuario(
     db.add(novo_prontuario)
     db.commit()
     db.refresh(novo_prontuario)
+
+    # ----------------------------
+    # Registrar log da criação
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Prontuario",
+        registro_id=novo_prontuario.id,
+        acao="CREATE",
+        descricao=f"Prontuário criado para paciente {paciente_id} pelo médico {medico_id}"
+    )
+
     return novo_prontuario
 
 
@@ -90,4 +104,17 @@ def cancelar_prontuario(
     prontuario.status = "CANCELADO"  # Marca como cancelado, sem excluir do banco
     db.commit()
     db.refresh(prontuario)
+
+    # ----------------------------
+    # Registrar log do cancelamento
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Prontuario",
+        registro_id=prontuario.id,
+        acao="DELETE",
+        descricao=f"Prontuário {prontuario_id} cancelado pelo usuário"
+    )
+
     return prontuario

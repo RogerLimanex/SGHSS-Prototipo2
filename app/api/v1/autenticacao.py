@@ -7,6 +7,7 @@ from fastapi import Form
 from app.db import get_db_session
 from app import models as m
 from app.core import security
+from app.utils.logs import registrar_log  # Função util para logs
 
 roteador = APIRouter()
 
@@ -40,6 +41,17 @@ def login(
         "role": usuario.papel.value if hasattr(usuario.papel, 'value') else usuario.papel
     }
     access_token = security.create_access_token(token_data, expires_delta=timedelta(hours=1))
+
+    # Log de login
+    registrar_log(
+        db=db,
+        usuario_id=usuario.id,
+        tabela="Usuario",
+        registro_id=usuario.id,
+        acao="LOGIN",
+        descricao=f"Usuário {usuario.email} realizou login"
+    )
+
     return {"access_token": access_token, "token_type": "bearer", "role": usuario.papel}
 
 
@@ -70,6 +82,17 @@ def registrar(
     db.add(usuario)
     db.commit()
     db.refresh(usuario)
+
+    # Log de criação de usuário
+    registrar_log(
+        db=db,
+        usuario_id=current_user.get("sub") if current_user else None,
+        tabela="Usuario",
+        registro_id=usuario.id,
+        acao="CREATE",
+        descricao=f"Usuário {usuario.email} criado com papel {papel}"
+    )
+
     return {"id": usuario.id, "email": usuario.email, "role": usuario.papel}
 
 
@@ -85,6 +108,17 @@ def listar_usuarios(
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
     usuarios = db.query(m.Usuario).all()
+
+    # Log de listagem
+    registrar_log(
+        db=db,
+        usuario_id=current_user.get("sub"),
+        tabela="Usuario",
+        registro_id=None,
+        acao="READ",
+        descricao=f"Usuário {current_user.get('sub')} listou todos os usuários"
+    )
+
     return [
         {
             "id": u.id,
@@ -105,6 +139,17 @@ def obter_me(current_user=Depends(security.get_current_user), db: Session = Depe
     usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    # Log de acesso a dados próprios
+    registrar_log(
+        db=db,
+        usuario_id=usuario.id,
+        tabela="Usuario",
+        registro_id=usuario.id,
+        acao="READ",
+        descricao=f"Usuário {usuario.email} acessou seus dados"
+    )
+
     return {
         "id": usuario.id,
         "email": usuario.email,

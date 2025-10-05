@@ -7,6 +7,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas.paciente import PacienteResponse
+from app.utils.logs import registrar_log  # Import do logger
 
 roteador = APIRouter()
 
@@ -78,6 +79,17 @@ def criar_paciente(
     db.add(novo)
     db.commit()
     db.refresh(novo)
+
+    # Log da criação
+    registrar_log(
+        db=db,
+        usuario_email=current_user.get("email"),
+        tabela="pacientes",
+        registro_id=novo.id,
+        acao="CREATE",
+        detalhes=f"Paciente criado: {novo.nome}"
+    )
+
     return novo
 
 
@@ -113,6 +125,17 @@ def atualizar_paciente(
 
     db.commit()
     db.refresh(db_paciente)
+
+    # Log da atualização
+    registrar_log(
+        db=db,
+        usuario_email=current_user.get("email"),
+        tabela="pacientes",
+        registro_id=db_paciente.id,
+        acao="UPDATE",
+        detalhes=f"Paciente atualizado: {db_paciente.nome}"
+    )
+
     return db_paciente
 
 
@@ -134,4 +157,15 @@ def deletar_paciente(
 
     db.delete(db_paciente)
     db.commit()
+
+    # Log da exclusão
+    registrar_log(
+        db=db,
+        usuario_email=current_user.get("email"),
+        tabela="pacientes",
+        registro_id=paciente_id,
+        acao="DELETE",
+        detalhes=f"Paciente deletado ID: {paciente_id}"
+    )
+
     return None

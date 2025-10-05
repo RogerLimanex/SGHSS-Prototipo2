@@ -6,6 +6,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas.medico import MedicoResponse
+from app.utils.logs import registrar_log  # 🔹 Import do log
 
 roteador = APIRouter()
 
@@ -78,6 +79,10 @@ def criar_medico(
     db.add(novo_medico)
     db.commit()
     db.refresh(novo_medico)
+
+    # 🔹 Log de criação
+    registrar_log(db, usuario_atual.get("sub"), "Medico", novo_medico.id, "CREATE", f"Médico criado: {nome}")
+
     return novo_medico
 
 
@@ -115,6 +120,10 @@ def atualizar_medico(
 
     db.commit()
     db.refresh(db_medico)
+
+    # 🔹 Log de atualização
+    registrar_log(db, usuario_atual.get("sub"), "Medico", medico_id, "UPDATE", f"Médico atualizado: {db_medico.nome}")
+
     return db_medico
 
 
@@ -136,4 +145,8 @@ def deletar_medico(
 
     db_medico.ativo = False  # Soft delete
     db.commit()
+
+    # 🔹 Log de exclusão
+    registrar_log(db, usuario_atual.get("sub"), "Medico", medico_id, "DELETE", f"Médico inativado: {db_medico.nome}")
+
     return None

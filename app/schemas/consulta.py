@@ -1,7 +1,7 @@
 from pydantic import BaseModel  # Importa o BaseModel do Pydantic para validar/estruturar os dados
 from datetime import datetime  # Importa o tipo datetime para datas e horas
 from typing import Optional  # Importa Optional para permitir campos opcionais
-from app.models import StatusConsulta  # Importa o Enum de status de consulta do models
+from app.models.medical import StatusConsulta  # Importa o Enum de status de consulta do models
 
 
 # Classe base de Consulta, usada para validação e herança

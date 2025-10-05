@@ -7,6 +7,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas import TeleconsultaResponse
+from app.utils.logs import registrar_log  # Import do util de logs
 
 roteador = APIRouter()
 
@@ -50,6 +51,19 @@ def criar_teleconsulta(
     db.add(nova_teleconsulta)
     db.commit()
     db.refresh(nova_teleconsulta)
+
+    # ----------------------------
+    # Registrar log da criação
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Teleconsulta",
+        registro_id=nova_teleconsulta.id,
+        acao="CREATE",
+        descricao=f"Teleconsulta criada para consulta {consulta_id}"
+    )
+
     return nova_teleconsulta
 
 
@@ -102,4 +116,17 @@ def cancelar_teleconsulta(
     teleconsulta.status = m.StatusConsulta.CANCELADA
     db.commit()
     db.refresh(teleconsulta)
+
+    # ----------------------------
+    # Registrar log do cancelamento
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Teleconsulta",
+        registro_id=teleconsulta.id,
+        acao="DELETE",
+        descricao=f"Teleconsulta {teleconsulta_id} cancelada pelo usuário"
+    )
+
     return teleconsulta

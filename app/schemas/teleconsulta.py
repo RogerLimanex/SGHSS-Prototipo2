@@ -1,7 +1,7 @@
 from pydantic import BaseModel  # BaseModel para schemas
 from datetime import datetime  # Para campos de data/hora
 from typing import Optional  # Para campos opcionais
-from app.models import StatusConsulta  # Enum de status de consulta
+from app.models.medical import StatusConsulta  # Enum de status de consulta
 
 
 # Classe base de Teleconsulta, usada para validação e herança

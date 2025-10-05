@@ -4,8 +4,9 @@ from typing import Optional
 from datetime import datetime, timedelta
 
 from app.db import get_db
-from app.models import Consulta, Paciente, Medico, StatusConsulta, LogAuditoria, PapelUsuario
+from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario
 from app.core.security import get_current_user
+from app.utils.logs import registrar_log
 
 roteador = APIRouter()
 
@@ -14,10 +15,6 @@ roteador = APIRouter()
 # Função para converter data e hora
 # --------------------------
 def parse_data_hora(data: str, hora: str) -> datetime:
-    """
-    Converte strings de data e hora em um objeto datetime.
-    Aceita separadores '/' ou '-' na data.
-    """
     for sep in ('/', '-'):
         try:
             data_formatada = datetime.strptime(data, f"%d{sep}%m{sep}%Y")
@@ -29,9 +26,6 @@ def parse_data_hora(data: str, hora: str) -> datetime:
 
 
 def formatar_data_hora(dt: datetime) -> dict:
-    """
-    Retorna um dicionário com data e hora formatadas.
-    """
     return {
         "data_consulta": dt.strftime("%d/%m/%Y"),
         "hora_consulta": dt.strftime("%H:%M")
@@ -51,10 +45,6 @@ def listar_consultas(
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    """
-    Lista consultas com paginação, filtro por status, médico ou paciente.
-    Apenas ADMIN, MEDICO ou o próprio PACIENTE podem acessar suas consultas.
-    """
     papel = usuario_atual.get("role")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
@@ -104,10 +94,6 @@ def obter_consulta(
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    """
-    Obtém detalhes de uma consulta pelo ID.
-    Valida permissão do usuário (paciente ou médico).
-    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
@@ -145,11 +131,6 @@ def criar_consulta(
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    """
-    Cria uma nova consulta.
-    Apenas ADMIN ou MEDICO podem criar consultas.
-    Valida conflitos de horários do médico.
-    """
     if usuario_atual.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
@@ -186,10 +167,8 @@ def criar_consulta(
     db.commit()
     db.refresh(nova_consulta)
 
-    # Auditoria
-    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Criou consulta")
-    db.add(log)
-    db.commit()
+    registrar_log(db, usuario_atual.get("sub"), "Consulta", nova_consulta.id, "CREATE",
+                  f"Consulta criada para paciente {paciente_id} com médico {medico_id}")
 
     return {
         "id": nova_consulta.id,
@@ -215,11 +194,6 @@ def atualizar_consulta(
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    """
-    Atualiza dados de uma consulta.
-    Pacientes não podem atualizar consultas.
-    Médicos só podem atualizar suas próprias consultas.
-    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
@@ -247,10 +221,8 @@ def atualizar_consulta(
     db.commit()
     db.refresh(consulta)
 
-    # Auditoria
-    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Atualizou consulta")
-    db.add(log)
-    db.commit()
+    registrar_log(db, usuario_atual.get("sub"), "Consulta", consulta.id, "UPDATE",
+                  f"Consulta {consulta_id} atualizada")
 
     return {
         "id": consulta.id,
@@ -272,11 +244,6 @@ def cancelar_consulta(
         usuario_atual=Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    """
-    Cancela uma consulta (soft delete).
-    Pacientes só podem cancelar suas próprias consultas.
-    Médicos só podem cancelar suas próprias consultas.
-    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
@@ -293,8 +260,7 @@ def cancelar_consulta(
     db.commit()
     db.refresh(consulta)
 
-    log = LogAuditoria(usuario_id=usuario_atual.get("sub"), acao="Cancelou consulta")
-    db.add(log)
-    db.commit()
+    registrar_log(db, usuario_atual.get("sub"), "Consulta", consulta.id, "DELETE",
+                  f"Consulta {consulta_id} cancelada")
 
     return {"id": consulta.id, "status": consulta.status.value}

@@ -7,6 +7,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas import PrescricaoResponse
+from app.utils.logs import registrar_log  # import do util de logs
 
 roteador = APIRouter()
 
@@ -50,6 +51,19 @@ def criar_prescricao(
     db.add(nova_prescricao)
     db.commit()
     db.refresh(nova_prescricao)
+
+    # ----------------------------
+    # Registrar log da criação
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Receita",
+        registro_id=nova_prescricao.id,
+        acao="CREATE",
+        descricao=f"Prescrição criada para paciente {paciente_id} pelo médico {medico_id}"
+    )
+
     return nova_prescricao
 
 
@@ -94,4 +108,17 @@ def cancelar_prescricao(
     prescricao.status = "CANCELADA"
     db.commit()
     db.refresh(prescricao)
+
+    # ----------------------------
+    # Registrar log do cancelamento
+    # ----------------------------
+    registrar_log(
+        db=db,
+        usuario_id=usuario_atual.get("sub"),
+        tabela="Receita",
+        registro_id=prescricao.id,
+        acao="DELETE",
+        descricao=f"Prescrição {prescricao_id} cancelada pelo usuário"
+    )
+
     return prescricao
