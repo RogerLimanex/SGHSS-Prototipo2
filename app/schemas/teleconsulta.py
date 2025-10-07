@@ -1,25 +1,31 @@
-from pydantic import BaseModel  # BaseModel para schemas
-from datetime import datetime  # Para campos de data/hora
+from pydantic import BaseModel  # BaseModel do Pydantic para criar schemas de validação
+from datetime import datetime  # Para campos de data e hora
 from typing import Optional  # Para campos opcionais
-from app.models.medical import StatusConsulta  # Enum de status de consulta
+from app.models.medical import StatusConsulta  # Enum de status de consulta (AGENDADA, CONCLUIDA, CANCELADA)
 
 
-# Classe base de Teleconsulta, usada para validação e herança
+# ----------------------------
+# Classe base de Teleconsulta
+# ----------------------------
 class TeleconsultaBase(BaseModel):
-    consulta_id: int  # ID da consulta vinculada à teleconsulta
+    consulta_id: int  # ID da consulta vinculada à teleconsulta (obrigatório)
     link_video: Optional[str] = None  # Link para videoconferência (opcional)
-    data_hora: Optional[datetime] = None  # Data e hora da teleconsulta (opcional)
-    status: Optional[StatusConsulta] = StatusConsulta.AGENDADA  # Status inicial
+    data_hora: Optional[datetime] = None  # Data e hora agendada da teleconsulta (opcional)
+    status: Optional[StatusConsulta] = StatusConsulta.AGENDADA  # Status inicial (padrão: AGENDADA)
 
 
-# Schema usado para criar uma nova teleconsulta
+# ----------------------------
+# Schema para criar uma nova teleconsulta
+# ----------------------------
 class TeleconsultaCreate(TeleconsultaBase):
-    pass  # Mantém a mesma estrutura do base
+    pass  # Mantém a mesma estrutura do base, sem alterações adicionais
 
 
-# Schema usado para resposta de teleconsulta (inclui campos do banco)
+# ----------------------------
+# Schema para resposta de teleconsulta
+# ----------------------------
 class TeleconsultaResponse(TeleconsultaBase):
     id: int  # ID único da teleconsulta no banco
 
     class Config:
-        orm_mode = True  # Compatibilidade com objetos ORM (SQLAlchemy)
+        from_attributes = True  # Pydantic v2: permite compatibilidade com objetos ORM (substitui orm_mode)

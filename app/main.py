@@ -8,12 +8,12 @@ from app.api.v1.consultas import roteador as roteador_consultas
 from app.api.v1.prescricoes import roteador as roteador_prescricoes
 from app.api.v1.teleconsultas import roteador as roteador_teleconsultas
 from app.api.v1.prontuario import roteador as roteador_prontuario
+from app.api.v1.auditoria import roteador as roteador_auditoria  # <-- adicionado
 from app.db.migrations import criar_tabelas, popular_dados
 
 
 @asynccontextmanager
-async def ciclo_vida(_app: FastAPI):
-    # Mensagens de inicialização / migração
+async def ciclo_vida(app: FastAPI):
     print("🔧 Iniciando migrações...")
 
     db_path = "./sghss.db"
@@ -25,12 +25,8 @@ async def ciclo_vida(_app: FastAPI):
         print(f"📁 Tamanho do arquivo: {size} bytes")
 
     try:
-        # Cria todas as tabelas definidas nos modelos
         criar_tabelas()
-
-        # Popula dados iniciais (usuário admin, médicos, pacientes)
         popular_dados()
-
     except Exception as e:
         print(f"❌ ERRO nas migrações: {e}")
         import traceback
@@ -40,20 +36,20 @@ async def ciclo_vida(_app: FastAPI):
     yield
 
 
-# ←←← Aplicação FastAPI
+# Aplicação FastAPI
 app = FastAPI(title="SGHSS - Protótipo", lifespan=ciclo_vida)
 
-# Inclui os roteadores traduzidos
+# Roteadores
 app.include_router(roteador_autenticacao, prefix="/api/v1/autenticacao", tags=["Autenticação"])
 app.include_router(roteador_pacientes, prefix="/api/v1/pacientes", tags=["Pacientes"])
 app.include_router(roteador_medicos, prefix="/api/v1/medicos", tags=["Médicos"])
 app.include_router(roteador_consultas, prefix="/api/v1/consultas", tags=["Consultas"])
 app.include_router(roteador_prescricoes, prefix="/api/v1/prescricoes", tags=["Prescrições"])
 app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultas", tags=["Teleconsultas"])
-app.include_router(roteador_prontuario, prefix="/prontuario", tags=["Prontuários"])
+app.include_router(roteador_prontuario, prefix="/api/v1/prontuario", tags=["Prontuários"])
+app.include_router(roteador_auditoria, prefix="/api/v1/auditoria", tags=["Auditoria"])  # <-- adicionado
 
 
 @app.get("/")
 def ler_raiz():
-    # Rota raiz com mensagem de boas-vindas
     return {"message": "Bem-vindo à API SGHSS"}

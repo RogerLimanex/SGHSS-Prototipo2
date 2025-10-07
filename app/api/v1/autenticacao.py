@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+# D:\ProjectSGHSS\app\api\v1\autenticacao.py
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import timedelta
 from pydantic import BaseModel
-from fastapi import Form
 from app.db import get_db_session
 from app import models as m
 from app.core import security
@@ -45,11 +45,11 @@ def login(
     # Log de login
     registrar_log(
         db=db,
-        usuario_id=usuario.id,
+        usuario_email=usuario.email,
         tabela="Usuario",
         registro_id=usuario.id,
         acao="LOGIN",
-        descricao=f"Usuário {usuario.email} realizou login"
+        detalhes=f"Usuário {usuario.email} realizou login"
     )
 
     return {"access_token": access_token, "token_type": "bearer", "role": usuario.papel}
@@ -83,14 +83,20 @@ def registrar(
     db.commit()
     db.refresh(usuario)
 
+    # Tenta obter email do criador, se possível
+    criador_email = None
+    if current_user:
+        criador = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        criador_email = criador.email if criador else "sistema"
+
     # Log de criação de usuário
     registrar_log(
         db=db,
-        usuario_id=current_user.get("sub") if current_user else None,
+        usuario_email=criador_email or "sistema",
         tabela="Usuario",
         registro_id=usuario.id,
         acao="CREATE",
-        descricao=f"Usuário {usuario.email} criado com papel {papel}"
+        detalhes=f"Usuário {usuario.email} criado com papel {papel}"
     )
 
     return {"id": usuario.id, "email": usuario.email, "role": usuario.papel}
@@ -109,14 +115,18 @@ def listar_usuarios(
 
     usuarios = db.query(m.Usuario).all()
 
+    # Obtém email do ADMIN autenticado
+    admin = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+    admin_email = admin.email if admin else "desconhecido"
+
     # Log de listagem
     registrar_log(
         db=db,
-        usuario_id=current_user.get("sub"),
+        usuario_email=admin_email,
         tabela="Usuario",
         registro_id=None,
         acao="READ",
-        descricao=f"Usuário {current_user.get('sub')} listou todos os usuários"
+        detalhes=f"Usuário {admin_email} listou todos os usuários"
     )
 
     return [
@@ -143,11 +153,11 @@ def obter_me(current_user=Depends(security.get_current_user), db: Session = Depe
     # Log de acesso a dados próprios
     registrar_log(
         db=db,
-        usuario_id=usuario.id,
+        usuario_email=usuario.email,
         tabela="Usuario",
         registro_id=usuario.id,
         acao="READ",
-        descricao=f"Usuário {usuario.email} acessou seus dados"
+        detalhes=f"Usuário {usuario.email} acessou seus dados"
     )
 
     return {
