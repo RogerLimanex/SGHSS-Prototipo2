@@ -7,12 +7,28 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas.paciente import PacienteResponse
-from app.utils.logs import registrar_log  # Import do logger
+from app.utils.logs import registrar_log  # Função utilitária de logs
 
 roteador = APIRouter()
 
 
-def obter_usuario_atual(current_user=Depends(security.get_current_user)):
+# ----------------------------
+# Obter usuário atual com email garantido
+# ----------------------------
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """
+    Retorna o usuário autenticado com email garantido.
+    Isso evita falhas nos logs quando o token JWT não contém o campo 'email'.
+    """
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
     return current_user
 
 
@@ -28,7 +44,18 @@ def listar_pacientes(
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
-    return db.query(m.Paciente).offset((page - 1) * size).limit(size).all()
+    pacientes = db.query(m.Paciente).offset((page - 1) * size).limit(size).all()
+
+    # Log da listagem
+    registrar_log(
+        db=db,
+        usuario_email=current_user.get("email"),
+        tabela="pacientes",
+        acao="READ",
+        detalhes=f"{current_user.get('email')} listou pacientes (página {page})"
+    )
+
+    return pacientes
 
 
 # ----------------------------
@@ -42,14 +69,26 @@ def obter_paciente(
 ):
     if current_user.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
+
     paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
+    # Log da leitura individual
+    registrar_log(
+        db=db,
+        usuario_email=current_user.get("email"),
+        tabela="pacientes",
+        registro_id=paciente.id,
+        acao="READ",
+        detalhes=f"{current_user.get('email')} acessou paciente ID {paciente.id}"
+    )
+
     return paciente
 
 
 # ----------------------------
-# Criar paciente com campos separados
+# Criar paciente
 # ----------------------------
 @roteador.post("/", response_model=PacienteResponse, status_code=status.HTTP_201_CREATED)
 def criar_paciente(
@@ -87,14 +126,14 @@ def criar_paciente(
         tabela="pacientes",
         registro_id=novo.id,
         acao="CREATE",
-        detalhes=f"Paciente criado: {novo.nome}"
+        detalhes=f"Paciente criado: {novo.nome} por {current_user.get('email')}"
     )
 
     return novo
 
 
 # ----------------------------
-# Atualizar paciente com campos separados
+# Atualizar paciente
 # ----------------------------
 @roteador.put("/{paciente_id}", response_model=PacienteResponse)
 def atualizar_paciente(
@@ -113,7 +152,7 @@ def atualizar_paciente(
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
-    # Atualiza somente campos enviados
+    # Atualiza campos enviados
     if nome is not None:
         db_paciente.nome = nome
     if email is not None:
@@ -133,7 +172,7 @@ def atualizar_paciente(
         tabela="pacientes",
         registro_id=db_paciente.id,
         acao="UPDATE",
-        detalhes=f"Paciente atualizado: {db_paciente.nome}"
+        detalhes=f"Paciente atualizado: {db_paciente.nome} por {current_user.get('email')}"
     )
 
     return db_paciente
@@ -165,7 +204,7 @@ def deletar_paciente(
         tabela="pacientes",
         registro_id=paciente_id,
         acao="DELETE",
-        detalhes=f"Paciente deletado ID: {paciente_id}"
+        detalhes=f"Paciente deletado ID: {paciente_id} por {current_user.get('email')}"
     )
 
     return None

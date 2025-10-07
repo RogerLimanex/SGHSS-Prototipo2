@@ -5,19 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo segundo commit:&#10;&#10;Adiciona logs de auditoria em endpoints de autenticação&#10;&#10;- Registro de login de usuários (ação LOGIN)&#10;- Registro de criação de usuários (ação CREATE)&#10;- Registro de listagem de usuários (ação READ)&#10;- Registro de acesso a dados próprios (ação READ)&#10;- Integração com função centralizada registrar_log">
-      <change afterPath="$PROJECT_DIR$/app/api/v1/auditoria.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/audit.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/audit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/consulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/consulta.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/medico.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/medico.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/paciente.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/paciente.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/prescricao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prescricao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/registro_medico.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/registro_medico.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/teleconsulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/teleconsulta.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/medical.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

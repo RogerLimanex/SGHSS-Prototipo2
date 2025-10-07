@@ -1,4 +1,3 @@
-# modelos principais unificados (mantive a estrutura similar à original)
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, Enum
 )
@@ -19,6 +18,11 @@ class StatusConsulta(str, enum.Enum):
     CANCELADA = "cancelada"
 
 
+class StatusPrescricao(str, enum.Enum):
+    ATIVA = "ATIVA"
+    CANCELADA = "CANCELADA"
+
+
 class PapelUsuario(str, enum.Enum):
     ADMIN = "ADMIN"
     MEDICO = "MEDICO"
@@ -29,7 +33,7 @@ class PapelUsuario(str, enum.Enum):
 # MODELOS
 # -------------------
 class Usuario(Base):
-    __tablename__ = "usuarios"  # tabela em português
+    __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), unique=True, index=True, nullable=False)
@@ -38,7 +42,6 @@ class Usuario(Base):
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamento com logs (relação um-para-muitos)
     logs_auditoria = relationship("LogAuditoria", back_populates="usuario")
 
 
@@ -55,7 +58,6 @@ class Paciente(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     consultas = relationship("Consulta", back_populates="paciente")
     prontuarios = relationship("Prontuario", back_populates="paciente")
     prescricoes = relationship("Receita", back_populates="paciente")
@@ -74,7 +76,6 @@ class Medico(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     consultas = relationship("Consulta", back_populates="medico")
     prontuarios = relationship("Prontuario", back_populates="medico")
     prescricoes = relationship("Receita", back_populates="medico")
@@ -93,7 +94,6 @@ class Consulta(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="consultas")
     medico = relationship("Medico", back_populates="consultas")
     teleconsultas = relationship("Teleconsulta", back_populates="consulta")
@@ -108,7 +108,6 @@ class Prontuario(Base):
     descricao = Column(Text, nullable=False)
     data_hora = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="prontuarios")
     medico = relationship("Medico", back_populates="prontuarios")
 
@@ -123,8 +122,10 @@ class Receita(Base):
     dosagem = Column(String(100), nullable=False)
     instrucoes = Column(Text)
     data_hora = Column(DateTime, default=datetime.utcnow)
+    status = Column(Enum(StatusPrescricao), default=StatusPrescricao.ATIVA, nullable=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="prescricoes")
     medico = relationship("Medico", back_populates="prescricoes")
 
@@ -138,7 +139,6 @@ class Teleconsulta(Base):
     data_hora = Column(DateTime, default=datetime.utcnow)
     status = Column(Enum(StatusConsulta), default=StatusConsulta.AGENDADA, nullable=False)
 
-    # Relacionamentos
     consulta = relationship("Consulta", back_populates="teleconsultas")
 
 
@@ -150,5 +150,4 @@ class LogAuditoria(Base):
     acao = Column(String(255), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamento
     usuario = relationship("Usuario", back_populates="logs_auditoria")

@@ -6,13 +6,28 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas.medico import MedicoResponse
-from app.utils.logs import registrar_log  # 🔹 Import do log
+from app.utils.logs import registrar_log  # Função utilitária de logs
 
 roteador = APIRouter()
 
 
-def obter_usuario_atual(current_user=Depends(security.get_current_user)):
-    """Dependência simples para recuperar o usuário atual"""
+# ----------------------------
+# Obter usuário atual com email garantido
+# ----------------------------
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """
+    Retorna o usuário autenticado com email garantido.
+    Evita falhas nos logs quando o token JWT não contém o campo 'email'.
+    """
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
     return current_user
 
 
@@ -28,7 +43,19 @@ def listar_medicos(
 ):
     if usuario_atual.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
-    return db.query(m.Medico).offset((pagina - 1) * tamanho).limit(tamanho).all()
+
+    medicos = db.query(m.Medico).offset((pagina - 1) * tamanho).limit(tamanho).all()
+
+    # Log da listagem
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} listou médicos (página {pagina})"
+    )
+
+    return medicos
 
 
 # ----------------------------
@@ -42,14 +69,26 @@ def obter_medico(
 ):
     if usuario_atual.get("role") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
+
     medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
+
+    # Log de leitura individual
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        registro_id=medico.id,
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} acessou médico ID {medico.id}"
+    )
+
     return medico
 
 
 # ----------------------------
-# Criar médico com campos separados
+# Criar médico
 # ----------------------------
 @roteador.post("/", response_model=MedicoResponse, status_code=status.HTTP_201_CREATED)
 def criar_medico(
@@ -80,14 +119,21 @@ def criar_medico(
     db.commit()
     db.refresh(novo_medico)
 
-    # 🔹 Log de criação
-    registrar_log(db, usuario_atual.get("sub"), "Medico", novo_medico.id, "CREATE", f"Médico criado: {nome}")
+    # Log de criação
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        registro_id=novo_medico.id,
+        acao="CREATE",
+        detalhes=f"Médico criado: {novo_medico.nome} por {usuario_atual.get('email')}"
+    )
 
     return novo_medico
 
 
 # ----------------------------
-# Atualizar médico com campos separados
+# Atualizar médico
 # ----------------------------
 @roteador.put("/{medico_id}", response_model=MedicoResponse)
 def atualizar_medico(
@@ -121,8 +167,15 @@ def atualizar_medico(
     db.commit()
     db.refresh(db_medico)
 
-    # 🔹 Log de atualização
-    registrar_log(db, usuario_atual.get("sub"), "Medico", medico_id, "UPDATE", f"Médico atualizado: {db_medico.nome}")
+    # Log de atualização
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        registro_id=medico_id,
+        acao="UPDATE",
+        detalhes=f"Médico atualizado: {db_medico.nome} por {usuario_atual.get('email')}"
+    )
 
     return db_medico
 
@@ -143,10 +196,17 @@ def deletar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    db_medico.ativo = False  # Soft delete
+    db_medico.ativo = False
     db.commit()
 
-    # 🔹 Log de exclusão
-    registrar_log(db, usuario_atual.get("sub"), "Medico", medico_id, "DELETE", f"Médico inativado: {db_medico.nome}")
+    # Log de exclusão (soft delete)
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        registro_id=medico_id,
+        acao="DELETE",
+        detalhes=f"Médico inativado: {db_medico.nome} por {usuario_atual.get('email')}"
+    )
 
     return None

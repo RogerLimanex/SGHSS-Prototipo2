@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, func
 from typing import Optional
 from datetime import datetime, timedelta
 
 from app.db import get_db
-from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario
+from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario, Usuario
 from app.core.security import get_current_user
 from app.utils.logs import registrar_log
 
@@ -15,6 +16,10 @@ roteador = APIRouter()
 # Função para converter data e hora
 # --------------------------
 def parse_data_hora(data: str, hora: str) -> datetime:
+    """
+    Converte strings de data e hora em um objeto datetime.
+    Aceita formatos com '/' ou '-'.
+    """
     for sep in ('/', '-'):
         try:
             data_formatada = datetime.strptime(data, f"%d{sep}%m{sep}%Y")
@@ -26,10 +31,28 @@ def parse_data_hora(data: str, hora: str) -> datetime:
 
 
 def formatar_data_hora(dt: datetime) -> dict:
+    """Formata o campo datetime em strings legíveis."""
     return {
         "data_consulta": dt.strftime("%d/%m/%Y"),
         "hora_consulta": dt.strftime("%H:%M")
     }
+
+
+# --------------------------
+# Obter usuário atual com email garantido
+# --------------------------
+def obter_usuario_atual(
+        current_user=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(Usuario).filter(Usuario.id == int(current_user.get("sub"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
+    return current_user
 
 
 # --------------------------
@@ -42,7 +65,7 @@ def listar_consultas(
         status_filtro: Optional[str] = None,
         medico_id: Optional[int] = None,
         paciente_id: Optional[int] = None,
-        usuario_atual=Depends(get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
     papel = usuario_atual.get("role")
@@ -50,11 +73,13 @@ def listar_consultas(
 
     query = db.query(Consulta)
 
+    # Filtra conforme o papel do usuário
     if papel == PapelUsuario.PACIENTE.value:
         query = query.filter(Consulta.paciente_id == user_id)
     elif papel == PapelUsuario.MEDICO.value:
         query = query.filter(Consulta.medico_id == user_id)
 
+    # Filtro de status
     if status_filtro:
         try:
             status_enum = StatusConsulta(status_filtro.lower())
@@ -62,6 +87,7 @@ def listar_consultas(
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
 
+    # Filtros adicionais
     if medico_id:
         query = query.filter(Consulta.medico_id == medico_id)
     if paciente_id:
@@ -70,6 +96,16 @@ def listar_consultas(
     total = query.count()
     itens = query.offset((pagina - 1) * tamanho).limit(tamanho).all()
 
+    # Log de leitura
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} listou consultas (página {pagina})"
+    )
+
+    # Retorno formatado
     resultado = []
     for c in itens:
         resultado.append({
@@ -91,7 +127,7 @@ def listar_consultas(
 @roteador.get("/{consulta_id}")
 def obter_consulta(
         consulta_id: int,
-        usuario_atual=Depends(get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
@@ -101,10 +137,20 @@ def obter_consulta(
     papel = usuario_atual.get("role")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
+    # Restringe acesso conforme o papel
     if papel == PapelUsuario.PACIENTE.value and consulta.paciente_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
     if papel == PapelUsuario.MEDICO.value and consulta.medico_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
+
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        registro_id=consulta.id,
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} acessou consulta ID {consulta.id}"
+    )
 
     return {
         "id": consulta.id,
@@ -118,7 +164,7 @@ def obter_consulta(
 
 
 # --------------------------
-# CRIAR CONSULTA
+# CRIAR CONSULTA (com correção de conflito)
 # --------------------------
 @roteador.post("/", status_code=status.HTTP_201_CREATED)
 def criar_consulta(
@@ -128,7 +174,7 @@ def criar_consulta(
         hora_consulta: str,
         duracao_minutos: int = 30,
         observacoes: Optional[str] = None,
-        usuario_atual=Depends(get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
     if usuario_atual.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
@@ -144,16 +190,23 @@ def criar_consulta(
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
 
+    # Cálculo de fim da nova consulta
     fim = data_hora + timedelta(minutes=duracao_minutos)
+
+    # Verifica conflitos de horário diretamente no banco (sem erro de tipo)
     conflito = db.query(Consulta).filter(
         Consulta.medico_id == medico_id,
-        Consulta.data_hora < fim,
-        (Consulta.data_hora + timedelta(minutes=Consulta.duracao_minutos)) > data_hora,
-        Consulta.status != StatusConsulta.CANCELADA
+        Consulta.status != StatusConsulta.CANCELADA,
+        and_(
+            Consulta.data_hora < fim,
+            func.datetime(Consulta.data_hora, f'+{Consulta.duracao_minutos} minutes') > data_hora
+        )
     ).first()
+
     if conflito:
         raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
 
+    # Criação da nova consulta
     nova_consulta = Consulta(
         paciente_id=paciente_id,
         medico_id=medico_id,
@@ -167,8 +220,14 @@ def criar_consulta(
     db.commit()
     db.refresh(nova_consulta)
 
-    registrar_log(db, usuario_atual.get("sub"), "Consulta", nova_consulta.id, "CREATE",
-                  f"Consulta criada para paciente {paciente_id} com médico {medico_id}")
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        registro_id=nova_consulta.id,
+        acao="CREATE",
+        detalhes=f"Consulta criada por {usuario_atual.get('email')} para paciente {paciente_id} e médico {medico_id}"
+    )
 
     return {
         "id": nova_consulta.id,
@@ -191,7 +250,7 @@ def atualizar_consulta(
         hora_consulta: Optional[str] = None,
         status_update: Optional[str] = None,
         observacoes: Optional[str] = None,
-        usuario_atual=Depends(get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
@@ -221,8 +280,14 @@ def atualizar_consulta(
     db.commit()
     db.refresh(consulta)
 
-    registrar_log(db, usuario_atual.get("sub"), "Consulta", consulta.id, "UPDATE",
-                  f"Consulta {consulta_id} atualizada")
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        registro_id=consulta.id,
+        acao="UPDATE",
+        detalhes=f"Consulta {consulta_id} atualizada por {usuario_atual.get('email')}"
+    )
 
     return {
         "id": consulta.id,
@@ -241,7 +306,7 @@ def atualizar_consulta(
 @roteador.patch("/{consulta_id}/cancelar", response_model=dict)
 def cancelar_consulta(
         consulta_id: int,
-        usuario_atual=Depends(get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
@@ -260,7 +325,13 @@ def cancelar_consulta(
     db.commit()
     db.refresh(consulta)
 
-    registrar_log(db, usuario_atual.get("sub"), "Consulta", consulta.id, "DELETE",
-                  f"Consulta {consulta_id} cancelada")
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        registro_id=consulta.id,
+        acao="DELETE",
+        detalhes=f"Consulta {consulta_id} cancelada por {usuario_atual.get('email')}"
+    )
 
     return {"id": consulta.id, "status": consulta.status.value}
