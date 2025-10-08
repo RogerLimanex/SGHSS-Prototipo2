@@ -45,8 +45,7 @@ def criar_prescricao(
         medicamento=medicamento,
         dosagem=dosagem,
         instrucoes=instrucoes,
-        data_hora=datetime.now(),
-        status="ATIVA"  # status inicial
+        data_hora=datetime.now()
     )
     db.add(nova_prescricao)
     db.commit()
@@ -57,7 +56,7 @@ def criar_prescricao(
     # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),  # corrigido
         tabela="Receita",
         registro_id=nova_prescricao.id,
         acao="CREATE",
@@ -114,7 +113,7 @@ def cancelar_prescricao(
     # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),  # corrigido
         tabela="Receita",
         registro_id=prescricao.id,
         acao="DELETE",

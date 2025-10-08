@@ -122,6 +122,7 @@ class Receita(Base):
     dosagem = Column(String(100), nullable=False)
     instrucoes = Column(Text)
     data_hora = Column(DateTime, default=datetime.utcnow)
+    status = Column(String(20), default="ATIVA")  # ✅ adicionar esta linha
 
     # Relacionamentos
     paciente = relationship("Paciente", back_populates="prescricoes")

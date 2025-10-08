@@ -57,7 +57,7 @@ def criar_teleconsulta(
     # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),  # corrigido
         tabela="Teleconsulta",
         registro_id=nova_teleconsulta.id,
         acao="CREATE",
@@ -122,7 +122,7 @@ def cancelar_teleconsulta(
     # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),  # corrigido
         tabela="Teleconsulta",
         registro_id=teleconsulta.id,
         acao="DELETE",
