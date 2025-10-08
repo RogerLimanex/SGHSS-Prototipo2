@@ -36,10 +36,13 @@ def login(
     if not usuario.ativo:
         raise HTTPException(status_code=403, detail="Usuário inativo")
 
+    # Monta dados do token JWT
     token_data = {
-        "sub": str(usuario.id),
+        "id": usuario.id,
+        "email": usuario.email,
         "role": usuario.papel.value if hasattr(usuario.papel, 'value') else usuario.papel
     }
+
     access_token = security.create_access_token(token_data, expires_delta=timedelta(hours=1))
 
     # Log de login
@@ -52,7 +55,13 @@ def login(
         detalhes=f"Usuário {usuario.email} realizou login"
     )
 
-    return {"access_token": access_token, "token_type": "bearer", "role": usuario.papel}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "id": usuario.id,
+        "email": usuario.email,
+        "role": usuario.papel
+    }
 
 
 # ----------------------------
@@ -60,15 +69,16 @@ def login(
 # ----------------------------
 @roteador.post("/register", status_code=status.HTTP_201_CREATED)
 def registrar(
-        email: str,
-        password: str,
-        papel: Optional[str] = "PACIENTE",
+        email: str = Form(...),
+        password: str = Form(...),
+        papel: Optional[str] = Form("PACIENTE"),
         db: Session = Depends(get_db_session),
         current_user=Depends(security.get_current_user)
 ):
     if db.query(m.Usuario).filter(m.Usuario.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
+    # Somente ADMIN pode criar MEDICO ou ADMIN
     if papel in ["MEDICO", "ADMIN"]:
         if not current_user or current_user.get("role") != "ADMIN":
             raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários MEDICO ou ADMIN")
@@ -83,16 +93,16 @@ def registrar(
     db.commit()
     db.refresh(usuario)
 
-    # Tenta obter email do criador, se possível
-    criador_email = None
+    # Email do criador (ou "sistema" se não houver)
+    criador_email = "sistema"
     if current_user:
-        criador = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        criador = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         criador_email = criador.email if criador else "sistema"
 
     # Log de criação de usuário
     registrar_log(
         db=db,
-        usuario_email=criador_email or "sistema",
+        usuario_email=criador_email,
         tabela="Usuario",
         registro_id=usuario.id,
         acao="CREATE",
@@ -115,9 +125,7 @@ def listar_usuarios(
 
     usuarios = db.query(m.Usuario).all()
 
-    # Obtém email do ADMIN autenticado
-    admin = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
-    admin_email = admin.email if admin else "desconhecido"
+    admin_email = current_user.get("email") or "desconhecido"
 
     # Log de listagem
     registrar_log(
@@ -145,8 +153,11 @@ def listar_usuarios(
 # Dados do usuário logado
 # ----------------------------
 @roteador.get("/me")
-def obter_me(current_user=Depends(security.get_current_user), db: Session = Depends(get_db_session)):
-    usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+def obter_me(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 

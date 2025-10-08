@@ -1,3 +1,4 @@
+# D:\ProjectSGHSS\app\api\v1\teleconsultas.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -7,7 +8,7 @@ from app.db import get_db_session
 from app import models as m
 from app.core import security
 from app.schemas import TeleconsultaResponse
-from app.utils.logs import registrar_log  # Import do util de logs
+from app.utils.logs import registrar_log
 
 roteador = APIRouter()
 
@@ -16,11 +17,12 @@ roteador = APIRouter()
 # Dependência para obter o usuário atual
 # ----------------------------
 def obter_usuario_atual(current_user=Depends(security.get_current_user)):
+    """Retorna o usuário autenticado com id, email e role."""
     return current_user
 
 
 # ----------------------------
-# Criar teleconsulta com campos separados
+# Criar teleconsulta
 # ----------------------------
 @roteador.post(
     "/",
@@ -35,11 +37,8 @@ def criar_teleconsulta(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cria uma nova teleconsulta vinculada a uma consulta existente.
-    Apenas ADMIN ou MEDICO podem criar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    """Cria uma nova teleconsulta vinculada a uma consulta existente."""
+    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     nova_teleconsulta = m.Teleconsulta(
@@ -52,12 +51,10 @@ def criar_teleconsulta(
     db.commit()
     db.refresh(nova_teleconsulta)
 
-    # ----------------------------
-    # Registrar log da criação
-    # ----------------------------
+    # Log da criação
     registrar_log(
         db=db,
-        usuario_email=usuario_atual.get("email"),  # corrigido
+        usuario_email=usuario_atual["email"],
         tabela="Teleconsulta",
         registro_id=nova_teleconsulta.id,
         acao="CREATE",
@@ -80,12 +77,24 @@ def listar_teleconsultas(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Lista todas as teleconsultas. Apenas ADMIN ou MEDICO podem acessar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    """Lista todas as teleconsultas. Apenas ADMIN ou MEDICO podem acessar."""
+    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
-    return db.query(m.Teleconsulta).all()
+
+    teleconsultas = db.query(m.Teleconsulta).all()
+
+    # Log da listagem
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual["email"],
+        tabela="Teleconsulta",
+        registro_id=None,
+        acao="READ",
+        descricao="Listagem de teleconsultas realizada",
+        detalhes=f"Usuário {usuario_atual['email']} consultou as teleconsultas"
+    )
+
+    return teleconsultas
 
 
 # ----------------------------
@@ -102,11 +111,8 @@ def cancelar_teleconsulta(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cancela uma teleconsulta existente (soft delete).
-    Apenas ADMIN ou MEDICO podem cancelar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    """Cancela uma teleconsulta existente (soft delete)."""
+    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     teleconsulta = db.query(m.Teleconsulta).filter(m.Teleconsulta.id == teleconsulta_id).first()
@@ -117,12 +123,10 @@ def cancelar_teleconsulta(
     db.commit()
     db.refresh(teleconsulta)
 
-    # ----------------------------
-    # Registrar log do cancelamento
-    # ----------------------------
+    # Log do cancelamento
     registrar_log(
         db=db,
-        usuario_email=usuario_atual.get("email"),  # corrigido
+        usuario_email=usuario_atual["email"],
         tabela="Teleconsulta",
         registro_id=teleconsulta.id,
         acao="DELETE",
