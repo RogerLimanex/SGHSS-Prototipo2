@@ -1,3 +1,4 @@
+# D:\ProjectSGHSS\app\api\v1\prontuario.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,14 +14,24 @@ roteador = APIRouter()
 
 
 # ----------------------------
-# Dependência para obter o usuário atual
+# Obter usuário atual com email garantido
 # ----------------------------
-def obter_usuario_atual(current_user=Depends(security.get_current_user)):
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
     return current_user
 
 
 # ----------------------------
-# Criar prontuário médico com campos separados
+# Criar prontuário médico
 # ----------------------------
 @roteador.post("/prontuarios", response_model=ProntuarioMedicoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prontuario(
@@ -30,11 +41,7 @@ def criar_prontuario(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cria um novo prontuário médico para um paciente.
-    Apenas ADMIN ou MEDICO podem criar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     novo_prontuario = m.Prontuario(
@@ -48,16 +55,13 @@ def criar_prontuario(
     db.commit()
     db.refresh(novo_prontuario)
 
-    # ----------------------------
-    # Registrar log da criação
-    # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),
         tabela="Prontuario",
         registro_id=novo_prontuario.id,
         acao="CREATE",
-        descricao=f"Prontuário criado para paciente {paciente_id} pelo médico {medico_id}"
+        detalhes=f"Prontuário criado para paciente {paciente_id} pelo médico {medico_id}"
     )
 
     return novo_prontuario
@@ -71,14 +75,20 @@ def listar_prontuarios(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Lista todos os prontuários médicos cadastrados.
-    Apenas ADMIN ou MEDICO podem visualizar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    return db.query(m.Prontuario).all()
+    prontuarios = db.query(m.Prontuario).all()
+
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="Prontuario",
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} listou todos os prontuários"
+    )
+
+    return prontuarios
 
 
 # ----------------------------
@@ -90,11 +100,7 @@ def cancelar_prontuario(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cancela (inativa) um prontuário médico existente.
-    Apenas ADMIN ou MEDICO podem cancelar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     prontuario = db.query(m.Prontuario).filter(m.Prontuario.id == prontuario_id).first()
@@ -105,16 +111,13 @@ def cancelar_prontuario(
     db.commit()
     db.refresh(prontuario)
 
-    # ----------------------------
-    # Registrar log do cancelamento
-    # ----------------------------
     registrar_log(
         db=db,
-        usuario_id=usuario_atual.get("sub"),
+        usuario_email=usuario_atual.get("email"),
         tabela="Prontuario",
         registro_id=prontuario.id,
         acao="DELETE",
-        descricao=f"Prontuário {prontuario_id} cancelado pelo usuário"
+        detalhes=f"Prontuário {prontuario_id} cancelado pelo usuário {usuario_atual.get('email')}"
     )
 
     return prontuario

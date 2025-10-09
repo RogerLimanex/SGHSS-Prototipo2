@@ -8,16 +8,40 @@ from app.core import security
 roteador = APIRouter()
 
 
+# --------------------------
+# Obter usuário atual com email garantido
+# --------------------------
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """
+    Retorna o usuário autenticado com email garantido.
+    Evita falhas nos logs quando o token JWT não contém o campo 'email'.
+    """
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        from app import models as m
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
+    return current_user
+
+
+# --------------------------
+# Listar logs de auditoria
+# --------------------------
 @roteador.get("/audit_logs", summary="Listar logs de auditoria", tags=["Auditoria"])
 def listar_logs(
-        current_user=Depends(security.get_current_user),
+        usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db_session)
 ):
     """
     Lista todos os registros de auditoria do sistema (somente ADMIN).
     """
     # Verifica se o usuário logado é ADMIN
-    if current_user.get("role") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
     logs = db.query(AuditLog).order_by(AuditLog.data_hora.desc()).all()

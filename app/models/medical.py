@@ -107,6 +107,7 @@ class Prontuario(Base):
     medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
     data_hora = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="ATIVO")  # ← adiciona aqui
 
     paciente = relationship("Paciente", back_populates="prontuarios")
     medico = relationship("Medico", back_populates="prontuarios")

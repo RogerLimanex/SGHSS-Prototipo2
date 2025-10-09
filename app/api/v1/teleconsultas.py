@@ -14,10 +14,19 @@ roteador = APIRouter()
 
 
 # ----------------------------
-# Dependência para obter o usuário atual
+# Obter usuário atual com email garantido
 # ----------------------------
-def obter_usuario_atual(current_user=Depends(security.get_current_user)):
-    """Retorna o usuário autenticado com id, email e role."""
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
     return current_user
 
 
@@ -27,9 +36,7 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user)):
 @roteador.post(
     "/",
     response_model=TeleconsultaResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Criar Teleconsulta",
-    operation_id="criarTeleconsulta"
+    status_code=status.HTTP_201_CREATED
 )
 def criar_teleconsulta(
         consulta_id: int = Form(...),
@@ -37,8 +44,7 @@ def criar_teleconsulta(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """Cria uma nova teleconsulta vinculada a uma consulta existente."""
-    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     nova_teleconsulta = m.Teleconsulta(
@@ -51,14 +57,13 @@ def criar_teleconsulta(
     db.commit()
     db.refresh(nova_teleconsulta)
 
-    # Log da criação
     registrar_log(
         db=db,
-        usuario_email=usuario_atual["email"],
+        usuario_email=usuario_atual.get("email"),
         tabela="Teleconsulta",
         registro_id=nova_teleconsulta.id,
         acao="CREATE",
-        descricao=f"Teleconsulta criada para consulta {consulta_id}"
+        detalhes=f"Teleconsulta criada para consulta {consulta_id} por {usuario_atual.get('email')}"
     )
 
     return nova_teleconsulta
@@ -69,29 +74,24 @@ def criar_teleconsulta(
 # ----------------------------
 @roteador.get(
     "/",
-    response_model=List[TeleconsultaResponse],
-    summary="Listar Teleconsultas",
-    operation_id="listarTeleconsultas"
+    response_model=List[TeleconsultaResponse]
 )
 def listar_teleconsultas(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """Lista todas as teleconsultas. Apenas ADMIN ou MEDICO podem acessar."""
-    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     teleconsultas = db.query(m.Teleconsulta).all()
 
-    # Log da listagem
     registrar_log(
         db=db,
-        usuario_email=usuario_atual["email"],
+        usuario_email=usuario_atual.get("email"),
         tabela="Teleconsulta",
         registro_id=None,
         acao="READ",
-        descricao="Listagem de teleconsultas realizada",
-        detalhes=f"Usuário {usuario_atual['email']} consultou as teleconsultas"
+        detalhes=f"{usuario_atual.get('email')} listou todas as teleconsultas"
     )
 
     return teleconsultas
@@ -102,17 +102,14 @@ def listar_teleconsultas(
 # ----------------------------
 @roteador.patch(
     "/{teleconsulta_id}/cancelar",
-    response_model=TeleconsultaResponse,
-    summary="Cancelar Teleconsulta",
-    operation_id="cancelarTeleconsulta"
+    response_model=TeleconsultaResponse
 )
 def cancelar_teleconsulta(
         teleconsulta_id: int,
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """Cancela uma teleconsulta existente (soft delete)."""
-    if usuario_atual["role"] not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     teleconsulta = db.query(m.Teleconsulta).filter(m.Teleconsulta.id == teleconsulta_id).first()
@@ -123,14 +120,13 @@ def cancelar_teleconsulta(
     db.commit()
     db.refresh(teleconsulta)
 
-    # Log do cancelamento
     registrar_log(
         db=db,
-        usuario_email=usuario_atual["email"],
+        usuario_email=usuario_atual.get("email"),
         tabela="Teleconsulta",
         registro_id=teleconsulta.id,
         acao="DELETE",
-        descricao=f"Teleconsulta {teleconsulta_id} cancelada pelo usuário"
+        detalhes=f"Teleconsulta {teleconsulta_id} cancelada por {usuario_atual.get('email')}"
     )
 
     return teleconsulta

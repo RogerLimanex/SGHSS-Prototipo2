@@ -1,3 +1,4 @@
+# D:\ProjectSGHSS\app\api\v1\prescricoes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,14 +14,24 @@ roteador = APIRouter()
 
 
 # ----------------------------
-# Dependência para obter o usuário atual
+# Obter usuário atual com email garantido
 # ----------------------------
-def obter_usuario_atual(current_user=Depends(security.get_current_user)):
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db_session)
+):
+    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    usuario_email = current_user.get("email")
+    if not usuario_email:
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
+        if usuario:
+            usuario_email = usuario.email
+            current_user["email"] = usuario.email
     return current_user
 
 
 # ----------------------------
-# Criar prescrição médica com campos separados
+# Criar prescrição médica
 # ----------------------------
 @roteador.post("/prescricoes", response_model=PrescricaoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prescricao(
@@ -32,11 +43,7 @@ def criar_prescricao(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cria uma nova prescrição médica para um paciente.
-    Apenas ADMIN ou MEDICO podem criar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     nova_prescricao = m.Receita(
@@ -51,16 +58,13 @@ def criar_prescricao(
     db.commit()
     db.refresh(nova_prescricao)
 
-    # ----------------------------
-    # Registrar log da criação
-    # ----------------------------
     registrar_log(
         db=db,
-        usuario_email=usuario_atual.get("email"),  # corrigido
+        usuario_email=usuario_atual.get("email"),
         tabela="Receita",
         registro_id=nova_prescricao.id,
         acao="CREATE",
-        descricao=f"Prescrição criada para paciente {paciente_id} pelo médico {medico_id}"
+        detalhes=f"Prescrição criada para paciente {paciente_id} pelo médico {medico_id}"
     )
 
     return nova_prescricao
@@ -74,14 +78,20 @@ def listar_prescricoes(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Lista todas as prescrições médicas cadastradas.
-    Apenas ADMIN ou MEDICO podem visualizar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    return db.query(m.Receita).all()
+    prescricoes = db.query(m.Receita).all()
+
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="Receita",
+        acao="READ",
+        detalhes=f"{usuario_atual.get('email')} listou todas as prescrições"
+    )
+
+    return prescricoes
 
 
 # ----------------------------
@@ -93,11 +103,7 @@ def cancelar_prescricao(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    """
-    Cancela (inativa) uma prescrição existente.
-    Apenas ADMIN ou MEDICO podem cancelar.
-    """
-    if usuario_atual.get("role") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     prescricao = db.query(m.Receita).filter(m.Receita.id == prescricao_id).first()
@@ -108,16 +114,13 @@ def cancelar_prescricao(
     db.commit()
     db.refresh(prescricao)
 
-    # ----------------------------
-    # Registrar log do cancelamento
-    # ----------------------------
     registrar_log(
         db=db,
-        usuario_email=usuario_atual.get("email"),  # corrigido
+        usuario_email=usuario_atual.get("email"),
         tabela="Receita",
         registro_id=prescricao.id,
         acao="DELETE",
-        descricao=f"Prescrição {prescricao_id} cancelada pelo usuário"
+        detalhes=f"Prescrição {prescricao_id} cancelada pelo usuário {usuario_atual.get('email')}"
     )
 
     return prescricao

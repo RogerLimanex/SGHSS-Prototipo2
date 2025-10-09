@@ -4,12 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo sexto commit:&#10;&#10;Refatoração de autenticação e permissões&#10;&#10;- Corrigido o retorno do usuário logado para usar 'papel' em vez de 'role'&#10;- Atualizado security.py com funções de hash, verificação de senha e geração de JWT&#10;- Ajustado login, registro e listagem de usuários para usar papel de forma consistente&#10;- Corrigida validação de permissões: apenas ADMIN pode listar ou criar usuários com papel MEDICO/ADMIN&#10;- Padronizado retorno de dados do usuário e token JWT&#10;- Correção de bugs relacionados a token inválido e permissões 401/403">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo setimo commit:&#10;&#10;Ajuste dos endpoints de autenticação e logs:&#10;&#10;- Padronizada função `obter_usuario_atual` para garantir o campo email em todos os endpoints.&#10;- Unificados logs com `registrar_log`, seguindo padrão dos módulos `medicos.py` e `consultas.py`.&#10;- Todos os logs utilizam agora: `usuario_email`, `tabela=&quot;usuarios&quot;`, `registro_id`, `acao`, `detalhes`.&#10;- Login, logout, registro de usuário, listagem de usuários e dados do usuário logado foram atualizados.&#10;- Nomes de campos padronizados: `id`, `email`, `papel`.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auditoria.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auditoria.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/medical.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -265,7 +268,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760034591517</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Décimo setimo commit:&#10;&#10;Ajuste dos endpoints de autenticação e logs:&#10;&#10;- Padronizada função `obter_usuario_atual` para garantir o campo email em todos os endpoints.&#10;- Unificados logs com `registrar_log`, seguindo padrão dos módulos `medicos.py` e `consultas.py`.&#10;- Todos os logs utilizam agora: `usuario_email`, `tabela=&quot;usuarios&quot;`, `registro_id`, `acao`, `detalhes`.&#10;- Login, logout, registro de usuário, listagem de usuários e dados do usuário logado foram atualizados.&#10;- Nomes de campos padronizados: `id`, `email`, `papel`.">
+      <option name="closed" value="true" />
+      <created>1760036193315</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1760036193315</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -301,6 +312,7 @@
     <MESSAGE value="Décimo quarto commit:&#10;&#10;Corrigido registro de logs em Prescrições&#10;&#10;- Ajustado `registrar_log` para usar `usuario_email` em vez de `usuario_id`.&#10;- Endpoints de criação e cancelamento de prescrições agora registram logs corretamente.&#10;- Removido uso de `status=&quot;ATIVA&quot;` como argumento inválido, mantendo coluna `status` no banco." />
     <MESSAGE value="Décimo quinto commit:&#10;&#10;Refatoração completa do módulo de teleconsultas e segurança&#10;&#10;- Atualizado `security.py`:&#10;  - `get_current_user` compatível com todos os endpoints.&#10;  - Garante que o token contenha `id`, `email` e `role`.&#10;  - Decodificação e validação de JWT centralizada.&#10;&#10;- Refatorado `teleconsultas.py`:&#10;  - Uso de `get_current_user` atualizado para obter o usuário.&#10;  - Logs de criação, listagem e cancelamento agora gravam corretamente `usuario_email`.&#10;  - Checagem de permissões consistente para MEDICO e ADMIN.&#10;  - Código limpo e consistente para todas as operações de teleconsulta.&#10;&#10;- Correção de problemas de autenticação e registro de logs." />
     <MESSAGE value="Décimo sexto commit:&#10;&#10;Refatoração de autenticação e permissões&#10;&#10;- Corrigido o retorno do usuário logado para usar 'papel' em vez de 'role'&#10;- Atualizado security.py com funções de hash, verificação de senha e geração de JWT&#10;- Ajustado login, registro e listagem de usuários para usar papel de forma consistente&#10;- Corrigida validação de permissões: apenas ADMIN pode listar ou criar usuários com papel MEDICO/ADMIN&#10;- Padronizado retorno de dados do usuário e token JWT&#10;- Correção de bugs relacionados a token inválido e permissões 401/403" />
-    <option name="LAST_COMMIT_MESSAGE" value="Décimo sexto commit:&#10;&#10;Refatoração de autenticação e permissões&#10;&#10;- Corrigido o retorno do usuário logado para usar 'papel' em vez de 'role'&#10;- Atualizado security.py com funções de hash, verificação de senha e geração de JWT&#10;- Ajustado login, registro e listagem de usuários para usar papel de forma consistente&#10;- Corrigida validação de permissões: apenas ADMIN pode listar ou criar usuários com papel MEDICO/ADMIN&#10;- Padronizado retorno de dados do usuário e token JWT&#10;- Correção de bugs relacionados a token inválido e permissões 401/403" />
+    <MESSAGE value="Décimo setimo commit:&#10;&#10;Ajuste dos endpoints de autenticação e logs:&#10;&#10;- Padronizada função `obter_usuario_atual` para garantir o campo email em todos os endpoints.&#10;- Unificados logs com `registrar_log`, seguindo padrão dos módulos `medicos.py` e `consultas.py`.&#10;- Todos os logs utilizam agora: `usuario_email`, `tabela=&quot;usuarios&quot;`, `registro_id`, `acao`, `detalhes`.&#10;- Login, logout, registro de usuário, listagem de usuários e dados do usuário logado foram atualizados.&#10;- Nomes de campos padronizados: `id`, `email`, `papel`." />
+    <option name="LAST_COMMIT_MESSAGE" value="Décimo setimo commit:&#10;&#10;Ajuste dos endpoints de autenticação e logs:&#10;&#10;- Padronizada função `obter_usuario_atual` para garantir o campo email em todos os endpoints.&#10;- Unificados logs com `registrar_log`, seguindo padrão dos módulos `medicos.py` e `consultas.py`.&#10;- Todos os logs utilizam agora: `usuario_email`, `tabela=&quot;usuarios&quot;`, `registro_id`, `acao`, `detalhes`.&#10;- Login, logout, registro de usuário, listagem de usuários e dados do usuário logado foram atualizados.&#10;- Nomes de campos padronizados: `id`, `email`, `papel`." />
   </component>
 </project>
