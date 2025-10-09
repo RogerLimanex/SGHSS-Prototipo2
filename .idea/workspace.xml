@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo quarto commit:&#10;&#10;Corrigido registro de logs em Prescrições&#10;&#10;- Ajustado `registrar_log` para usar `usuario_email` em vez de `usuario_id`.&#10;- Endpoints de criação e cancelamento de prescrições agora registram logs corretamente.&#10;- Removido uso de `status=&quot;ATIVA&quot;` como argumento inválido, mantendo coluna `status` no banco.">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo quinto commit:&#10;&#10;Refatoração completa do módulo de teleconsultas e segurança&#10;&#10;- Atualizado `security.py`:&#10;  - `get_current_user` compatível com todos os endpoints.&#10;  - Garante que o token contenha `id`, `email` e `role`.&#10;  - Decodificação e validação de JWT centralizada.&#10;&#10;- Refatorado `teleconsultas.py`:&#10;  - Uso de `get_current_user` atualizado para obter o usuário.&#10;  - Logs de criação, listagem e cancelamento agora gravam corretamente `usuario_email`.&#10;  - Checagem de permissões consistente para MEDICO e ADMIN.&#10;  - Código limpo e consistente para todas as operações de teleconsulta.&#10;&#10;- Correção de problemas de autenticação e registro de logs.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
@@ -248,7 +247,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759930871485</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Décimo quinto commit:&#10;&#10;Refatoração completa do módulo de teleconsultas e segurança&#10;&#10;- Atualizado `security.py`:&#10;  - `get_current_user` compatível com todos os endpoints.&#10;  - Garante que o token contenha `id`, `email` e `role`.&#10;  - Decodificação e validação de JWT centralizada.&#10;&#10;- Refatorado `teleconsultas.py`:&#10;  - Uso de `get_current_user` atualizado para obter o usuário.&#10;  - Logs de criação, listagem e cancelamento agora gravam corretamente `usuario_email`.&#10;  - Checagem de permissões consistente para MEDICO e ADMIN.&#10;  - Código limpo e consistente para todas as operações de teleconsulta.&#10;&#10;- Correção de problemas de autenticação e registro de logs.">
+      <option name="closed" value="true" />
+      <created>1759949178967</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1759949178967</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -282,6 +289,7 @@
     <MESSAGE value="Décimo segundo commit:&#10;&#10;Adiciona logs de auditoria em endpoints de autenticação&#10;&#10;- Registro de login de usuários (ação LOGIN)&#10;- Registro de criação de usuários (ação CREATE)&#10;- Registro de listagem de usuários (ação READ)&#10;- Registro de acesso a dados próprios (ação READ)&#10;- Integração com função centralizada registrar_log" />
     <MESSAGE value="Décimo terceiro commit:&#10;&#10;- Adiciona coluna 'status' na tabela 'prescricoes' com valor padrão 'ATIVA'&#10;- Atualiza endpoint de criação de prescrição para definir status inicial&#10;- Atualiza endpoint de cancelamento para alterar status para 'CANCELADA'" />
     <MESSAGE value="Décimo quarto commit:&#10;&#10;Corrigido registro de logs em Prescrições&#10;&#10;- Ajustado `registrar_log` para usar `usuario_email` em vez de `usuario_id`.&#10;- Endpoints de criação e cancelamento de prescrições agora registram logs corretamente.&#10;- Removido uso de `status=&quot;ATIVA&quot;` como argumento inválido, mantendo coluna `status` no banco." />
-    <option name="LAST_COMMIT_MESSAGE" value="Décimo quarto commit:&#10;&#10;Corrigido registro de logs em Prescrições&#10;&#10;- Ajustado `registrar_log` para usar `usuario_email` em vez de `usuario_id`.&#10;- Endpoints de criação e cancelamento de prescrições agora registram logs corretamente.&#10;- Removido uso de `status=&quot;ATIVA&quot;` como argumento inválido, mantendo coluna `status` no banco." />
+    <MESSAGE value="Décimo quinto commit:&#10;&#10;Refatoração completa do módulo de teleconsultas e segurança&#10;&#10;- Atualizado `security.py`:&#10;  - `get_current_user` compatível com todos os endpoints.&#10;  - Garante que o token contenha `id`, `email` e `role`.&#10;  - Decodificação e validação de JWT centralizada.&#10;&#10;- Refatorado `teleconsultas.py`:&#10;  - Uso de `get_current_user` atualizado para obter o usuário.&#10;  - Logs de criação, listagem e cancelamento agora gravam corretamente `usuario_email`.&#10;  - Checagem de permissões consistente para MEDICO e ADMIN.&#10;  - Código limpo e consistente para todas as operações de teleconsulta.&#10;&#10;- Correção de problemas de autenticação e registro de logs." />
+    <option name="LAST_COMMIT_MESSAGE" value="Décimo quinto commit:&#10;&#10;Refatoração completa do módulo de teleconsultas e segurança&#10;&#10;- Atualizado `security.py`:&#10;  - `get_current_user` compatível com todos os endpoints.&#10;  - Garante que o token contenha `id`, `email` e `role`.&#10;  - Decodificação e validação de JWT centralizada.&#10;&#10;- Refatorado `teleconsultas.py`:&#10;  - Uso de `get_current_user` atualizado para obter o usuário.&#10;  - Logs de criação, listagem e cancelamento agora gravam corretamente `usuario_email`.&#10;  - Checagem de permissões consistente para MEDICO e ADMIN.&#10;  - Código limpo e consistente para todas as operações de teleconsulta.&#10;&#10;- Correção de problemas de autenticação e registro de logs." />
   </component>
 </project>

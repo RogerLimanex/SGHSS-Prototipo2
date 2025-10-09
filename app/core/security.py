@@ -1,24 +1,27 @@
 # D:\ProjectSGHSS\app\core\security.py
-import os
-from datetime import datetime, timedelta
-import bcrypt
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from datetime import datetime, timedelta
+from app.db import get_db_session
+from app import models as m
+import os
+import bcrypt
 
-# ----------------------------
-# Configurações de segurança
-# ----------------------------
-JWT_SECRET = os.getenv("JWT_SECRET", "CHANGE_ME")
-JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+# -------------------------------
+# Configurações do Token JWT
+# -------------------------------
+SECRET_KEY = os.getenv("SECRET_KEY", "CHAVE_SUPER_SECRETA_PADRAO")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_HOURS = int(os.getenv("ACCESS_TOKEN_EXPIRE_HOURS", 8))
 
-security_scheme = HTTPBearer()
+# Esquema de autenticação OAuth2
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/autenticacao/login")
 
 
-# ----------------------------
-# Funções de senha usando bcrypt
-# ----------------------------
+# -------------------------------
+# Funções de Senha (bcrypt)
+# -------------------------------
 def hash_password(password: str) -> str:
     """Gera o hash da senha usando bcrypt."""
     salt = bcrypt.gensalt()
@@ -26,63 +29,61 @@ def hash_password(password: str) -> str:
     return hashed.decode("utf-8")
 
 
-def verify_password(plain: str, hashed: str) -> bool:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica se a senha informada corresponde ao hash armazenado."""
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except Exception:
+        return False
 
 
-# ----------------------------
-# Funções de token JWT
-# ----------------------------
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    """
-    Cria um token JWT contendo id, email e role do usuário.
-    """
+# -------------------------------
+# Geração do Token JWT
+# -------------------------------
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)):
+    """Cria um token JWT com tempo de expiração."""
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
 
-    # Garantir que sempre tenha 'id', 'email' e 'role' no token
-    if "id" not in to_encode:
-        raise ValueError("O token precisa do 'id' do usuário")
-    if "email" not in to_encode:
-        raise ValueError("O token precisa do 'email' do usuário")
-    if "role" not in to_encode:
-        raise ValueError("O token precisa do 'role' do usuário")
+    # Adiciona "sub" (identificador padrão do usuário)
+    if "email" in to_encode:
+        to_encode["sub"] = to_encode["email"]
 
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
-def decode_token(token: str) -> dict:
-    """Decodifica e valida um token JWT."""
+# -------------------------------
+# Obtém o usuário logado (via cookie ou header)
+# -------------------------------
+def get_current_user(request: Request, db=Depends(get_db_session)):
+    """Obtém o usuário autenticado a partir do token JWT."""
+    token = None
+
+    # Tenta pegar o token do cookie primeiro
+    if "access_token" in request.cookies:
+        token = request.cookies.get("access_token")
+    else:
+        # Se não houver cookie, tenta pegar do header Authorization
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Token de acesso ausente")
+
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
+    usuario = db.query(m.Usuario).filter(m.Usuario.email == email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-# ----------------------------
-# Função para obter usuário atual
-# ----------------------------
-def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(security_scheme)
-) -> dict:
-    """
-    Retorna um dict com id, email e role do usuário logado.
-    Compatível com teleconsultas, usuários e logs.
-    """
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Token ausente")
-
-    token = credentials.credentials
-    payload = decode_token(token)
-
-    user_id = payload.get("id")
-    email = payload.get("email")
-    role = payload.get("role")
-
-    if not all([user_id, email, role]):
-        raise HTTPException(status_code=401, detail="Token inválido ou usuário não encontrado")
-
-    return {"id": user_id, "email": email, "role": role}
+    # ✅ Corrigido: campo 'papel' no lugar de 'role', já retorna o valor do Enum
+    return {"id": usuario.id, "email": usuario.email, "papel": usuario.papel.value}
