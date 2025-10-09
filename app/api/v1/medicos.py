@@ -24,7 +24,7 @@ def obter_usuario_atual(
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
-        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
             current_user["email"] = usuario.email
@@ -41,12 +41,11 @@ def listar_medicos(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    if usuario_atual.get("role") not in ["ADMIN", "MEDICO"]:
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     medicos = db.query(m.Medico).offset((pagina - 1) * tamanho).limit(tamanho).all()
 
-    # Log da listagem
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -67,14 +66,13 @@ def obter_medico(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    if usuario_atual.get("role") not in ["ADMIN", "MEDICO"]:
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    # Log de leitura individual
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -100,7 +98,7 @@ def criar_medico(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    if usuario_atual.get("role") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
 
     if db.query(m.Medico).filter(m.Medico.email == email).first():
@@ -119,7 +117,6 @@ def criar_medico(
     db.commit()
     db.refresh(novo_medico)
 
-    # Log de criação
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -146,7 +143,7 @@ def atualizar_medico(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    if usuario_atual.get("role") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode atualizar médicos")
 
     db_medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
@@ -167,7 +164,6 @@ def atualizar_medico(
     db.commit()
     db.refresh(db_medico)
 
-    # Log de atualização
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -189,7 +185,7 @@ def deletar_medico(
         db: Session = Depends(get_db_session),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    if usuario_atual.get("role") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir médicos")
 
     db_medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
@@ -199,7 +195,6 @@ def deletar_medico(
     db_medico.ativo = False
     db.commit()
 
-    # Log de exclusão (soft delete)
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),

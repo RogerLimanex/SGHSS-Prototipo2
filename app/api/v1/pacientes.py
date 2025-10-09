@@ -19,13 +19,9 @@ def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db_session)
 ):
-    """
-    Retorna o usuário autenticado com email garantido.
-    Isso evita falhas nos logs quando o token JWT não contém o campo 'email'.
-    """
     usuario_email = current_user.get("email")
     if not usuario_email:
-        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("sub"))).first()
+        usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
             current_user["email"] = usuario.email
@@ -42,11 +38,10 @@ def listar_pacientes(
         db: Session = Depends(get_db_session),
         current_user=Depends(obter_usuario_atual)
 ):
-    if current_user.get("role") not in ["ADMIN", "MEDICO"]:
+    if current_user.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     pacientes = db.query(m.Paciente).offset((page - 1) * size).limit(size).all()
 
-    # Log da listagem
     registrar_log(
         db=db,
         usuario_email=current_user.get("email"),
@@ -67,14 +62,13 @@ def obter_paciente(
         db: Session = Depends(get_db_session),
         current_user=Depends(obter_usuario_atual)
 ):
-    if current_user.get("role") not in ["ADMIN", "MEDICO"]:
+    if current_user.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
-    # Log da leitura individual
     registrar_log(
         db=db,
         usuario_email=current_user.get("email"),
@@ -101,7 +95,7 @@ def criar_paciente(
         db: Session = Depends(get_db_session),
         current_user=Depends(obter_usuario_atual)
 ):
-    if current_user.get("role") not in ["ADMIN", "MEDICO"]:
+    if current_user.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     if db.query(m.Paciente).filter(m.Paciente.email == email).first():
@@ -119,7 +113,6 @@ def criar_paciente(
     db.commit()
     db.refresh(novo)
 
-    # Log da criação
     registrar_log(
         db=db,
         usuario_email=current_user.get("email"),
@@ -145,14 +138,13 @@ def atualizar_paciente(
         db: Session = Depends(get_db_session),
         current_user=Depends(obter_usuario_atual)
 ):
-    if current_user.get("role") not in ["ADMIN", "MEDICO"]:
+    if current_user.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     db_paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
-    # Atualiza campos enviados
     if nome is not None:
         db_paciente.nome = nome
     if email is not None:
@@ -165,7 +157,6 @@ def atualizar_paciente(
     db.commit()
     db.refresh(db_paciente)
 
-    # Log da atualização
     registrar_log(
         db=db,
         usuario_email=current_user.get("email"),
@@ -187,7 +178,7 @@ def deletar_paciente(
         db: Session = Depends(get_db_session),
         current_user=Depends(obter_usuario_atual)
 ):
-    if current_user.get("role") != "ADMIN":
+    if current_user.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir")
 
     db_paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
@@ -197,7 +188,6 @@ def deletar_paciente(
     db.delete(db_paciente)
     db.commit()
 
-    # Log da exclusão
     registrar_log(
         db=db,
         usuario_email=current_user.get("email"),
