@@ -62,7 +62,7 @@ def listar_consultas(
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
-    papel = usuario_atual.get("role")
+    papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     query = db.query(Consulta)
@@ -123,7 +123,7 @@ def obter_consulta(
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = usuario_atual.get("role")
+    papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value and consulta.paciente_id != user_id:
@@ -165,7 +165,7 @@ def criar_consulta(
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
-    if usuario_atual.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
+    if usuario_atual.get("papel") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
     data_hora = parse_data_hora(data_consulta, hora_consulta)
@@ -242,7 +242,7 @@ def atualizar_consulta(
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = usuario_atual.get("role")
+    papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value:
@@ -298,7 +298,7 @@ def cancelar_consulta(
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
 
-    papel = usuario_atual.get("role")
+    papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     if papel == PapelUsuario.PACIENTE.value and consulta.paciente_id != user_id:

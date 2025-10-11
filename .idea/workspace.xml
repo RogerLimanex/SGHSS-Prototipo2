@@ -4,18 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE">
-      <change afterPath="$PROJECT_DIR$/app/api/v1/backup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/financeiro.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/relatorios.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/schemas/financeiro.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/schemas/leito.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/schemas/suprimento.py" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo primeiro commit:&#10;&#10;Resumo: Estrutura completa do SGHSS implementada&#10;&#10;- Endpoints principais criados: &#10;  - Pacientes, Médicos, Consultas, Prescrições, Teleconsultas, Prontuários, Auditoria&#10;  - Financeiro, Relatórios e Backup (estrutura base criada)&#10;- Schemas Pydantic definidos para todos os módulos&#10;- Controle de perfis e permissões implementado (ADMIN, MEDICO, PACIENTE)&#10;- Registro de logs e auditoria habilitado em todos os CRUDs&#10;- Uploads de arquivos configurados e servidos via /uploads&#10;- Migrações e populamento do banco SQLite automatizados&#10;- Arquivo main.py completo e funcional&#10;- README.md criado com descrição do projeto, instalação, execução e endpoints">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/relatorios.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/relatorios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -302,7 +295,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760149874039</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Vigésimo primeiro commit:&#10;&#10;Resumo: Estrutura completa do SGHSS implementada&#10;&#10;- Endpoints principais criados: &#10;  - Pacientes, Médicos, Consultas, Prescrições, Teleconsultas, Prontuários, Auditoria&#10;  - Financeiro, Relatórios e Backup (estrutura base criada)&#10;- Schemas Pydantic definidos para todos os módulos&#10;- Controle de perfis e permissões implementado (ADMIN, MEDICO, PACIENTE)&#10;- Registro de logs e auditoria habilitado em todos os CRUDs&#10;- Uploads de arquivos configurados e servidos via /uploads&#10;- Migrações e populamento do banco SQLite automatizados&#10;- Arquivo main.py completo e funcional&#10;- README.md criado com descrição do projeto, instalação, execução e endpoints">
+      <option name="closed" value="true" />
+      <created>1760212633995</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1760212633995</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -317,7 +318,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Primeiro commit - Servidor funcionando" />
     <MESSAGE value="Segundo commit - ENDPOINTS auth (login, create_test_admin) e patients funcionando" />
     <MESSAGE value="Terceiro commit - Indentação" />
     <MESSAGE value="Quarto commit: * GET /api/v1/patients/ - 200 OK (listar)&#10;* POST /api/v1/patients/ - 201 Created (criar)&#10;* GET /api/v1/patients/1 - 200 OK (obter por ID)&#10;* PUT /api/v1/patients/1 - 200 OK (atualizar)&#10;* DELETE /api/v1/patients/1 - 204 No Content (deletar)&#10;&#10;Resumo:&#10;* FastAPI configurado e rodando&#10;* Autenticação JWT com roles&#10;* Banco de dados SQLite com migrações automáticas&#10;* CRUD COMPLETO para Patients&#10;* Validações e segurança implementadas&#10;* Documentação Swagger interativa&#10;* Paginação funcionando&#10;* Hot reload para desenvolvimento" />
@@ -342,6 +342,7 @@
     <MESSAGE value="Décimo oitavo commit:&#10;&#10;Corrigido erro de criação de prontuário: adicionada coluna 'status' na tabela 'prontuarios' para suportar status ATIVO/CANCELADO." />
     <MESSAGE value="Décimo nono commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
     <MESSAGE value="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
-    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
+    <MESSAGE value="Vigésimo primeiro commit:&#10;&#10;Resumo: Estrutura completa do SGHSS implementada&#10;&#10;- Endpoints principais criados: &#10;  - Pacientes, Médicos, Consultas, Prescrições, Teleconsultas, Prontuários, Auditoria&#10;  - Financeiro, Relatórios e Backup (estrutura base criada)&#10;- Schemas Pydantic definidos para todos os módulos&#10;- Controle de perfis e permissões implementado (ADMIN, MEDICO, PACIENTE)&#10;- Registro de logs e auditoria habilitado em todos os CRUDs&#10;- Uploads de arquivos configurados e servidos via /uploads&#10;- Migrações e populamento do banco SQLite automatizados&#10;- Arquivo main.py completo e funcional&#10;- README.md criado com descrição do projeto, instalação, execução e endpoints" />
+    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo primeiro commit:&#10;&#10;Resumo: Estrutura completa do SGHSS implementada&#10;&#10;- Endpoints principais criados: &#10;  - Pacientes, Médicos, Consultas, Prescrições, Teleconsultas, Prontuários, Auditoria&#10;  - Financeiro, Relatórios e Backup (estrutura base criada)&#10;- Schemas Pydantic definidos para todos os módulos&#10;- Controle de perfis e permissões implementado (ADMIN, MEDICO, PACIENTE)&#10;- Registro de logs e auditoria habilitado em todos os CRUDs&#10;- Uploads de arquivos configurados e servidos via /uploads&#10;- Migrações e populamento do banco SQLite automatizados&#10;- Arquivo main.py completo e funcional&#10;- README.md criado com descrição do projeto, instalação, execução e endpoints" />
   </component>
 </project>
