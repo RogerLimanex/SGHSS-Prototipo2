@@ -1,26 +1,209 @@
-# SGHSS - Protótipo (FastAPI)
+# 🏥 SGHSS - Sistema de Gestão Hospitalar e de Serviços de Saúde
 
-Este repositório contém um protótipo mínimo do SGHSS (Sistema de Gestão Hospitalar e de Serviços de Saúde).
-Inclui um backend em FastAPI (SQLite para desenvolvimento) e um frontend simples (HTML/CSS).
+**Protótipo Back-end desenvolvido com FastAPI**, voltado à administração de pacientes, profissionais de saúde, consultas, prontuários, prescrições e telemedicina.  
+Inclui autenticação JWT, controle de acesso por perfil, auditoria LGPD e módulos administrativos.
 
-# Como rodar localmente (modo simples)
-Recomendado: Python 3.11+
+---
 
+## 🚀 Tecnologias Utilizadas
+
+- **Python 3.11+**
+- **FastAPI**
+- **SQLAlchemy**
+- **Pydantic**
+- **JWT (Autenticação e Controle de Acesso)**
+- **SQLite (banco padrão)**
+- **Uvicorn** (servidor)
+- **Logs e Auditoria com LGPD**
+
+---
+
+## ⚙️ Estrutura de Pastas
+
+```
+app/
+ ├── api/v1/
+ │   ├── autenticacao.py
+ │   ├── pacientes.py
+ │   ├── medicos.py
+ │   ├── consultas.py
+ │   ├── prescricoes.py
+ │   ├── teleconsultas.py
+ │   ├── prontuario.py
+ │   ├── auditoria.py
+ │   ├── financeiro.py
+ │   ├── relatorios.py
+ │   └── backup.py
+ │
+ ├── core/
+ │   ├── security.py
+ │   └── config.py
+ │
+ ├── db/
+ │   ├── base.py
+ │   ├── migrations.py
+ │   └── session.py
+ │
+ ├── models/
+ ├── schemas/
+ ├── utils/
+ │   └── logs.py
+ │
+ ├── uploads/
+ └── main.py
+```
+
+---
+
+## 🧩 Perfis de Usuário
+
+| Perfil | Permissões principais |
+|--------|------------------------|
+| **ADMIN** | Acesso total a todos os módulos e relatórios |
+| **MEDICO** | CRUD de pacientes, consultas, prontuários e prescrições |
+| **PACIENTE** | Agendar consultas, acessar histórico, visualizar prescrições |
+
+---
+
+## 🔐 Autenticação
+
+Autenticação baseada em **JWT**.  
+Para acessar os endpoints protegidos, obtenha um token via `/api/v1/autenticacao/login` e envie nos headers:
+
+```http
+Authorization: Bearer <seu_token_aqui>
+```
+
+---
+
+## 🧾 Principais Endpoints
+
+### 🔹 Autenticação (`/api/v1/autenticacao`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `POST` | `/login` | Realiza login e retorna token JWT |
+| `POST` | `/registrar` | Cadastra novo usuário |
+| `GET` | `/me` | Retorna dados do usuário autenticado |
+
+---
+
+### 🔹 Pacientes (`/api/v1/pacientes`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista todos os pacientes |
+| `POST` | `/` | Cadastra paciente |
+| `PUT` | `/{id}` | Atualiza dados do paciente |
+| `DELETE` | `/{id}` | Exclui paciente |
+
+---
+
+### 🔹 Médicos (`/api/v1/medicos`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista médicos |
+| `POST` | `/` | Cadastra médico |
+| `PUT` | `/{id}` | Atualiza médico |
+| `DELETE` | `/{id}` | Exclui médico |
+
+---
+
+### 🔹 Consultas (`/api/v1/consultas`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista consultas |
+| `POST` | `/` | Agenda nova consulta |
+| `PUT` | `/{id}` | Atualiza dados da consulta |
+| `DELETE` | `/{id}` | Cancela consulta |
+
+---
+
+### 🔹 Prontuários (`/api/v1/prontuario`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `POST` | `/prontuarios` | Cria prontuário com upload opcional |
+| `GET` | `/prontuarios` | Lista todos os prontuários |
+| `POST` | `/prontuarios/{id}/cancelar` | Cancela prontuário |
+
+---
+
+### 🔹 Prescrições (`/api/v1/prescricoes`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista prescrições |
+| `POST` | `/` | Cria nova prescrição |
+| `PUT` | `/{id}` | Atualiza prescrição |
+| `DELETE` | `/{id}` | Cancela prescrição |
+
+---
+
+### 🔹 Teleconsultas (`/api/v1/teleconsultas`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista teleconsultas |
+| `POST` | `/` | Cria teleconsulta (com URL de vídeo) |
+| `PUT` | `/{id}` | Atualiza teleconsulta |
+| `DELETE` | `/{id}` | Cancela teleconsulta |
+
+---
+
+### 🔹 Financeiro (`/api/v1/financeiro`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista registros financeiros |
+| `POST` | `/` | Adiciona lançamento |
+| `PUT` | `/{id}` | Atualiza lançamento |
+| `DELETE` | `/{id}` | Remove lançamento |
+
+---
+
+### 🔹 Relatórios (`/api/v1/relatorios`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/pacientes` | Relatório de pacientes cadastrados |
+| `GET` | `/consultas` | Relatório de consultas realizadas |
+| `GET` | `/financeiro` | Relatório financeiro consolidado |
+| `GET` | `/geral` | Resumo geral (pacientes, médicos, consultas) |
+
+---
+
+### 🔹 Backup (`/api/v1/backup`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/exportar` | Gera backup do banco SQLite |
+| `POST` | `/restaurar` | Restaura backup enviado |
+| `GET` | `/listar` | Lista backups disponíveis |
+
+---
+
+### 🔹 Auditoria (`/api/v1/auditoria`)
+| Método | Rota | Descrição |
+|--------|------|------------|
+| `GET` | `/` | Lista registros de log/auditoria |
+| `GET` | `/{id}` | Detalha log específico |
+
+---
+
+## 🧠 LGPD e Auditoria
+
+- Todos os CRUDs registram logs automáticos (tabela: **Auditoria**).
+- Campos sensíveis são protegidos e/ou criptografados.
+- Controle de acesso por **perfil de usuário**.
+
+---
+
+## 🧰 Execução do Projeto
+
+### ▶️ Rodar localmente
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # ou .venv\Scripts\activate no Windows
-pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Abra no navegador: http://localhost:8000/frontend/login.html
+### 🌐 Acessar documentação
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Redoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-# Usando Docker (opcional)
-Construir e subir com docker-compose:
-```bash
-docker-compose up --build
-```
+---
 
-# Observações
-- Esta é uma versão protótipo para testes e aprendizado. Em produção, use PostgreSQL, variáveis de ambiente seguras, TLS, KMS para chaves e configuração de usuários/senhas.
-- JWT secret padrão está em `app/core/security.py` como `CHANGE_ME`. Troque para valor seguro em produção.
+## 🧾 Licença
+Projeto acadêmico desenvolvido para fins de estudo e demonstração.  
+© 2025 — **Roger de Oliveira Lima**

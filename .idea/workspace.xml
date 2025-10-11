@@ -4,9 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Décimo nono commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE">
+      <change afterPath="$PROJECT_DIR$/app/api/v1/backup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/financeiro.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/relatorios.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/financeiro.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/leito.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/suprimento.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -285,7 +294,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760148603809</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE">
+      <option name="closed" value="true" />
+      <created>1760149874039</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1760149874039</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -324,6 +341,7 @@
     <MESSAGE value="Décimo setimo commit:&#10;&#10;Ajuste dos endpoints de autenticação e logs:&#10;&#10;- Padronizada função `obter_usuario_atual` para garantir o campo email em todos os endpoints.&#10;- Unificados logs com `registrar_log`, seguindo padrão dos módulos `medicos.py` e `consultas.py`.&#10;- Todos os logs utilizam agora: `usuario_email`, `tabela=&quot;usuarios&quot;`, `registro_id`, `acao`, `detalhes`.&#10;- Login, logout, registro de usuário, listagem de usuários e dados do usuário logado foram atualizados.&#10;- Nomes de campos padronizados: `id`, `email`, `papel`." />
     <MESSAGE value="Décimo oitavo commit:&#10;&#10;Corrigido erro de criação de prontuário: adicionada coluna 'status' na tabela 'prontuarios' para suportar status ATIVO/CANCELADO." />
     <MESSAGE value="Décimo nono commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
-    <option name="LAST_COMMIT_MESSAGE" value="Décimo nono commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
+    <MESSAGE value="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
+    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
   </component>
 </project>
