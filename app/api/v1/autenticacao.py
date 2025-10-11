@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import timedelta
 from pydantic import BaseModel
 
-from app.db import get_db_session
+from app.db import get_db
 from app import models as m
 from app.core import security
 from app.utils.logs import registrar_log
@@ -26,7 +26,7 @@ class LoginSchema(BaseModel):
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     email = current_user.get("email")
     if not email:
@@ -45,7 +45,7 @@ def login(
         response: Response,
         username: str = Form(..., description="Email do usuário"),
         password: str = Form(..., description="Senha do usuário"),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     usuario = db.query(m.Usuario).filter(m.Usuario.email == username).first()
     if not usuario or not security.verify_password(password, usuario.hashed_password):
@@ -110,7 +110,7 @@ def registrar(
         email: str = Form(...),
         password: str = Form(...),
         papel: Optional[str] = Form("PACIENTE"),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         current_user=Depends(obter_usuario_atual)
 ):
     if db.query(m.Usuario).filter(m.Usuario.email == email).first():
@@ -152,7 +152,7 @@ def registrar(
 @roteador.get("/usuarios")
 def listar_usuarios(
         current_user=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     if current_user.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
@@ -186,7 +186,7 @@ def listar_usuarios(
 @roteador.get("/me")
 def obter_me(
         current_user=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
     if not usuario:

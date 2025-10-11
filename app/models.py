@@ -1,11 +1,11 @@
+# D:\ProjectSGHSS\app\models.py
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, Enum
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from app.db import Base  # import corrigido
 import enum
-
-from app.db import Base  # declarative_base do projeto
 
 
 # -------------------
@@ -28,7 +28,7 @@ class PapelUsuario(str, enum.Enum):
 # MODELOS
 # -------------------
 class Usuario(Base):
-    __tablename__ = "usuarios"  # tabela em português
+    __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), unique=True, index=True, nullable=False)
@@ -37,7 +37,6 @@ class Usuario(Base):
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamento com logs (relação um-para-muitos)
     logs_auditoria = relationship("LogAuditoria", back_populates="usuario")
 
 
@@ -54,7 +53,6 @@ class Paciente(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     consultas = relationship("Consulta", back_populates="paciente")
     prontuarios = relationship("Prontuario", back_populates="paciente")
     prescricoes = relationship("Receita", back_populates="paciente")
@@ -73,7 +71,6 @@ class Medico(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     consultas = relationship("Consulta", back_populates="medico")
     prontuarios = relationship("Prontuario", back_populates="medico")
     prescricoes = relationship("Receita", back_populates="medico")
@@ -92,7 +89,6 @@ class Consulta(Base):
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="consultas")
     medico = relationship("Medico", back_populates="consultas")
     teleconsultas = relationship("Teleconsulta", back_populates="consulta")
@@ -105,12 +101,15 @@ class Prontuario(Base):
     paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
     medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
-    data_hora = Column(DateTime, default=datetime.utcnow)
-    status = Column(String, default="ATIVO")  # ← adiciona aqui
+    data_hora = Column(DateTime, nullable=True)
+    status = Column(String, default="ATIVO", nullable=True)
+    anexo = Column(Text, nullable=True)  # arquivo ou caminho do anexo
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="prontuarios")
     medico = relationship("Medico", back_populates="prontuarios")
+
+    def __repr__(self):
+        return f"<Prontuario(id={self.id}, paciente_id={self.paciente_id}, medico_id={self.medico_id}, status={self.status})>"
 
 
 class Receita(Base):
@@ -123,9 +122,8 @@ class Receita(Base):
     dosagem = Column(String(100), nullable=False)
     instrucoes = Column(Text)
     data_hora = Column(DateTime, default=datetime.utcnow)
-    status = Column(String(20), default="ATIVA")  # ✅ adicionar esta linha
+    status = Column(String(20), default="ATIVA")
 
-    # Relacionamentos
     paciente = relationship("Paciente", back_populates="prescricoes")
     medico = relationship("Medico", back_populates="prescricoes")
 
@@ -139,7 +137,6 @@ class Teleconsulta(Base):
     data_hora = Column(DateTime, default=datetime.utcnow)
     status = Column(Enum(StatusConsulta), default=StatusConsulta.AGENDADA, nullable=False)
 
-    # Relacionamentos
     consulta = relationship("Consulta", back_populates="teleconsultas")
 
 
@@ -151,5 +148,4 @@ class LogAuditoria(Base):
     acao = Column(String(255), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamento
     usuario = relationship("Usuario", back_populates="logs_auditoria")

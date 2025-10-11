@@ -4,7 +4,7 @@ from sqlalchemy import and_, func
 from typing import Optional
 from datetime import datetime, timedelta
 
-from app.db import get_db_session
+from app.db import get_db
 from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario, Usuario
 from app.core import security
 from app.utils.logs import registrar_log
@@ -38,7 +38,7 @@ def formatar_data_hora(dt: datetime) -> dict:
 # --------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -60,7 +60,7 @@ def listar_consultas(
         medico_id: Optional[int] = None,
         paciente_id: Optional[int] = None,
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     papel = usuario_atual.get("role")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
@@ -117,7 +117,7 @@ def listar_consultas(
 def obter_consulta(
         consulta_id: int,
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
@@ -163,7 +163,7 @@ def criar_consulta(
         duracao_minutos: int = 30,
         observacoes: Optional[str] = None,
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     if usuario_atual.get("role") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
@@ -236,7 +236,7 @@ def atualizar_consulta(
         status_update: Optional[str] = None,
         observacoes: Optional[str] = None,
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
@@ -292,7 +292,7 @@ def atualizar_consulta(
 def cancelar_consulta(
         consulta_id: int,
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:

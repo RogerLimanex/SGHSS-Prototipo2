@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
-from app.db import get_db_session
+from app.db import get_db
 from app import models as m
 import os
 import bcrypt
@@ -57,7 +57,7 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=A
 # -------------------------------
 # Obtém o usuário logado (via cookie ou header)
 # -------------------------------
-def get_current_user(request: Request, db=Depends(get_db_session)):
+def get_current_user(request: Request, db=Depends(get_db)):
     """Obtém o usuário autenticado a partir do token JWT."""
     token = None
 

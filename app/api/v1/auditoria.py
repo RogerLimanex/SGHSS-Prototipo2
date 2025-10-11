@@ -1,7 +1,7 @@
 # D:\ProjectSGHSS\app\api\v1\auditoria.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db import get_db_session
+from app.db import get_db
 from app.models.audit import AuditLog
 from app.core import security
 
@@ -13,7 +13,7 @@ roteador = APIRouter()
 # --------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     """
     Retorna o usuário autenticado com email garantido.
@@ -35,7 +35,7 @@ def obter_usuario_atual(
 @roteador.get("/audit_logs", summary="Listar logs de auditoria", tags=["Auditoria"])
 def listar_logs(
         usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     """
     Lista todos os registros de auditoria do sistema (somente ADMIN).

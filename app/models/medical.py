@@ -106,8 +106,9 @@ class Prontuario(Base):
     paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
     medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
+    anexo = Column(String(255), nullable=True)  # ✅ novo campo
     data_hora = Column(DateTime, default=datetime.utcnow)
-    status = Column(String, default="ATIVO")  # ← adiciona aqui
+    status = Column(String, default="ATIVO")
 
     paciente = relationship("Paciente", back_populates="prontuarios")
     medico = relationship("Medico", back_populates="prontuarios")

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from app.db import get_db_session
+from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas.medico import MedicoResponse
@@ -16,7 +16,7 @@ roteador = APIRouter()
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     """
     Retorna o usuário autenticado com email garantido.
@@ -38,7 +38,7 @@ def obter_usuario_atual(
 def listar_medicos(
         pagina: int = 1,
         tamanho: int = 20,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -63,7 +63,7 @@ def listar_medicos(
 @roteador.get("/{medico_id}", response_model=MedicoResponse)
 def obter_medico(
         medico_id: int,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -95,7 +95,7 @@ def criar_medico(
         telefone: Optional[str] = Form(None),
         crm: str = Form(...),
         especialidade: Optional[str] = Form(None),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") != "ADMIN":
@@ -140,7 +140,7 @@ def atualizar_medico(
         telefone: Optional[str] = Form(None),
         crm: Optional[str] = Form(None),
         especialidade: Optional[str] = Form(None),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") != "ADMIN":
@@ -182,7 +182,7 @@ def atualizar_medico(
 @roteador.delete("/{medico_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_medico(
         medico_id: int,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") != "ADMIN":

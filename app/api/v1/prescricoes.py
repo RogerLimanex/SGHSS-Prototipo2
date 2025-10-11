@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 
-from app.db import get_db_session
+from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas import PrescricaoResponse
@@ -18,7 +18,7 @@ roteador = APIRouter()
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     """Garante que o usuário atual tenha o campo 'email' disponível."""
     usuario_email = current_user.get("email")
@@ -40,7 +40,7 @@ def criar_prescricao(
         medicamento: str = Form(...),
         dosagem: str = Form(...),
         instrucoes: str = Form(...),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
@@ -75,7 +75,7 @@ def criar_prescricao(
 # ----------------------------
 @roteador.get("/prescricoes", response_model=List[PrescricaoResponse])
 def listar_prescricoes(
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
@@ -100,7 +100,7 @@ def listar_prescricoes(
 @roteador.patch("/prescricoes/{prescricao_id}/cancelar", response_model=PrescricaoResponse)
 def cancelar_prescricao(
         prescricao_id: int,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:

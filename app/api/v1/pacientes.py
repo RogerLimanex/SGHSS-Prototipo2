@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from app.db import get_db_session
+from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas.paciente import PacienteResponse
@@ -18,7 +18,7 @@ roteador = APIRouter()
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db_session)
+        db: Session = Depends(get_db)
 ):
     """
     Retorna o usuário autenticado com email garantido.
@@ -40,7 +40,7 @@ def obter_usuario_atual(
 def listar_pacientes(
         pagina: int = 1,
         tamanho: int = 20,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -64,7 +64,7 @@ def listar_pacientes(
 @roteador.get("/{paciente_id}", response_model=PacienteResponse)
 def obter_paciente(
         paciente_id: int,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -97,7 +97,7 @@ def criar_paciente(
         cpf: str = Form(...),
         data_nascimento: str = Form(...),
         endereco: Optional[str] = Form(None),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -140,7 +140,7 @@ def atualizar_paciente(
         email: Optional[str] = Form(None),
         telefone: Optional[str] = Form(None),
         endereco: Optional[str] = Form(None),
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
@@ -180,7 +180,7 @@ def atualizar_paciente(
 @roteador.delete("/{paciente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_paciente(
         paciente_id: int,
-        db: Session = Depends(get_db_session),
+        db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     if usuario_atual.get("papel") != "ADMIN":
