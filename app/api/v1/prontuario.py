@@ -8,7 +8,7 @@ from datetime import datetime
 from app.db import get_db
 from app import models as m
 from app.core import security
-from app.schemas.registro_medico import ProntuarioMedicoResponse
+from app.schemas.prontuario import ProntuarioMedicoResponse
 from app.utils.logs import registrar_log
 
 roteador = APIRouter()

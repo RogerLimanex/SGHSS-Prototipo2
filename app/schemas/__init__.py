@@ -14,4 +14,4 @@ from .teleconsulta import TeleconsultaCreate, TeleconsultaResponse
 from .prescricao import PrescricaoCreate, PrescricaoResponse
 
 # Prontuários
-from .registro_medico import ProntuarioMedicoCreate, ProntuarioMedicoResponse
+from .prontuario import ProntuarioMedicoCreate, ProntuarioMedicoResponse
