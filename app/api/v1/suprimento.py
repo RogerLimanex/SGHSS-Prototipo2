@@ -1,24 +1,26 @@
 # D:\ProjectSGHSS\app\api\v1\suprimento.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import date
+from typing import List, Optional
+from datetime import datetime
 from app.db import get_db
 from app import models as m
 from app.core import security
-from app.schemas.suprimento import SuprimentoBase, SuprimentoResponse
+from app.schemas.suprimento import SuprimentoResponse
 from app.utils.logs import registrar_log
 
-roteador = APIRouter()
+roteador = APIRouter()  # Inicializa o roteador de endpoints desta rota
 
 
-# ----------------------------
-# Obter usuário atual garantindo email
-# ----------------------------
-def obter_usuario_atual(current_user=Depends(security.get_current_user), db: Session = Depends(get_db)):
+# ============================================================
+# Função auxiliar: obter usuário atual garantindo campo "email"
+# ============================================================
+def obter_usuario_atual(
+        current_user=Depends(security.get_current_user),
+        db: Session = Depends(get_db)
+):
     """
-    Garante que o usuário autenticado possua o campo 'email'.
-    Evita falhas nos logs quando o token JWT não contém email.
+    Retorna o usuário autenticado garantindo que o campo 'email' esteja presente.
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -29,53 +31,95 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user), db: Ses
     return current_user
 
 
-# ----------------------------
-# Criar novo suprimento
-# ----------------------------
-@roteador.post("/suprimentos", response_model=SuprimentoResponse)
+# ============================================================
+# Função utilitária: formatar data no retorno
+# ============================================================
+def formatar_data_retorno(suprimento: m.Suprimento) -> dict:
+    """
+    Converte objeto ORM de Suprimento em dicionário
+    e formata a data de validade para dd/mm/yyyy.
+    """
+    return {
+        "id": suprimento.id,
+        "nome": suprimento.nome,
+        "quantidade": suprimento.quantidade,
+        "data_validade": suprimento.data_validade.strftime("%d/%m/%Y") if suprimento.data_validade else None,
+        "descricao": suprimento.descricao
+    }
+
+
+# ============================================================
+# CRIAR SUPRIMENTO
+# ============================================================
+@roteador.post("/suprimentos", response_model=SuprimentoResponse, status_code=status.HTTP_201_CREATED)
 def criar_suprimento(
-        suprimento: SuprimentoBase,
+        nome: str,
+        quantidade: int,
+        data_validade: Optional[str] = None,
+        descricao: Optional[str] = None,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Cria um novo registro de suprimento.
-    Permissão restrita a usuários ADMIN.
-    Registra log da operação.
+    Cria um novo suprimento no sistema.
+
+    - **Acesso restrito:** Apenas ADMIN
+    - **Campos obrigatórios:** nome, quantidade
+    - **Campos opcionais:** data_validade (dd/mm/yyyy), descricao
     """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    novo = m.Suprimento(**suprimento.dict())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
+    # Converte data_validade de string para date
+    validade = None
+    if data_validade and data_validade.strip():
+        try:
+            validade = datetime.strptime(data_validade, "%d/%m/%Y").date()
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Data inválida, use o formato dd/mm/yyyy")
 
+    # Criação do registro
+    novo_suprimento = m.Suprimento(
+        nome=nome,
+        quantidade=quantidade,
+        data_validade=validade,
+        descricao=descricao
+    )
+    db.add(novo_suprimento)
+    db.commit()
+    db.refresh(novo_suprimento)
+
+    # Log de auditoria
     registrar_log(
         db,
         usuario_atual["email"],
         "Suprimento",
-        registro_id=novo.id,
+        registro_id=novo_suprimento.id,
         acao="CREATE",
-        detalhes=f"Criado suprimento {novo.nome}"
+        detalhes=f"Criado suprimento '{nome}' com quantidade {quantidade}"
     )
-    return novo
+
+    return formatar_data_retorno(novo_suprimento)
 
 
-# ----------------------------
-# Listar todos os suprimentos
-# ----------------------------
+# ============================================================
+# LISTAR SUPRIMENTOS
+# ============================================================
 @roteador.get("/suprimentos", response_model=List[SuprimentoResponse])
-def listar_suprimentos(db: Session = Depends(get_db), usuario_atual=Depends(obter_usuario_atual)):
+def listar_suprimentos(
+        db: Session = Depends(get_db),
+        usuario_atual=Depends(obter_usuario_atual)
+):
     """
     Lista todos os suprimentos cadastrados.
-    Permissão para usuários ADMIN e MEDICO.
-    Registra log da operação.
+
+    - **Acesso restrito:** ADMIN ou MEDICO
+    - **Retorno:** Lista de suprimentos com datas no formato dd/mm/yyyy
     """
     if usuario_atual["papel"] not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    lista = db.query(m.Suprimento).all()
+    suprimentos = db.query(m.Suprimento).all()
 
     registrar_log(
         db,
@@ -84,37 +128,54 @@ def listar_suprimentos(db: Session = Depends(get_db), usuario_atual=Depends(obte
         acao="READ",
         detalhes="Listagem de suprimentos"
     )
-    return lista
+
+    return [formatar_data_retorno(s) for s in suprimentos]
 
 
-# ----------------------------
-# Atualizar suprimento existente
-# ----------------------------
-@roteador.put("/suprimentos/{id}", response_model=SuprimentoResponse)
+# ============================================================
+# ATUALIZAR SUPRIMENTO (PATCH)
+# ============================================================
+@roteador.patch("/suprimentos/{id}", response_model=SuprimentoResponse)
 def atualizar_suprimento(
         id: int,
-        dados: SuprimentoBase,
+        nome: Optional[str] = None,
+        quantidade: Optional[int] = None,
+        data_validade: Optional[str] = None,
+        descricao: Optional[str] = None,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Atualiza um suprimento existente pelo ID.
-    Permissão restrita a usuários ADMIN.
-    Registra log da operação.
+    Atualiza os campos de um suprimento existente pelo ID.
+
+    - **Acesso restrito:** Apenas ADMIN
+    - **Campos opcionais:** nome, quantidade, data_validade, descricao
+    - **Formatação de data:** dd/mm/yyyy
     """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    sup = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
-    if not sup:
+    suprimento = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
+    if not suprimento:
         raise HTTPException(status_code=404, detail="Suprimento não encontrado")
 
-    # Atualiza campos do suprimento com os dados recebidos
-    for campo, valor in dados.dict().items():
-        setattr(sup, campo, valor)
+    if nome is not None and nome.strip():
+        suprimento.nome = nome
+
+    if quantidade is not None:
+        suprimento.quantidade = quantidade
+
+    if data_validade is not None and data_validade.strip():
+        try:
+            suprimento.data_validade = datetime.strptime(data_validade, "%d/%m/%Y").date()
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Data inválida, use o formato dd/mm/yyyy")
+
+    if descricao is not None:
+        suprimento.descricao = descricao
 
     db.commit()
-    db.refresh(sup)
+    db.refresh(suprimento)
 
     registrar_log(
         db,
@@ -124,12 +185,13 @@ def atualizar_suprimento(
         acao="UPDATE",
         detalhes=f"Atualizado suprimento {id}"
     )
-    return sup
+
+    return formatar_data_retorno(suprimento)
 
 
-# ----------------------------
-# Remover suprimento
-# ----------------------------
+# ============================================================
+# REMOVER SUPRIMENTO
+# ============================================================
 @roteador.delete("/suprimentos/{id}")
 def remover_suprimento(
         id: int,
@@ -138,17 +200,18 @@ def remover_suprimento(
 ):
     """
     Remove um suprimento pelo ID.
-    Permissão restrita a usuários ADMIN.
-    Registra log da operação.
+
+    - **Acesso restrito:** Apenas ADMIN
+    - **Retorno:** Mensagem de confirmação
     """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    sup = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
-    if not sup:
+    suprimento = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
+    if not suprimento:
         raise HTTPException(status_code=404, detail="Suprimento não encontrado")
 
-    db.delete(sup)
+    db.delete(suprimento)
     db.commit()
 
     registrar_log(
@@ -160,4 +223,4 @@ def remover_suprimento(
         detalhes=f"Removido suprimento {id}"
     )
 
-    return {"detail": "Removido com sucesso"}
+    return {"detail": "Suprimento removido com sucesso"}

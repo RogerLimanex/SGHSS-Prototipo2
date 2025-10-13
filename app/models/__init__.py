@@ -15,3 +15,9 @@ from .medical import (
     StatusConsulta,
     PapelUsuario,
 )
+
+# Importa o modelo de suprimentos
+from .suprimento import Suprimento
+
+# Importa o modelo de Leitos
+from .leito import Leito

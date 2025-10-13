@@ -4,10 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo quarto commit:&#10;&#10;Refatoração completa dos endpoints da API (v1) com docstrings e comentários detalhados&#10;&#10;- Adicionados resumos explicativos (docstrings) para todos os endpoints.&#10;- Comentários antigos reescritos para maior clareza e padronização.&#10;- Função `obter_usuario_atual` detalhada em cada módulo para garantir email do usuário.&#10;- Endpoints revisados: medicos, pacientes, prescricoes, prontuario, relatorios, suprimento, teleconsultas.&#10;- Funcionalidade original mantida; logs e permissões preservadas.">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo quinto commit:&#10;&#10;🔧 Ajuste Backup e Swagger&#10;&#10;- Corrigida duplicação de tags no Swagger para endpoints de backup&#10;- Consolidado os endpoints de Backup e Restauração em uma única tag&#10;- Atualizado `backup.py` com docstrings completas e explicativas&#10;- Ajustado `main.py` para inclusão do roteador de backup sem tags duplicadas&#10;- Garantido que os endpoints de gerar e restaurar backup apareçam corretamente no Swagger">
+      <change afterPath="$PROJECT_DIR$/app/models/leito.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/suprimento.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/backup.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/backup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/medical.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/suprimento.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -326,7 +334,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760367307815</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Vigésimo quinto commit:&#10;&#10;🔧 Ajuste Backup e Swagger&#10;&#10;- Corrigida duplicação de tags no Swagger para endpoints de backup&#10;- Consolidado os endpoints de Backup e Restauração em uma única tag&#10;- Atualizado `backup.py` com docstrings completas e explicativas&#10;- Ajustado `main.py` para inclusão do roteador de backup sem tags duplicadas&#10;- Garantido que os endpoints de gerar e restaurar backup apareçam corretamente no Swagger">
+      <option name="closed" value="true" />
+      <created>1760373048423</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1760373048423</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -341,7 +357,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
     <MESSAGE value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
     <MESSAGE value="Segundo commit:&#10;&#10;O que esse models.py cobre:&#10;&#10;Usuários (User) com role e logs (AuditLog)&#10;&#10;Pacientes (Patient) com histórico (MedicalRecord) e prescrições (Prescription)&#10;&#10;Médicos (Doctor) com agenda (Appointment), prontuários e prescrições&#10;&#10;Consultas (Appointment) e teleconsultas (Teleconsultation)&#10;&#10;Auditoria de ações do usuário (AuditLog)&#10;&#10;Enumerações (AppointmentStatus, UserRole) para controle de status e perfis" />
     <MESSAGE value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
@@ -366,6 +381,7 @@
     <MESSAGE value="Vigésimo segundo commit:&#10;&#10;Atualiza relatórios com filtros de datas e renomeia Telemedicina para Teleconsultas&#10;&#10;- `/relatorios/teleconsultas` agora recebe `data_inicial` e `data_final` e filtra registros pelo período.&#10;- Todos os relatórios que retornam registros com datas (`consultas`, `prontuarios`, `teleconsultas`) agora incluem `data_inicial` e `data_final` no JSON.&#10;- Mantido padrão seguro de datas/horas (`DD/MM/YYYY` e `HH:MM`) e logs de acesso.&#10;- Renomeado endpoint de Telemedicina para Teleconsultas." />
     <MESSAGE value="Vigésimo terceiro commit:&#10;&#10;Renomeado schema de registro_medico.py para prontuario.py para padronização de nomenclatura" />
     <MESSAGE value="Vigésimo quarto commit:&#10;&#10;Refatoração completa dos endpoints da API (v1) com docstrings e comentários detalhados&#10;&#10;- Adicionados resumos explicativos (docstrings) para todos os endpoints.&#10;- Comentários antigos reescritos para maior clareza e padronização.&#10;- Função `obter_usuario_atual` detalhada em cada módulo para garantir email do usuário.&#10;- Endpoints revisados: medicos, pacientes, prescricoes, prontuario, relatorios, suprimento, teleconsultas.&#10;- Funcionalidade original mantida; logs e permissões preservadas." />
-    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo quarto commit:&#10;&#10;Refatoração completa dos endpoints da API (v1) com docstrings e comentários detalhados&#10;&#10;- Adicionados resumos explicativos (docstrings) para todos os endpoints.&#10;- Comentários antigos reescritos para maior clareza e padronização.&#10;- Função `obter_usuario_atual` detalhada em cada módulo para garantir email do usuário.&#10;- Endpoints revisados: medicos, pacientes, prescricoes, prontuario, relatorios, suprimento, teleconsultas.&#10;- Funcionalidade original mantida; logs e permissões preservadas." />
+    <MESSAGE value="Vigésimo quinto commit:&#10;&#10; Ajuste Backup e Swagger&#10;&#10;- Corrigida duplicação de tags no Swagger para endpoints de backup&#10;- Consolidado os endpoints de Backup e Restauração em uma única tag&#10;- Atualizado `backup.py` com docstrings completas e explicativas&#10;- Ajustado `main.py` para inclusão do roteador de backup sem tags duplicadas&#10;- Garantido que os endpoints de gerar e restaurar backup apareçam corretamente no Swagger" />
+    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo quinto commit:&#10;&#10; Ajuste Backup e Swagger&#10;&#10;- Corrigida duplicação de tags no Swagger para endpoints de backup&#10;- Consolidado os endpoints de Backup e Restauração em uma única tag&#10;- Atualizado `backup.py` com docstrings completas e explicativas&#10;- Ajustado `main.py` para inclusão do roteador de backup sem tags duplicadas&#10;- Garantido que os endpoints de gerar e restaurar backup apareçam corretamente no Swagger" />
   </component>
 </project>

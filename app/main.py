@@ -27,10 +27,12 @@ from app.api.v1.consultas import roteador as roteador_consultas
 from app.api.v1.prescricoes import roteador as roteador_prescricoes
 from app.api.v1.teleconsultas import roteador as roteador_teleconsultas
 from app.api.v1.prontuario import roteador as roteador_prontuario
+from app.api.v1.leito import roteador as roteador_leito
+from app.api.v1.suprimento import roteador as roteador_suprimento
 from app.api.v1.auditoria import roteador as roteador_auditoria
 from app.api.v1.financeiro import roteador as roteador_financeiro
 from app.api.v1.relatorios import roteador as roteador_relatorios
-from app.api.v1.backup import roteador as roteador_backup  # ✅ Ajustado para não duplicar tags
+from app.api.v1.backup import roteador as roteador_backup
 
 # Banco de dados e migrações
 from app.db.migrations import criar_tabelas, popular_dados
@@ -97,16 +99,12 @@ app.include_router(roteador_consultas, prefix="/api/v1/consultas", tags=["Consul
 app.include_router(roteador_teleconsultas, prefix="/api/v1/teleconsultas", tags=["Teleconsultas"])
 app.include_router(roteador_prescricoes, prefix="/api/v1/prescricoes", tags=["Prescrições"])
 app.include_router(roteador_prontuario, prefix="/api/v1/prontuario", tags=["Prontuários"])
+app.include_router(roteador_leito, prefix="/api/v1/leito", tags=["Leitos"])
+app.include_router(roteador_suprimento, prefix="/api/v1/suprimento", tags=["Suprimentos"])
 app.include_router(roteador_financeiro, prefix="/api/v1/financeiro", tags=["Financeiro"])
 app.include_router(roteador_relatorios, prefix="/api/v1/relatorios", tags=["Relatórios"])
 app.include_router(roteador_auditoria, prefix="/api/v1/auditoria", tags=["Auditoria"])
-
-# ✅ Backup ajustado para não gerar duplicação de tags no Swagger
-# As tags agora são definidas dentro do próprio arquivo `backup.py`
-app.include_router(
-    roteador_backup,
-    prefix="/api/v1/backup"  # Sem parâmetro `tags=[]` para evitar duplicações
-)
+app.include_router(roteador_backup, prefix="/api/v1/backup")  # Sem parâmetro `tags=[]` para evitar duplicações
 
 
 # ----------------------------

@@ -1,25 +1,51 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+# D:\ProjectSGHSS\app\api\v1\leito.py
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db import get_db
 from app import models as m
 from app.core import security
-from app.schemas.leito import LeitoBase, LeitoResponse
+from pydantic import BaseModel
 from app.utils.logs import registrar_log
 
+
+# ============================================================
+# SCHEMAS
+# ============================================================
+class LeitoBase(BaseModel):
+    """
+    Schema base para criar ou atualizar um leito.
+    """
+    numero: str
+    status: str
+    paciente_id: Optional[int] = None
+
+
+class LeitoResponse(LeitoBase):
+    """
+    Schema de resposta de um leito, incluindo o ID.
+    Compatível com objetos SQLAlchemy (from_attributes=True).
+    """
+    id: int
+
+    model_config = {"from_attributes": True}  # Pydantic v2
+
+
+# ============================================================
+# ROTEADOR
+# ============================================================
 roteador = APIRouter()
 
 
-# ----------------------------
-# Função auxiliar para obter usuário atual
-# ----------------------------
+# ============================================================
+# Função auxiliar: obter usuário autenticado
+# ============================================================
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
     """
-    Garante que o usuário atual possua email definido.
-    Consulta o banco caso necessário.
+    Obtém o usuário autenticado garantindo que o campo `email` esteja presente.
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -30,48 +56,48 @@ def obter_usuario_atual(
     return current_user
 
 
-# ----------------------------
-# CRIAR LEITO
-# ----------------------------
+# ============================================================
+# Endpoint: CRIAR LEITO
+# ============================================================
 @roteador.post("/leitos", response_model=LeitoResponse, status_code=status.HTTP_201_CREATED)
 def criar_leito(
-        leito: LeitoBase,
+        numero: str = Form(..., description="Número identificador do leito", example="101"),
+        status_leito: str = Form(..., description="Status atual do leito (Livre, Ocupado, Manutenção)",
+                                 example="Livre"),
+        paciente_id: Optional[int] = Form(None, description="ID do paciente associado (opcional)"),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
     Cria um novo leito hospitalar.
-    Apenas usuários com papel ADMIN podem criar leitos.
+
+    - **Acesso:** apenas ADMIN
+    - **Campos obrigatórios:** numero, status
+    - **Campos opcionais:** paciente_id
     """
     if usuario_atual.get("papel") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode criar leitos")
 
-    # Criação do objeto Leito
-    novo_leito = m.Leito(
-        numero=leito.numero,
-        status=leito.status,
-        paciente_id=leito.paciente_id
-    )
+    novo_leito = m.Leito(numero=numero, status=status_leito, paciente_id=paciente_id)
     db.add(novo_leito)
     db.commit()
     db.refresh(novo_leito)
 
-    # Registro de log
     registrar_log(
         db,
         usuario_atual["email"],
         "Leito",
-        novo_leito.id,
-        "CREATE",
-        f"Leito {leito.numero} criado com status {leito.status}"
+        registro_id=novo_leito.id,
+        acao="CREATE",
+        detalhes=f"Leito {numero} criado com status {status_leito}"
     )
 
     return novo_leito
 
 
-# ----------------------------
-# LISTAR LEITOS
-# ----------------------------
+# ============================================================
+# Endpoint: LISTAR LEITOS
+# ============================================================
 @roteador.get("/leitos", response_model=List[LeitoResponse])
 def listar_leitos(
         db: Session = Depends(get_db),
@@ -79,7 +105,8 @@ def listar_leitos(
 ):
     """
     Lista todos os leitos cadastrados.
-    Apenas usuários com papel ADMIN ou MEDICO podem acessar.
+
+    - **Acesso:** ADMIN ou MEDICO
     """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Acesso negado")
@@ -93,22 +120,27 @@ def listar_leitos(
         acao="READ",
         detalhes="Listagem de leitos"
     )
+
     return leitos
 
 
-# ----------------------------
-# ATUALIZAR LEITO
-# ----------------------------
-@roteador.put("/leitos/{leito_id}", response_model=LeitoResponse)
+# ============================================================
+# Endpoint: ATUALIZAR LEITO (PATCH)
+# ============================================================
+@roteador.patch("/leitos/{leito_id}", response_model=LeitoResponse)
 def atualizar_leito(
         leito_id: int,
-        dados: LeitoBase,
+        numero: Optional[str] = Form(None, description="Número identificador do leito", example="101"),
+        status_leito: Optional[str] = Form(None, description="Status atual do leito", example="Livre"),
+        paciente_id: Optional[int] = Form(None, description="ID do paciente associado", example=None),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Atualiza informações de um leito existente.
-    Apenas usuários ADMIN podem atualizar leitos.
+    Atualiza os campos de um leito existente.
+
+    - **Acesso:** apenas ADMIN
+    - **Campos opcionais:** numero, status, paciente_id
     """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado")
@@ -117,10 +149,13 @@ def atualizar_leito(
     if not leito:
         raise HTTPException(status_code=404, detail="Leito não encontrado")
 
-    # Atualização dos campos
-    leito.numero = dados.numero
-    leito.status = dados.status
-    leito.paciente_id = dados.paciente_id
+    if numero is not None:
+        leito.numero = numero
+    if status_leito is not None:
+        leito.status = status_leito
+    if paciente_id is not None:
+        leito.paciente_id = paciente_id
+
     db.commit()
     db.refresh(leito)
 
@@ -128,16 +163,17 @@ def atualizar_leito(
         db,
         usuario_atual["email"],
         "Leito",
-        leito.id,
-        "UPDATE",
-        f"Leito {leito_id} atualizado"
+        registro_id=leito.id,
+        acao="UPDATE",
+        detalhes=f"Leito {leito_id} atualizado"
     )
+
     return leito
 
 
-# ----------------------------
-# REMOVER LEITO
-# ----------------------------
+# ============================================================
+# Endpoint: REMOVER LEITO
+# ============================================================
 @roteador.delete("/leitos/{leito_id}")
 def remover_leito(
         leito_id: int,
@@ -145,8 +181,9 @@ def remover_leito(
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Remove um leito do sistema.
-    Apenas usuários ADMIN podem remover leitos.
+    Remove um leito pelo ID.
+
+    - **Acesso:** apenas ADMIN
     """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado")
@@ -162,8 +199,9 @@ def remover_leito(
         db,
         usuario_atual["email"],
         "Leito",
-        leito_id,
-        "DELETE",
-        f"Leito {leito_id} removido"
+        registro_id=leito_id,
+        acao="DELETE",
+        detalhes=f"Leito {leito_id} removido"
     )
+
     return {"detail": "Leito removido com sucesso"}
