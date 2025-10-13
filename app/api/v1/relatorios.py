@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\relatorios.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, date
@@ -10,7 +9,14 @@ from app.utils.logs import registrar_log
 roteador = APIRouter()
 
 
+# ----------------------------
+# Obter usuário atual garantindo email
+# ----------------------------
 def obter_usuario_atual(current_user=Depends(security.get_current_user), db: Session = Depends(get_db)):
+    """
+    Garante que o usuário autenticado tenha o campo 'email' disponível.
+    Evita falhas nos logs quando o token JWT não contém o email.
+    """
     usuario_email = current_user.get("email")
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
@@ -24,6 +30,10 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user), db: Ses
 # Função auxiliar para converter DD/MM/YYYY em datetime.date
 # ----------------------------
 def parse_data_br(data_str: str) -> date:
+    """
+    Converte uma string no formato DD/MM/YYYY para um objeto datetime.date.
+    Lança HTTPException 400 caso a string não esteja no formato esperado.
+    """
     try:
         return datetime.strptime(data_str, "%d/%m/%Y").date()
     except ValueError:
@@ -40,6 +50,11 @@ def relatorio_consultas(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Gera relatório de consultas entre duas datas.
+    Permissão restrita a usuários ADMIN.
+    Retorna informações do médico, data/hora, duração, status e observações.
+    """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
@@ -80,6 +95,11 @@ def relatorio_prontuarios(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Gera relatório de prontuários entre duas datas.
+    Permissão restrita a usuários ADMIN.
+    Inclui informações do paciente, médico, descrição, status, data/hora e anexo.
+    """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
@@ -119,6 +139,11 @@ def relatorio_teleconsultas(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Gera relatório de teleconsultas entre duas datas.
+    Permissão restrita a usuários ADMIN ou MEDICO.
+    Retorna informações do paciente, médico, data/hora, duração, status e link de vídeo.
+    """
     if usuario_atual["papel"] not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
@@ -158,6 +183,11 @@ def relatorio_geral(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Gera relatório geral resumido do sistema.
+    Permissão restrita a usuários ADMIN.
+    Inclui totais de pacientes, médicos, prontuários, consultas e teleconsultas.
+    """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado")
 

@@ -4,11 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo segundo commit:&#10;&#10;Atualiza relatórios com filtros de datas e renomeia Telemedicina para Teleconsultas&#10;&#10;- `/relatorios/teleconsultas` agora recebe `data_inicial` e `data_final` e filtra registros pelo período.&#10;- Todos os relatórios que retornam registros com datas (`consultas`, `prontuarios`, `teleconsultas`) agora incluem `data_inicial` e `data_final` no JSON.&#10;- Mantido padrão seguro de datas/horas (`DD/MM/YYYY` e `HH:MM`) e logs de acesso.&#10;- Renomeado endpoint de Telemedicina para Teleconsultas.">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo terceiro commit:&#10;&#10;Renomeado schema de registro_medico.py para prontuario.py para padronização de nomenclatura">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auditoria.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auditoria.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/backup.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/backup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/financeiro.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/registro_medico.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prontuario.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/relatorios.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/relatorios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -311,7 +321,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760217552345</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="Vigésimo terceiro commit:&#10;&#10;Renomeado schema de registro_medico.py para prontuario.py para padronização de nomenclatura">
+      <option name="closed" value="true" />
+      <created>1760261621173</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1760261621173</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -326,7 +344,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Terceiro commit - Indentação" />
     <MESSAGE value="Quarto commit: * GET /api/v1/patients/ - 200 OK (listar)&#10;* POST /api/v1/patients/ - 201 Created (criar)&#10;* GET /api/v1/patients/1 - 200 OK (obter por ID)&#10;* PUT /api/v1/patients/1 - 200 OK (atualizar)&#10;* DELETE /api/v1/patients/1 - 204 No Content (deletar)&#10;&#10;Resumo:&#10;* FastAPI configurado e rodando&#10;* Autenticação JWT com roles&#10;* Banco de dados SQLite com migrações automáticas&#10;* CRUD COMPLETO para Patients&#10;* Validações e segurança implementadas&#10;* Documentação Swagger interativa&#10;* Paginação funcionando&#10;* Hot reload para desenvolvimento" />
     <MESSAGE value="Quinto commit: * Users/Auth - Sistema de autenticação&#10;* Patients - CRUD completo&#10;* Doctors - CRUD completo&#10;&#10;Funcionalidades:&#10;* Autenticação JWT&#10;* Banco de dados com migrações automáticas&#10;* Paginação e filtros&#10;* Validações e segurança&#10;* Documentação Swagger" />
     <MESSAGE value="primeiro commit:&#10;&#10;appointments Listar consultas e Criar consultas funcionando" />
@@ -351,6 +368,7 @@
     <MESSAGE value="Vigésimo commit:&#10;&#10;feat(prontuario): adiciona campo 'anexo' ao modelo e sincroniza com schema e endpoint&#10;&#10;- Incluído campo 'anexo' na tabela prontuarios&#10;- Ajustado modelo SQLAlchemy para suportar o novo campo&#10;- Corrigido erro TypeError ao criar prontuário com anexo&#10;- Mantidos dados existentes no banco via ALTER TABLE" />
     <MESSAGE value="Vigésimo primeiro commit:&#10;&#10;Resumo: Estrutura completa do SGHSS implementada&#10;&#10;- Endpoints principais criados: &#10;  - Pacientes, Médicos, Consultas, Prescrições, Teleconsultas, Prontuários, Auditoria&#10;  - Financeiro, Relatórios e Backup (estrutura base criada)&#10;- Schemas Pydantic definidos para todos os módulos&#10;- Controle de perfis e permissões implementado (ADMIN, MEDICO, PACIENTE)&#10;- Registro de logs e auditoria habilitado em todos os CRUDs&#10;- Uploads de arquivos configurados e servidos via /uploads&#10;- Migrações e populamento do banco SQLite automatizados&#10;- Arquivo main.py completo e funcional&#10;- README.md criado com descrição do projeto, instalação, execução e endpoints" />
     <MESSAGE value="Vigésimo segundo commit:&#10;&#10;Atualiza relatórios com filtros de datas e renomeia Telemedicina para Teleconsultas&#10;&#10;- `/relatorios/teleconsultas` agora recebe `data_inicial` e `data_final` e filtra registros pelo período.&#10;- Todos os relatórios que retornam registros com datas (`consultas`, `prontuarios`, `teleconsultas`) agora incluem `data_inicial` e `data_final` no JSON.&#10;- Mantido padrão seguro de datas/horas (`DD/MM/YYYY` e `HH:MM`) e logs de acesso.&#10;- Renomeado endpoint de Telemedicina para Teleconsultas." />
-    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo segundo commit:&#10;&#10;Atualiza relatórios com filtros de datas e renomeia Telemedicina para Teleconsultas&#10;&#10;- `/relatorios/teleconsultas` agora recebe `data_inicial` e `data_final` e filtra registros pelo período.&#10;- Todos os relatórios que retornam registros com datas (`consultas`, `prontuarios`, `teleconsultas`) agora incluem `data_inicial` e `data_final` no JSON.&#10;- Mantido padrão seguro de datas/horas (`DD/MM/YYYY` e `HH:MM`) e logs de acesso.&#10;- Renomeado endpoint de Telemedicina para Teleconsultas." />
+    <MESSAGE value="Vigésimo terceiro commit:&#10;&#10;Renomeado schema de registro_medico.py para prontuario.py para padronização de nomenclatura" />
+    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo terceiro commit:&#10;&#10;Renomeado schema de registro_medico.py para prontuario.py para padronização de nomenclatura" />
   </component>
 </project>

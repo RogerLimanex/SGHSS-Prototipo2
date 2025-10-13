@@ -6,7 +6,7 @@ from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas.medico import MedicoResponse
-from app.utils.logs import registrar_log  # Função utilitária de logs
+from app.utils.logs import registrar_log  # Função utilitária para registrar logs
 
 roteador = APIRouter()
 
@@ -41,11 +41,16 @@ def listar_medicos(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Lista médicos com paginação.
+    Apenas usuários ADMIN ou MEDICO podem acessar.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     medicos = db.query(m.Medico).offset((pagina - 1) * tamanho).limit(tamanho).all()
 
+    # Registro de log
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -66,6 +71,10 @@ def obter_medico(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Retorna os dados de um médico específico pelo ID.
+    Apenas ADMIN ou MEDICO podem acessar.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -98,9 +107,15 @@ def criar_medico(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cria um novo médico.
+    Apenas ADMIN pode criar médicos.
+    Verifica duplicidade de email e CRM antes de criar.
+    """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
 
+    # Validação de duplicidade
     if db.query(m.Medico).filter(m.Medico.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
     if db.query(m.Medico).filter(m.Medico.crm == crm).first():
@@ -143,6 +158,11 @@ def atualizar_medico(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Atualiza os dados de um médico existente.
+    Apenas ADMIN pode atualizar médicos.
+    Campos não fornecidos permanecem inalterados.
+    """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode atualizar médicos")
 
@@ -150,6 +170,7 @@ def atualizar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
+    # Atualiza campos se fornecidos
     if nome is not None:
         db_medico.nome = nome
     if email is not None:
@@ -185,6 +206,10 @@ def deletar_medico(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Inativa um médico (soft-delete) em vez de excluir permanentemente.
+    Apenas ADMIN pode realizar esta operação.
+    """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir médicos")
 
@@ -192,6 +217,7 @@ def deletar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
+    # Soft-delete
     db_medico.ativo = False
     db.commit()
 

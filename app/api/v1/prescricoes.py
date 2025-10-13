@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\prescricoes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,7 +7,7 @@ from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas import PrescricaoResponse
-from app.utils.logs import registrar_log  # import do util de logs
+from app.utils.logs import registrar_log  # Função utilitária para logs
 
 roteador = APIRouter()
 
@@ -20,7 +19,10 @@ def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
-    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    """
+    Garante que o usuário autenticado tenha o campo 'email' disponível.
+    Evita falhas nos logs quando o token JWT não contém o email.
+    """
     usuario_email = current_user.get("email")
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
@@ -43,6 +45,11 @@ def criar_prescricao(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cria uma nova prescrição médica para um paciente.
+    Apenas usuários MEDICO ou ADMIN podem criar prescrições.
+    Registra log da criação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -78,6 +85,10 @@ def listar_prescricoes(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Lista todas as prescrições médicas cadastradas.
+    Apenas usuários MEDICO ou ADMIN podem acessar.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -103,6 +114,12 @@ def cancelar_prescricao(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cancela uma prescrição médica existente.
+    Apenas usuários MEDICO ou ADMIN podem cancelar.
+    O status da prescrição é alterado para 'CANCELADA'.
+    Registra log do cancelamento.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 

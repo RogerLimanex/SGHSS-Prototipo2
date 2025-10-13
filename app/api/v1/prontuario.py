@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\prontuario.py
 import os
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Request
 from sqlalchemy.orm import Session
@@ -13,7 +12,7 @@ from app.utils.logs import registrar_log
 
 roteador = APIRouter()
 
-# Diretório de uploads
+# Diretório onde arquivos enviados serão salvos
 UPLOAD_DIR = "app/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -26,7 +25,8 @@ def obter_usuario_atual(
         db: Session = Depends(get_db)
 ):
     """
-    Garante que o usuário atual tenha o campo 'email' disponível.
+    Garante que o usuário autenticado tenha o campo 'email' disponível.
+    Evita falhas nos logs quando o token JWT não contém o email.
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -50,11 +50,16 @@ def criar_prontuario(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    # Permissão restrita a MEDICO e ADMIN
+    """
+    Cria um novo prontuário médico para um paciente.
+    Permissão restrita a usuários MEDICO ou ADMIN.
+    Suporte para upload de arquivo opcional.
+    Registra log da operação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    # --- Salvar arquivo no disco (se enviado) ---
+    # --- Salvar arquivo no disco (se fornecido) ---
     caminho_arquivo = None
     if arquivo:
         nome_arquivo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{arquivo.filename}"
@@ -113,7 +118,11 @@ def listar_prontuarios(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    # Permissão restrita a MEDICO e ADMIN
+    """
+    Lista todos os prontuários médicos cadastrados.
+    Permissão restrita a usuários MEDICO ou ADMIN.
+    Retorna URLs públicas para anexos, se existirem.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -123,7 +132,7 @@ def listar_prontuarios(
     lista_formatada = []
     for p in prontuarios:
         anexo_url = None
-        if getattr(p, "anexo", None):  # Compatível com registros antigos
+        if getattr(p, "anexo", None):
             nome_arquivo = os.path.basename(p.anexo)
             anexo_url = f"{base_url}/uploads/{nome_arquivo}"
 
@@ -157,7 +166,13 @@ def cancelar_prontuario(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
-    # Permissão restrita a MEDICO e ADMIN
+    """
+    Cancela um prontuário médico existente.
+    Permissão restrita a usuários MEDICO ou ADMIN.
+    O status do prontuário é alterado para 'CANCELADO'.
+    Retorna URL pública do anexo se existir.
+    Registra log da operação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -178,7 +193,6 @@ def cancelar_prontuario(
         detalhes=f"Prontuário {prontuario_id} cancelado pelo usuário {usuario_atual.get('email')}"
     )
 
-    # Retorna URL pública do anexo se houver
     anexo_url = None
     if getattr(prontuario, "anexo", None):
         nome_arquivo = os.path.basename(prontuario.anexo)

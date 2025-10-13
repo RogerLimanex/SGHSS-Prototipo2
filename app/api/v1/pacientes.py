@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\pacientes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,7 +7,7 @@ from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas.paciente import PacienteResponse
-from app.utils.logs import registrar_log  # Função utilitária de logs
+from app.utils.logs import registrar_log  # Função utilitária para registrar logs
 
 roteador = APIRouter()
 
@@ -43,10 +42,16 @@ def listar_pacientes(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Lista pacientes com paginação.
+    Apenas usuários ADMIN ou MEDICO podem acessar.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
+
     pacientes = db.query(m.Paciente).offset((pagina - 1) * tamanho).limit(tamanho).all()
 
+    # Registro de log
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -67,6 +72,10 @@ def obter_paciente(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Retorna os dados de um paciente específico pelo ID.
+    Apenas ADMIN ou MEDICO podem acessar.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -100,9 +109,15 @@ def criar_paciente(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cria um novo paciente.
+    Apenas ADMIN ou MEDICO podem criar pacientes.
+    Verifica duplicidade de email antes de criar.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
+    # Validação de email duplicado
     if db.query(m.Paciente).filter(m.Paciente.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
@@ -143,6 +158,11 @@ def atualizar_paciente(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Atualiza dados de um paciente existente.
+    Apenas ADMIN ou MEDICO podem atualizar pacientes.
+    Campos não fornecidos permanecem inalterados.
+    """
     if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -150,6 +170,7 @@ def atualizar_paciente(
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
+    # Atualiza campos se fornecidos
     if nome is not None:
         db_paciente.nome = nome
     if email is not None:
@@ -183,6 +204,10 @@ def deletar_paciente(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Deleta um paciente do sistema.
+    Apenas ADMIN pode realizar a exclusão.
+    """
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode excluir")
 

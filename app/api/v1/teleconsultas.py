@@ -14,13 +14,16 @@ roteador = APIRouter()
 
 
 # ----------------------------
-# Obter usuário atual com email garantido
+# Obter usuário atual garantindo email
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
-    """Garante que o usuário atual tenha o campo 'email' disponível."""
+    """
+    Garante que o usuário autenticado possua o campo 'email'.
+    Evita falhas nos logs quando o token JWT não contém email.
+    """
     usuario_email = current_user.get("email")
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
@@ -31,7 +34,7 @@ def obter_usuario_atual(
 
 
 # ----------------------------
-# Criar teleconsulta
+# Criar nova teleconsulta
 # ----------------------------
 @roteador.post(
     "/",
@@ -44,6 +47,11 @@ def criar_teleconsulta(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cria uma nova teleconsulta associada a uma consulta existente.
+    Permissão restrita a usuários MEDICO e ADMIN.
+    Registra log da operação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -70,7 +78,7 @@ def criar_teleconsulta(
 
 
 # ----------------------------
-# Listar teleconsultas
+# Listar todas as teleconsultas
 # ----------------------------
 @roteador.get(
     "/",
@@ -80,6 +88,11 @@ def listar_teleconsultas(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Retorna todas as teleconsultas cadastradas.
+    Permissão restrita a usuários MEDICO e ADMIN.
+    Registra log da operação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
@@ -98,7 +111,7 @@ def listar_teleconsultas(
 
 
 # ----------------------------
-# Cancelar teleconsulta
+# Cancelar teleconsulta existente
 # ----------------------------
 @roteador.patch(
     "/{teleconsulta_id}/cancelar",
@@ -109,6 +122,11 @@ def cancelar_teleconsulta(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
+    """
+    Cancela uma teleconsulta pelo seu ID.
+    Permissão restrita a usuários MEDICO e ADMIN.
+    Registra log da operação.
+    """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 

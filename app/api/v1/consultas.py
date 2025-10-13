@@ -13,9 +13,15 @@ roteador = APIRouter()
 
 
 # --------------------------
-# Função para converter data e hora
+# Funções auxiliares
 # --------------------------
 def parse_data_hora(data: str, hora: str) -> datetime:
+    """
+    Converte strings de data e hora em um objeto datetime.
+
+    Aceita datas nos formatos 'dd/mm/yyyy' ou 'dd-mm-yyyy'.
+    Lança HTTPException 400 em caso de formato inválido.
+    """
     for sep in ('/', '-'):
         try:
             data_formatada = datetime.strptime(data, f"%d{sep}%m{sep}%Y")
@@ -27,19 +33,23 @@ def parse_data_hora(data: str, hora: str) -> datetime:
 
 
 def formatar_data_hora(dt: datetime) -> dict:
+    """
+    Formata um objeto datetime em dicionário com strings legíveis para data e hora.
+    """
     return {
         "data_consulta": dt.strftime("%d/%m/%Y"),
         "hora_consulta": dt.strftime("%H:%M")
     }
 
 
-# --------------------------
-# Obter usuário atual com email garantido
-# --------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
+    """
+    Garante que o usuário atual possua email definido.
+    Consulta o banco caso necessário.
+    """
     usuario_email = current_user.get("email")
     if not usuario_email:
         usuario = db.query(Usuario).filter(Usuario.id == int(current_user.get("sub"))).first()
@@ -50,8 +60,9 @@ def obter_usuario_atual(
 
 
 # --------------------------
-# LISTAR CONSULTAS
+# ENDPOINTS
 # --------------------------
+
 @roteador.get("/")
 def listar_consultas(
         pagina: int = 1,
@@ -62,16 +73,25 @@ def listar_consultas(
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
+    """
+    Lista consultas com paginação e filtros opcionais.
+    Filtra automaticamente de acordo com o papel do usuário:
+        - Paciente: vê apenas suas consultas
+        - Médico: vê apenas suas consultas
+        - Admin: vê todas
+    """
     papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     query = db.query(Consulta)
 
+    # Filtra por papel
     if papel == PapelUsuario.PACIENTE.value:
         query = query.filter(Consulta.paciente_id == user_id)
     elif papel == PapelUsuario.MEDICO.value:
         query = query.filter(Consulta.medico_id == user_id)
 
+    # Filtra por status se fornecido
     if status_filtro:
         try:
             status_enum = StatusConsulta(status_filtro.lower())
@@ -79,6 +99,7 @@ def listar_consultas(
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
 
+    # Filtra por médico ou paciente se IDs fornecidos
     if medico_id:
         query = query.filter(Consulta.medico_id == medico_id)
     if paciente_id:
@@ -87,6 +108,7 @@ def listar_consultas(
     total = query.count()
     itens = query.offset((pagina - 1) * tamanho).limit(tamanho).all()
 
+    # Log de acesso
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -95,6 +117,7 @@ def listar_consultas(
         detalhes=f"{usuario_atual.get('email')} listou consultas (página {pagina})"
     )
 
+    # Formata o resultado
     resultado = []
     for c in itens:
         resultado.append({
@@ -110,15 +133,16 @@ def listar_consultas(
     return {"items": resultado, "total": total}
 
 
-# --------------------------
-# OBTER CONSULTA POR ID
-# --------------------------
 @roteador.get("/{consulta_id}")
 def obter_consulta(
         consulta_id: int,
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
+    """
+    Obtém uma consulta pelo ID.
+    Verifica permissões de acesso conforme papel do usuário.
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
@@ -151,9 +175,6 @@ def obter_consulta(
     }
 
 
-# --------------------------
-# CRIAR CONSULTA
-# --------------------------
 @roteador.post("/", status_code=status.HTTP_201_CREATED)
 def criar_consulta(
         paciente_id: int,
@@ -165,21 +186,28 @@ def criar_consulta(
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
+    """
+    Cria uma nova consulta.
+    Apenas ADMIN ou MÉDICO podem criar consultas.
+    Verifica conflitos de agenda do médico.
+    """
     if usuario_atual.get("papel") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
         raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
     data_hora = parse_data_hora(data_consulta, hora_consulta)
 
+    # Verifica paciente
     paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
+    # Verifica médico ativo
     medico = db.query(Medico).filter(Medico.id == medico_id, Medico.ativo == True).first()
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
 
+    # Verifica conflito de horários
     fim = data_hora + timedelta(minutes=duracao_minutos)
-
     conflito = db.query(Consulta).filter(
         Consulta.medico_id == medico_id,
         Consulta.status != StatusConsulta.CANCELADA,
@@ -188,10 +216,10 @@ def criar_consulta(
             func.datetime(Consulta.data_hora, f'+{Consulta.duracao_minutos} minutes') > data_hora
         )
     ).first()
-
     if conflito:
         raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
 
+    # Cria consulta
     nova_consulta = Consulta(
         paciente_id=paciente_id,
         medico_id=medico_id,
@@ -225,9 +253,6 @@ def criar_consulta(
     }
 
 
-# --------------------------
-# ATUALIZAR CONSULTA
-# --------------------------
 @roteador.patch("/{consulta_id}")
 def atualizar_consulta(
         consulta_id: int,
@@ -238,6 +263,11 @@ def atualizar_consulta(
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
+    """
+    Atualiza dados de uma consulta existente.
+    Pacientes não podem alterar consultas.
+    Médicos só podem alterar suas próprias consultas.
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
@@ -250,15 +280,18 @@ def atualizar_consulta(
     if papel == PapelUsuario.MEDICO.value and consulta.medico_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
+    # Atualiza status se fornecido
     if status_update:
         try:
             consulta.status = StatusConsulta(status_update.lower())
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
 
+    # Atualiza data/hora se fornecido
     if data_consulta and hora_consulta:
         consulta.data_hora = parse_data_hora(data_consulta, hora_consulta)
 
+    # Atualiza observações se fornecido
     if observacoes is not None:
         consulta.observacoes = observacoes
 
@@ -285,15 +318,16 @@ def atualizar_consulta(
     }
 
 
-# --------------------------
-# CANCELAR CONSULTA
-# --------------------------
 @roteador.patch("/{consulta_id}/cancelar", response_model=dict)
 def cancelar_consulta(
         consulta_id: int,
         usuario_atual=Depends(obter_usuario_atual),
         db: Session = Depends(get_db)
 ):
+    """
+    Cancela uma consulta existente.
+    Apenas paciente ou médico responsável podem cancelar.
+    """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
