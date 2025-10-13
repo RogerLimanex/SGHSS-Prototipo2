@@ -6,7 +6,7 @@ from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas.medico import MedicoResponse
-from app.utils.logs import registrar_log  # Função utilitária para registrar logs
+from app.utils.logs import registrar_log
 
 roteador = APIRouter()
 
@@ -32,6 +32,55 @@ def obter_usuario_atual(
 
 
 # ----------------------------
+# Criar médico
+# ----------------------------
+@roteador.post("/", response_model=MedicoResponse, status_code=status.HTTP_201_CREATED)
+def criar_medico(
+        nome: str = Form(...),
+        email: str = Form(...),
+        telefone: Optional[str] = Form(None),
+        crm: str = Form(...),
+        especialidade: Optional[str] = Form(None),
+        db: Session = Depends(get_db),
+        usuario_atual=Depends(obter_usuario_atual)
+):
+    """
+    Cria um novo médico.
+    Apenas ADMIN pode criar médicos.
+    Verifica duplicidade de email e CRM antes de criar.
+    """
+    if usuario_atual.get("papel") != "ADMIN":
+        raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
+
+    if db.query(m.Medico).filter(m.Medico.email == email).first():
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+    if db.query(m.Medico).filter(m.Medico.crm == crm).first():
+        raise HTTPException(status_code=400, detail="CRM já cadastrado")
+
+    novo_medico = m.Medico(
+        nome=nome,
+        email=email,
+        telefone=telefone,
+        crm=crm,
+        especialidade=especialidade
+    )
+    db.add(novo_medico)
+    db.commit()
+    db.refresh(novo_medico)
+
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="medicos",
+        registro_id=novo_medico.id,
+        acao="CREATE",
+        detalhes=f"Médico criado: {novo_medico.nome} por {usuario_atual.get('email')}"
+    )
+
+    return novo_medico
+
+
+# ----------------------------
 # Listar médicos
 # ----------------------------
 @roteador.get("/", response_model=List[MedicoResponse])
@@ -50,7 +99,6 @@ def listar_medicos(
 
     medicos = db.query(m.Medico).offset((pagina - 1) * tamanho).limit(tamanho).all()
 
-    # Registro de log
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -95,66 +143,16 @@ def obter_medico(
 
 
 # ----------------------------
-# Criar médico
-# ----------------------------
-@roteador.post("/", response_model=MedicoResponse, status_code=status.HTTP_201_CREATED)
-def criar_medico(
-        nome: str = Form(...),
-        email: str = Form(...),
-        telefone: Optional[str] = Form(None),
-        crm: str = Form(...),
-        especialidade: Optional[str] = Form(None),
-        db: Session = Depends(get_db),
-        usuario_atual=Depends(obter_usuario_atual)
-):
-    """
-    Cria um novo médico.
-    Apenas ADMIN pode criar médicos.
-    Verifica duplicidade de email e CRM antes de criar.
-    """
-    if usuario_atual.get("papel") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar médicos")
-
-    # Validação de duplicidade
-    if db.query(m.Medico).filter(m.Medico.email == email).first():
-        raise HTTPException(status_code=400, detail="Email já cadastrado")
-    if db.query(m.Medico).filter(m.Medico.crm == crm).first():
-        raise HTTPException(status_code=400, detail="CRM já cadastrado")
-
-    novo_medico = m.Medico(
-        nome=nome,
-        email=email,
-        telefone=telefone,
-        crm=crm,
-        especialidade=especialidade
-    )
-    db.add(novo_medico)
-    db.commit()
-    db.refresh(novo_medico)
-
-    registrar_log(
-        db=db,
-        usuario_email=usuario_atual.get("email"),
-        tabela="medicos",
-        registro_id=novo_medico.id,
-        acao="CREATE",
-        detalhes=f"Médico criado: {novo_medico.nome} por {usuario_atual.get('email')}"
-    )
-
-    return novo_medico
-
-
-# ----------------------------
 # Atualizar médico
 # ----------------------------
 @roteador.put("/{medico_id}", response_model=MedicoResponse)
 def atualizar_medico(
         medico_id: int,
-        nome: Optional[str] = Form(None),
-        email: Optional[str] = Form(None),
-        telefone: Optional[str] = Form(None),
-        crm: Optional[str] = Form(None),
-        especialidade: Optional[str] = Form(None),
+        nome: Optional[str] = None,
+        email: Optional[str] = None,
+        telefone: Optional[str] = None,
+        crm: Optional[str] = None,
+        especialidade: Optional[str] = None,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -170,7 +168,6 @@ def atualizar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    # Atualiza campos se fornecidos
     if nome is not None:
         db_medico.nome = nome
     if email is not None:
@@ -217,7 +214,6 @@ def deletar_medico(
     if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    # Soft-delete
     db_medico.ativo = False
     db.commit()
 

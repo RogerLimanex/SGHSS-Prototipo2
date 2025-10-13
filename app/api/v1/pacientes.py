@@ -33,6 +33,54 @@ def obter_usuario_atual(
 
 
 # ----------------------------
+# Criar paciente
+# ----------------------------
+@roteador.post("/", response_model=PacienteResponse, status_code=status.HTTP_201_CREATED)
+def criar_paciente(
+        nome: str = Form(...),
+        email: str = Form(...),
+        telefone: Optional[str] = Form(None),
+        cpf: str = Form(...),
+        data_nascimento: str = Form(...),
+        endereco: Optional[str] = Form(None),
+        db: Session = Depends(get_db),
+        usuario_atual=Depends(obter_usuario_atual)
+):
+    """
+    Cria um novo paciente.
+    Apenas ADMIN ou MEDICO podem criar pacientes.
+    """
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+
+    if db.query(m.Paciente).filter(m.Paciente.email == email).first():
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+
+    novo = m.Paciente(
+        nome=nome,
+        email=email,
+        telefone=telefone,
+        cpf=cpf,
+        data_nascimento=datetime.strptime(data_nascimento, "%Y-%m-%d").date(),
+        endereco=endereco
+    )
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="pacientes",
+        registro_id=novo.id,
+        acao="CREATE",
+        detalhes=f"Paciente criado: {novo.nome} por {usuario_atual.get('email')}"
+    )
+
+    return novo
+
+
+# ----------------------------
 # Listar pacientes
 # ----------------------------
 @roteador.get("/", response_model=List[PacienteResponse])
@@ -51,7 +99,6 @@ def listar_pacientes(
 
     pacientes = db.query(m.Paciente).offset((pagina - 1) * tamanho).limit(tamanho).all()
 
-    # Registro de log
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -96,65 +143,15 @@ def obter_paciente(
 
 
 # ----------------------------
-# Criar paciente
-# ----------------------------
-@roteador.post("/", response_model=PacienteResponse, status_code=status.HTTP_201_CREATED)
-def criar_paciente(
-        nome: str = Form(...),
-        email: str = Form(...),
-        telefone: Optional[str] = Form(None),
-        cpf: str = Form(...),
-        data_nascimento: str = Form(...),
-        endereco: Optional[str] = Form(None),
-        db: Session = Depends(get_db),
-        usuario_atual=Depends(obter_usuario_atual)
-):
-    """
-    Cria um novo paciente.
-    Apenas ADMIN ou MEDICO podem criar pacientes.
-    Verifica duplicidade de email antes de criar.
-    """
-    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
-
-    # Validação de email duplicado
-    if db.query(m.Paciente).filter(m.Paciente.email == email).first():
-        raise HTTPException(status_code=400, detail="Email já cadastrado")
-
-    novo = m.Paciente(
-        nome=nome,
-        email=email,
-        telefone=telefone,
-        cpf=cpf,
-        data_nascimento=datetime.strptime(data_nascimento, "%Y-%m-%d").date(),
-        endereco=endereco
-    )
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-
-    registrar_log(
-        db=db,
-        usuario_email=usuario_atual.get("email"),
-        tabela="pacientes",
-        registro_id=novo.id,
-        acao="CREATE",
-        detalhes=f"Paciente criado: {novo.nome} por {usuario_atual.get('email')}"
-    )
-
-    return novo
-
-
-# ----------------------------
 # Atualizar paciente
 # ----------------------------
 @roteador.put("/{paciente_id}", response_model=PacienteResponse)
 def atualizar_paciente(
         paciente_id: int,
-        nome: Optional[str] = Form(None),
-        email: Optional[str] = Form(None),
-        telefone: Optional[str] = Form(None),
-        endereco: Optional[str] = Form(None),
+        nome: Optional[str] = None,
+        email: Optional[str] = None,
+        telefone: Optional[str] = None,
+        endereco: Optional[str] = None,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -170,7 +167,6 @@ def atualizar_paciente(
     if not db_paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
-    # Atualiza campos se fornecidos
     if nome is not None:
         db_paciente.nome = nome
     if email is not None:

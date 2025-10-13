@@ -12,15 +12,15 @@ from app.utils.logs import registrar_log
 roteador = APIRouter()
 
 
-# --------------------------
-# Funções auxiliares
-# --------------------------
+# ==========================
+# FUNÇÕES AUXILIARES
+# ==========================
+
 def parse_data_hora(data: str, hora: str) -> datetime:
     """
     Converte strings de data e hora em um objeto datetime.
-
-    Aceita datas nos formatos 'dd/mm/yyyy' ou 'dd-mm-yyyy'.
-    Lança HTTPException 400 em caso de formato inválido.
+    Aceita formatos 'dd/mm/yyyy' ou 'dd-mm-yyyy'.
+    Lança HTTPException 400 se inválido.
     """
     for sep in ('/', '-'):
         try:
@@ -34,7 +34,7 @@ def parse_data_hora(data: str, hora: str) -> datetime:
 
 def formatar_data_hora(dt: datetime) -> dict:
     """
-    Formata um objeto datetime em dicionário com strings legíveis para data e hora.
+    Formata um objeto datetime em dicionário legível para data e hora.
     """
     return {
         "data_consulta": dt.strftime("%d/%m/%Y"),
@@ -59,10 +59,91 @@ def obter_usuario_atual(
     return current_user
 
 
-# --------------------------
-# ENDPOINTS
-# --------------------------
+# ==========================
+# CRIAR CONSULTA
+# ==========================
+@roteador.post("/", status_code=status.HTTP_201_CREATED)
+def criar_consulta(
+        paciente_id: int,
+        medico_id: int,
+        data_consulta: str,
+        hora_consulta: str,
+        duracao_minutos: int = 30,
+        observacoes: Optional[str] = None,
+        usuario_atual=Depends(obter_usuario_atual),
+        db: Session = Depends(get_db)
+):
+    """
+    Cria uma nova consulta.
+    - Apenas ADMIN ou MÉDICO podem criar.
+    - Verifica conflitos de agenda do médico.
+    """
+    if usuario_atual.get("papel") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
+        raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
 
+    data_hora = parse_data_hora(data_consulta, hora_consulta)
+
+    # Verifica paciente
+    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
+    # Verifica médico ativo
+    medico = db.query(Medico).filter(Medico.id == medico_id, Medico.ativo == True).first()
+    if not medico:
+        raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
+
+    # Verifica conflito de horários
+    fim = data_hora + timedelta(minutes=duracao_minutos)
+    conflito = db.query(Consulta).filter(
+        Consulta.medico_id == medico_id,
+        Consulta.status != StatusConsulta.CANCELADA,
+        and_(
+            Consulta.data_hora < fim,
+            func.datetime(Consulta.data_hora, f'+{Consulta.duracao_minutos} minutes') > data_hora
+        )
+    ).first()
+    if conflito:
+        raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
+
+    # Criação da consulta
+    nova_consulta = Consulta(
+        paciente_id=paciente_id,
+        medico_id=medico_id,
+        data_hora=data_hora,
+        duracao_minutos=duracao_minutos,
+        observacoes=observacoes,
+        status=StatusConsulta.AGENDADA
+    )
+
+    db.add(nova_consulta)
+    db.commit()
+    db.refresh(nova_consulta)
+
+    # Log
+    registrar_log(
+        db=db,
+        usuario_email=usuario_atual.get("email"),
+        tabela="consultas",
+        registro_id=nova_consulta.id,
+        acao="CREATE",
+        detalhes=f"Consulta criada por {usuario_atual.get('email')} para paciente {paciente_id} e médico {medico_id}"
+    )
+
+    return {
+        "id": nova_consulta.id,
+        "paciente_id": nova_consulta.paciente_id,
+        "medico_id": nova_consulta.medico_id,
+        **formatar_data_hora(nova_consulta.data_hora),
+        "duracao_minutos": nova_consulta.duracao_minutos,
+        "status": nova_consulta.status.value,
+        "observacoes": nova_consulta.observacoes
+    }
+
+
+# ==========================
+# LISTAR CONSULTAS
+# ==========================
 @roteador.get("/")
 def listar_consultas(
         pagina: int = 1,
@@ -75,23 +156,20 @@ def listar_consultas(
 ):
     """
     Lista consultas com paginação e filtros opcionais.
-    Filtra automaticamente de acordo com o papel do usuário:
-        - Paciente: vê apenas suas consultas
-        - Médico: vê apenas suas consultas
-        - Admin: vê todas
+    - Paciente: só suas consultas
+    - Médico: só suas consultas
+    - Admin: todas as consultas
     """
     papel = usuario_atual.get("papel")
     user_id = int(usuario_atual.get("sub")) if usuario_atual.get("sub") else None
 
     query = db.query(Consulta)
 
-    # Filtra por papel
     if papel == PapelUsuario.PACIENTE.value:
         query = query.filter(Consulta.paciente_id == user_id)
     elif papel == PapelUsuario.MEDICO.value:
         query = query.filter(Consulta.medico_id == user_id)
 
-    # Filtra por status se fornecido
     if status_filtro:
         try:
             status_enum = StatusConsulta(status_filtro.lower())
@@ -99,7 +177,6 @@ def listar_consultas(
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
 
-    # Filtra por médico ou paciente se IDs fornecidos
     if medico_id:
         query = query.filter(Consulta.medico_id == medico_id)
     if paciente_id:
@@ -108,7 +185,6 @@ def listar_consultas(
     total = query.count()
     itens = query.offset((pagina - 1) * tamanho).limit(tamanho).all()
 
-    # Log de acesso
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -117,7 +193,6 @@ def listar_consultas(
         detalhes=f"{usuario_atual.get('email')} listou consultas (página {pagina})"
     )
 
-    # Formata o resultado
     resultado = []
     for c in itens:
         resultado.append({
@@ -133,6 +208,9 @@ def listar_consultas(
     return {"items": resultado, "total": total}
 
 
+# ==========================
+# OBTER CONSULTA
+# ==========================
 @roteador.get("/{consulta_id}")
 def obter_consulta(
         consulta_id: int,
@@ -141,7 +219,7 @@ def obter_consulta(
 ):
     """
     Obtém uma consulta pelo ID.
-    Verifica permissões de acesso conforme papel do usuário.
+    - Verifica permissões de acordo com o papel.
     """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
@@ -175,84 +253,9 @@ def obter_consulta(
     }
 
 
-@roteador.post("/", status_code=status.HTTP_201_CREATED)
-def criar_consulta(
-        paciente_id: int,
-        medico_id: int,
-        data_consulta: str,
-        hora_consulta: str,
-        duracao_minutos: int = 30,
-        observacoes: Optional[str] = None,
-        usuario_atual=Depends(obter_usuario_atual),
-        db: Session = Depends(get_db)
-):
-    """
-    Cria uma nova consulta.
-    Apenas ADMIN ou MÉDICO podem criar consultas.
-    Verifica conflitos de agenda do médico.
-    """
-    if usuario_atual.get("papel") not in [PapelUsuario.ADMIN.value, PapelUsuario.MEDICO.value]:
-        raise HTTPException(status_code=403, detail="Sem permissão para agendar consultas")
-
-    data_hora = parse_data_hora(data_consulta, hora_consulta)
-
-    # Verifica paciente
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
-    if not paciente:
-        raise HTTPException(status_code=404, detail="Paciente não encontrado")
-
-    # Verifica médico ativo
-    medico = db.query(Medico).filter(Medico.id == medico_id, Medico.ativo == True).first()
-    if not medico:
-        raise HTTPException(status_code=404, detail="Médico não encontrado ou inativo")
-
-    # Verifica conflito de horários
-    fim = data_hora + timedelta(minutes=duracao_minutos)
-    conflito = db.query(Consulta).filter(
-        Consulta.medico_id == medico_id,
-        Consulta.status != StatusConsulta.CANCELADA,
-        and_(
-            Consulta.data_hora < fim,
-            func.datetime(Consulta.data_hora, f'+{Consulta.duracao_minutos} minutes') > data_hora
-        )
-    ).first()
-    if conflito:
-        raise HTTPException(status_code=400, detail="Médico já possui consulta neste horário")
-
-    # Cria consulta
-    nova_consulta = Consulta(
-        paciente_id=paciente_id,
-        medico_id=medico_id,
-        data_hora=data_hora,
-        duracao_minutos=duracao_minutos,
-        observacoes=observacoes,
-        status=StatusConsulta.AGENDADA
-    )
-
-    db.add(nova_consulta)
-    db.commit()
-    db.refresh(nova_consulta)
-
-    registrar_log(
-        db=db,
-        usuario_email=usuario_atual.get("email"),
-        tabela="consultas",
-        registro_id=nova_consulta.id,
-        acao="CREATE",
-        detalhes=f"Consulta criada por {usuario_atual.get('email')} para paciente {paciente_id} e médico {medico_id}"
-    )
-
-    return {
-        "id": nova_consulta.id,
-        "paciente_id": nova_consulta.paciente_id,
-        "medico_id": nova_consulta.medico_id,
-        **formatar_data_hora(nova_consulta.data_hora),
-        "duracao_minutos": nova_consulta.duracao_minutos,
-        "status": nova_consulta.status.value,
-        "observacoes": nova_consulta.observacoes
-    }
-
-
+# ==========================
+# ATUALIZAR CONSULTA
+# ==========================
 @roteador.patch("/{consulta_id}")
 def atualizar_consulta(
         consulta_id: int,
@@ -265,8 +268,8 @@ def atualizar_consulta(
 ):
     """
     Atualiza dados de uma consulta existente.
-    Pacientes não podem alterar consultas.
-    Médicos só podem alterar suas próprias consultas.
+    - Pacientes não podem alterar consultas.
+    - Médicos só podem alterar suas próprias consultas.
     """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
@@ -280,18 +283,15 @@ def atualizar_consulta(
     if papel == PapelUsuario.MEDICO.value and consulta.medico_id != user_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    # Atualiza status se fornecido
     if status_update:
         try:
             consulta.status = StatusConsulta(status_update.lower())
         except ValueError:
             raise HTTPException(status_code=400, detail="Status inválido")
 
-    # Atualiza data/hora se fornecido
     if data_consulta and hora_consulta:
         consulta.data_hora = parse_data_hora(data_consulta, hora_consulta)
 
-    # Atualiza observações se fornecido
     if observacoes is not None:
         consulta.observacoes = observacoes
 
@@ -318,6 +318,9 @@ def atualizar_consulta(
     }
 
 
+# ==========================
+# ENDPOINT: CANCELAR CONSULTA
+# ==========================
 @roteador.patch("/{consulta_id}/cancelar", response_model=dict)
 def cancelar_consulta(
         consulta_id: int,
@@ -326,7 +329,7 @@ def cancelar_consulta(
 ):
     """
     Cancela uma consulta existente.
-    Apenas paciente ou médico responsável podem cancelar.
+    - Apenas paciente ou médico responsável podem cancelar.
     """
     consulta = db.query(Consulta).filter(Consulta.id == consulta_id).first()
     if not consulta:
