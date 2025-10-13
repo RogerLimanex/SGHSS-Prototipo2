@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\backup.py
 import shutil
 import os
 from datetime import datetime
@@ -10,7 +9,9 @@ from app import models as m
 from app.core import security
 from app.utils.logs import registrar_log
 
+# ----------------------------
 # Criação do roteador principal
+# ----------------------------
 roteador = APIRouter()
 
 # Diretório onde os arquivos de backup serão armazenados
@@ -36,21 +37,18 @@ def obter_usuario_atual(
     - `dict`: Dados do usuário autenticado
     """
     usuario_email = current_user.get("email")
-
-    # Caso o email não esteja no token, busca no banco
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
             current_user["email"] = usuario.email
-
     return current_user
 
 
 # ----------------------------
 # Gerar backup do banco de dados
 # ----------------------------
-@roteador.get("/backup/exportar", summary="Gerar backup do banco de dados", tags=["Backup"])
+@roteador.get("/exportar", summary="Gerar backup do banco de dados", tags=["Backup e Restauração"])
 def gerar_backup(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
@@ -58,7 +56,7 @@ def gerar_backup(
     """
     💾 **Gerar Backup do Banco de Dados**
 
-    📘 Gera uma cópia completa do banco de dados atual e disponibiliza
+    Gera uma cópia completa do banco de dados atual e disponibiliza
     o arquivo `.db` para download.
 
     **Somente usuários ADMIN podem executar esta ação.**
@@ -67,20 +65,16 @@ def gerar_backup(
     - Arquivo `.db` com o backup completo.
 
     **Exemplo de uso:**
-    `GET /api/v1/backup/exportar`
+    GET /api/v1/backup/exportar
     """
-    # Verifica se o usuário tem permissão
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    # Define o nome do arquivo com timestamp
     nome_arquivo = f"sghss_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
     caminho_destino = os.path.join(BACKUP_DIR, nome_arquivo)
 
-    # Copia o banco de dados atual para o diretório de backup
     shutil.copy("sghss.db", caminho_destino)
 
-    # Registra log da operação
     registrar_log(
         db,
         usuario_atual["email"],
@@ -89,7 +83,6 @@ def gerar_backup(
         detalhes=f"Backup gerado: {nome_arquivo}"
     )
 
-    # Retorna o arquivo como resposta para download
     return FileResponse(
         caminho_destino,
         filename=nome_arquivo,
@@ -100,7 +93,7 @@ def gerar_backup(
 # ----------------------------
 # Restaurar banco de dados a partir de um backup
 # ----------------------------
-@roteador.post("/backup/importar", summary="Restaurar banco de dados", tags=["Backup"])
+@roteador.post("/importar", summary="Restaurar banco de dados", tags=["Backup e Restauração"])
 def restaurar_backup(
         arquivo: UploadFile = File(..., description="Arquivo .db de backup para restaurar"),
         db: Session = Depends(get_db),
@@ -109,7 +102,7 @@ def restaurar_backup(
     """
     🔄 **Restaurar Banco de Dados a partir de um Backup**
 
-    📂 Permite restaurar o banco de dados do sistema a partir de um arquivo `.db` de backup.
+    Permite restaurar o banco de dados do sistema a partir de um arquivo `.db` de backup.
     O arquivo enviado substituirá o banco de dados atual.
 
     **Somente usuários ADMIN podem executar esta ação.**
@@ -121,27 +114,21 @@ def restaurar_backup(
     - Mensagem de sucesso confirmando a restauração
 
     **Exemplo de uso:**
-    `POST /api/v1/backup/importar`
+    POST /api/v1/backup/importar
     """
-    # Verifica se o usuário tem permissão
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    # Valida se o arquivo enviado é um .db
     if not arquivo.filename.endswith(".db"):
         raise HTTPException(status_code=400, detail="Arquivo inválido. Envie um .db")
 
-    # Caminho temporário para armazenar o arquivo antes da substituição
     caminho_temp = os.path.join(BACKUP_DIR, arquivo.filename)
 
-    # Salva o arquivo temporariamente
     with open(caminho_temp, "wb") as buffer:
         buffer.write(arquivo.file.read())
 
-    # Substitui o banco de dados atual pelo backup enviado
     shutil.copy(caminho_temp, "sghss.db")
 
-    # Registra log da restauração
     registrar_log(
         db,
         usuario_atual["email"],
@@ -150,5 +137,4 @@ def restaurar_backup(
         detalhes=f"Banco restaurado a partir de {arquivo.filename}"
     )
 
-    # Retorna confirmação
     return {"detail": "Banco de dados restaurado com sucesso"}
