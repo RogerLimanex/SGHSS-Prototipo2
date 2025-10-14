@@ -1,20 +1,15 @@
-import os
-from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from datetime import datetime
 
 from app.db import get_db
 from app import models as m
 from app.core import security
-from app.schemas.prontuario import ProntuarioMedicoResponse
+from app.schemas import ProntuarioResponse
 from app.utils.logs import registrar_log
 
 roteador = APIRouter()
-
-# Diretório onde arquivos enviados serão salvos
-UPLOAD_DIR = "app/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # ============================================================
@@ -25,8 +20,8 @@ def obter_usuario_atual(
         db: Session = Depends(get_db)
 ):
     """
-    Garante que o usuário autenticado tenha o campo 'email' disponível.
-    Evita falhas nos logs quando o token JWT não contém o email.
+    Garante que o usuário autenticado possua o campo 'email'.
+    Evita falhas nos logs quando o token JWT não contém email.
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -38,42 +33,32 @@ def obter_usuario_atual(
 
 
 # ============================================================
-# ENDPOINT: Criar prontuário
+# ENDPOINT: Criar registro de prontuário
 # ============================================================
-@roteador.post("/prontuarios", response_model=ProntuarioMedicoResponse, status_code=status.HTTP_201_CREATED)
+@roteador.post(
+    "/",
+    response_model=ProntuarioResponse,
+    status_code=status.HTTP_201_CREATED
+)
 def criar_prontuario(
-        request: Request,
-        paciente_id: int = Form(...),
-        medico_id: int = Form(...),
-        descricao: str = Form(...),
-        arquivo: Optional[UploadFile] = File(None),
+        consulta_id: int = Form(..., description="ID da consulta relacionada"),
+        anotacoes: str = Form(..., description="Anotações médicas e observações do prontuário"),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Cria um novo prontuário médico para um paciente.
+    Cria um novo registro de prontuário para uma consulta.
 
-    - **Acesso:** apenas MEDICO ou ADMIN
-    - Suporte para upload de arquivo opcional
+    - **Acesso:** apenas MÉDICO ou ADMIN
     - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    caminho_arquivo = None
-    if arquivo:
-        nome_arquivo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{arquivo.filename}"
-        caminho_arquivo = os.path.join(UPLOAD_DIR, nome_arquivo)
-        with open(caminho_arquivo, "wb") as buffer:
-            buffer.write(arquivo.file.read())
-
     novo_prontuario = m.Prontuario(
-        paciente_id=paciente_id,
-        medico_id=medico_id,
-        descricao=descricao,
-        data_hora=datetime.now(),
-        status="ATIVO",
-        anexo=caminho_arquivo
+        consulta_id=consulta_id,
+        anotacoes=anotacoes,
+        data_registro=datetime.now()
     )
 
     db.add(novo_prontuario)
@@ -86,124 +71,81 @@ def criar_prontuario(
         tabela="Prontuario",
         registro_id=novo_prontuario.id,
         acao="CREATE",
-        detalhes=f"Prontuário criado para paciente {paciente_id} pelo médico {medico_id}"
-                 + (f" com anexo {arquivo.filename}" if arquivo else "")
+        detalhes=f"Prontuário criado para consulta {consulta_id} por {usuario_atual.get('email')}"
     )
 
-    anexo_url = None
-    if novo_prontuario.anexo:
-        nome_arquivo = os.path.basename(novo_prontuario.anexo)
-        base_url = str(request.base_url).rstrip("/")
-        anexo_url = f"{base_url}/uploads/{nome_arquivo}"
-
-    return ProntuarioMedicoResponse(
-        id=novo_prontuario.id,
-        paciente_id=novo_prontuario.paciente_id,
-        medico_id=novo_prontuario.medico_id,
-        descricao=novo_prontuario.descricao,
-        data_hora=novo_prontuario.data_hora,
-        anexo=anexo_url
-    )
+    return novo_prontuario
 
 
 # ============================================================
 # ENDPOINT: Listar prontuários
 # ============================================================
-@roteador.get("/prontuarios", response_model=List[ProntuarioMedicoResponse])
+@roteador.get(
+    "/",
+    response_model=List[ProntuarioResponse]
+)
 def listar_prontuarios(
-        request: Request,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Lista todos os prontuários médicos cadastrados.
+    Lista todos os prontuários cadastrados.
 
-    - **Acesso:** apenas MEDICO ou ADMIN
-    - Retorna URLs públicas para anexos, se existirem
+    - **Acesso:** apenas MÉDICO ou ADMIN
     - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     prontuarios = db.query(m.Prontuario).all()
-    base_url = str(request.base_url).rstrip("/")
-
-    lista_formatada = []
-    for p in prontuarios:
-        anexo_url = None
-        if getattr(p, "anexo", None):
-            nome_arquivo = os.path.basename(p.anexo)
-            anexo_url = f"{base_url}/uploads/{nome_arquivo}"
-
-        lista_formatada.append(ProntuarioMedicoResponse(
-            id=p.id,
-            paciente_id=p.paciente_id,
-            medico_id=p.medico_id,
-            descricao=p.descricao,
-            data_hora=p.data_hora,
-            anexo=anexo_url
-        ))
 
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
         tabela="Prontuario",
+        registro_id=None,
         acao="READ",
         detalhes=f"{usuario_atual.get('email')} listou todos os prontuários"
     )
 
-    return lista_formatada
+    return prontuarios
 
 
 # ============================================================
-# ENDPOINT: Cancelar prontuário
+# ENDPOINT: Excluir (ou cancelar) prontuário
 # ============================================================
-@roteador.post("/prontuarios/{prontuario_id}/cancelar", response_model=ProntuarioMedicoResponse)
-def cancelar_prontuario(
+@roteador.delete(
+    "/{prontuario_id}",
+    response_model=ProntuarioResponse
+)
+def excluir_prontuario(
         prontuario_id: int,
-        request: Request,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Cancela um prontuário médico existente.
+    Exclui um prontuário existente pelo ID.
 
-    - **Acesso:** apenas MEDICO ou ADMIN
-    - Altera status do prontuário para 'CANCELADO'
-    - Retorna URL pública do anexo se existir
+    - **Acesso:** apenas ADMIN
     - **Registra log** da operação
     """
-    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     prontuario = db.query(m.Prontuario).filter(m.Prontuario.id == prontuario_id).first()
     if not prontuario:
         raise HTTPException(status_code=404, detail="Prontuário não encontrado")
 
-    prontuario.status = "CANCELADO"
+    db.delete(prontuario)
     db.commit()
-    db.refresh(prontuario)
 
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
         tabela="Prontuario",
-        registro_id=prontuario.id,
+        registro_id=prontuario_id,
         acao="DELETE",
-        detalhes=f"Prontuário {prontuario_id} cancelado pelo usuário {usuario_atual.get('email')}"
+        detalhes=f"Prontuário {prontuario_id} excluído por {usuario_atual.get('email')}"
     )
 
-    anexo_url = None
-    if getattr(prontuario, "anexo", None):
-        nome_arquivo = os.path.basename(prontuario.anexo)
-        base_url = str(request.base_url).rstrip("/")
-        anexo_url = f"{base_url}/uploads/{nome_arquivo}"
-
-    return ProntuarioMedicoResponse(
-        id=prontuario.id,
-        paciente_id=prontuario.paciente_id,
-        medico_id=prontuario.medico_id,
-        descricao=prontuario.descricao,
-        data_hora=prontuario.data_hora,
-        anexo=anexo_url
-    )
+    return prontuario

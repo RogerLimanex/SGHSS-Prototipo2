@@ -1,3 +1,4 @@
+# D:\ProjectSGHSS\app\api\v1\teleconsultas.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -33,12 +34,13 @@ def obter_usuario_atual(
 
 
 # ============================================================
-# ENDPOINT: Criar teleconsulta
+# 1️⃣ ENDPOINT: Criar teleconsulta
 # ============================================================
 @roteador.post(
     "/",
     response_model=TeleconsultaResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    tags=["Teleconsultas"]
 )
 def criar_teleconsulta(
         consulta_id: int = Form(..., description="ID da consulta associada"),
@@ -78,11 +80,12 @@ def criar_teleconsulta(
 
 
 # ============================================================
-# ENDPOINT: Listar teleconsultas
+# 2️⃣ ENDPOINT: Listar teleconsultas
 # ============================================================
 @roteador.get(
     "/",
-    response_model=List[TeleconsultaResponse]
+    response_model=List[TeleconsultaResponse],
+    tags=["Teleconsultas"]
 )
 def listar_teleconsultas(
         db: Session = Depends(get_db),
@@ -112,11 +115,12 @@ def listar_teleconsultas(
 
 
 # ============================================================
-# ENDPOINT: Cancelar teleconsulta
+# 3️⃣ ENDPOINT: Cancelar teleconsulta
 # ============================================================
 @roteador.patch(
     "/{teleconsulta_id}/cancelar",
-    response_model=TeleconsultaResponse
+    response_model=TeleconsultaResponse,
+    tags=["Teleconsultas"]
 )
 def cancelar_teleconsulta(
         teleconsulta_id: int,
@@ -136,7 +140,6 @@ def cancelar_teleconsulta(
     if not teleconsulta:
         raise HTTPException(status_code=404, detail="Teleconsulta não encontrada")
 
-    # Atualiza status para CANCELADA
     teleconsulta.status = m.StatusConsulta.CANCELADA
     db.commit()
     db.refresh(teleconsulta)

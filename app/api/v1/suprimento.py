@@ -190,22 +190,22 @@ def atualizar_suprimento(
 
 
 # ============================================================
-# REMOVER SUPRIMENTO
+# ENDPOINT: EXCLUIR SUPRIMENTO
 # ============================================================
-@roteador.delete("/suprimentos/{id}")
-def remover_suprimento(
+@roteador.delete("/suprimentos/{id}", status_code=status.HTTP_200_OK)
+def excluir_suprimento(
         id: int,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Remove um suprimento pelo ID.
+    Exclui um suprimento pelo ID.
 
     - **Acesso restrito:** Apenas ADMIN
     - **Retorno:** Mensagem de confirmação
     """
     if usuario_atual["papel"] != "ADMIN":
-        raise HTTPException(status_code=403, detail="Acesso negado")
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode excluir suprimentos")
 
     suprimento = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
     if not suprimento:
@@ -220,7 +220,7 @@ def remover_suprimento(
         "Suprimento",
         registro_id=id,
         acao="DELETE",
-        detalhes=f"Removido suprimento {id}"
+        detalhes=f"Suprimento excluído ID {id} por {usuario_atual.get('email')}"
     )
 
-    return {"detail": "Suprimento removido com sucesso"}
+    return {"detail": "Suprimento excluído com sucesso"}

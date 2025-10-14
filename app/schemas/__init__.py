@@ -1,17 +1,57 @@
-# Pacientes
-from .paciente import PacienteCreate, PacienteUpdate, PacienteResponse
+# ============================================================
+# Paciente Schemas
+# ============================================================
+from .paciente import (
+    PacienteCreate,
+    PacienteUpdate,
+    PacienteResponse
+)
 
-# Médicos
-from .medico import MedicoCreate, MedicoUpdate, MedicoResponse
+# ============================================================
+# Médico Schemas
+# ============================================================
+from .medico import (
+    MedicoCreate,
+    MedicoUpdate,
+    MedicoResponse
+)
 
-# Consultas (atendimentos presenciais)
-from .consulta import ConsultaCreate, ConsultaResponse
+# ============================================================
+# Consulta Schemas
+# ============================================================
+from .consulta import (
+    ConsultaCreate,
+    ConsultaResponse
+)
 
-# Teleconsultas
-from .teleconsulta import TeleconsultaCreate, TeleconsultaResponse
+# ============================================================
+# Teleconsulta Schemas
+# ============================================================
+from .teleconsulta import (
+    TeleconsultaCreate,
+    TeleconsultaResponse
+)
 
-# Prescrições
-from .prescricao import PrescricaoCreate, PrescricaoResponse
+# ============================================================
+# Prescrição Schemas
+# ============================================================
+from .prescricao import (
+    PrescricaoCreate,
+    PrescricaoResponse
+)
 
-# Prontuários
-from .prontuario import ProntuarioMedicoCreate, ProntuarioMedicoResponse
+# ============================================================
+# Prontuário Schemas
+# ============================================================
+from .prontuario import (
+    ProntuarioMedicoCreate as ProntuarioCreate,
+    ProntuarioMedicoResponse as ProntuarioResponse
+)
+
+# ============================================================
+# Leito Schemas
+# ============================================================
+from .leito import (
+    LeitoBase,
+    LeitoResponse
+)

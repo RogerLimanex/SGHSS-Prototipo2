@@ -13,7 +13,7 @@ from app.utils.logs import registrar_log
 # ============================================================
 class LeitoBase(BaseModel):
     """
-    Schema base para criar ou atualizar um leito.
+    Schema base para criação ou atualização de um leito.
     """
     numero: str
     status: str
@@ -36,14 +36,15 @@ roteador = APIRouter()
 
 
 # ============================================================
-# Função auxiliar: obter usuário autenticado
+# FUNÇÃO AUXILIAR: Obter usuário autenticado
 # ============================================================
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
     """
-    Obtém o usuário autenticado garantindo que o campo `email` esteja presente.
+    Obtém o usuário autenticado, garantindo que o campo `email` esteja presente
+    no token JWT ou seja buscado no banco de dados.
     """
     usuario_email = current_user.get("email")
     if not usuario_email:
@@ -57,7 +58,11 @@ def obter_usuario_atual(
 # ============================================================
 # ENDPOINT: CRIAR LEITO
 # ============================================================
-@roteador.post("/leitos", response_model=LeitoResponse, status_code=status.HTTP_201_CREATED)
+@roteador.post(
+    "/leitos",
+    response_model=LeitoResponse,
+    status_code=status.HTTP_201_CREATED
+)
 def criar_leito(
         numero: str = Form(..., description="Número identificador do leito", example="101"),
         status_leito: str = Form(..., description="Status atual do leito (Livre, Ocupado, Manutenção)",
@@ -76,7 +81,12 @@ def criar_leito(
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode criar leitos")
 
-    novo_leito = m.Leito(numero=numero, status=status_leito, paciente_id=paciente_id)
+    novo_leito = m.Leito(
+        numero=numero,
+        status=status_leito,
+        paciente_id=paciente_id
+    )
+
     db.add(novo_leito)
     db.commit()
     db.refresh(novo_leito)
@@ -96,7 +106,10 @@ def criar_leito(
 # ============================================================
 # ENDPOINT: LISTAR LEITOS
 # ============================================================
-@roteador.get("/leitos", response_model=List[LeitoResponse])
+@roteador.get(
+    "/leitos",
+    response_model=List[LeitoResponse]
+)
 def listar_leitos(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
@@ -125,7 +138,10 @@ def listar_leitos(
 # ============================================================
 # ENDPOINT: ATUALIZAR LEITO
 # ============================================================
-@roteador.patch("/leitos/{leito_id}", response_model=LeitoResponse)
+@roteador.patch(
+    "/leitos/{leito_id}",
+    response_model=LeitoResponse
+)
 def atualizar_leito(
         leito_id: int,
         numero: Optional[str] = Form(None, description="Número identificador do leito", example="101"),
@@ -170,21 +186,24 @@ def atualizar_leito(
 
 
 # ============================================================
-# ENDPOINT: REMOVER LEITO
+# ENDPOINT: EXCLUIR LEITO
 # ============================================================
-@roteador.delete("/leitos/{leito_id}")
-def remover_leito(
+@roteador.delete(
+    "/leitos/{leito_id}",
+    status_code=status.HTTP_200_OK
+)
+def excluir_leito(
         leito_id: int,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Remove um leito pelo ID.
+    Exclui um leito pelo ID.
 
     - **Acesso:** apenas ADMIN
     """
     if usuario_atual.get("papel") != "ADMIN":
-        raise HTTPException(status_code=403, detail="Acesso negado")
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode excluir leitos")
 
     leito = db.query(m.Leito).filter(m.Leito.id == leito_id).first()
     if not leito:
@@ -199,7 +218,7 @@ def remover_leito(
         "Leito",
         registro_id=leito_id,
         acao="DELETE",
-        detalhes=f"Leito {leito_id} removido"
+        detalhes=f"Leito excluído ID {leito_id} por {usuario_atual.get('email')}"
     )
 
-    return {"detail": "Leito removido com sucesso"}
+    return {"detail": "Leito excluído com sucesso"}

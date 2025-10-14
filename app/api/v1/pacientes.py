@@ -192,16 +192,16 @@ def atualizar_paciente(
 
 
 # ----------------------------
-# Deletar paciente
+# Excluir paciente
 # ----------------------------
 @roteador.delete("/{paciente_id}", status_code=status.HTTP_204_NO_CONTENT)
-def deletar_paciente(
+def excluir_paciente(
         paciente_id: int,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Deleta um paciente do sistema.
+    Exclui um paciente do sistema.
     Apenas ADMIN pode realizar a exclusão.
     """
     if usuario_atual.get("papel") != "ADMIN":
@@ -220,7 +220,7 @@ def deletar_paciente(
         tabela="pacientes",
         registro_id=paciente_id,
         acao="DELETE",
-        detalhes=f"Paciente deletado ID: {paciente_id} por {usuario_atual.get('email')}"
+        detalhes=f"Paciente excluído ID: {paciente_id} por {usuario_atual.get('email')}"
     )
 
     return None

@@ -4,15 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo sétimo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar&#10;- Adicionados docstrings detalhados e comentários explicativos&#10;- Mantida lógica de permissões por papel (Admin, Médico, Paciente)&#10;- Incluídos logs para todas as operações">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db-shm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db-wal" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -355,7 +356,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760385522839</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar">
+      <option name="closed" value="true" />
+      <created>1760403554022</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1760403554022</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -370,7 +379,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Terceiro commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, porém, as informações são inseridas através de &quot;Edit Value&quot; e não de campos" />
     <MESSAGE value="Quarto commit:&#10;&#10;Inserido as funções cancelar no CRUD Medical, com campos individuais." />
     <MESSAGE value="Quinto commit:&#10;&#10;Backup antes da refatoração" />
     <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
@@ -395,6 +403,7 @@
     <MESSAGE value="Vigésimo quinto commit:&#10;&#10; Ajuste Backup e Swagger&#10;&#10;- Corrigida duplicação de tags no Swagger para endpoints de backup&#10;- Consolidado os endpoints de Backup e Restauração em uma única tag&#10;- Atualizado `backup.py` com docstrings completas e explicativas&#10;- Ajustado `main.py` para inclusão do roteador de backup sem tags duplicadas&#10;- Garantido que os endpoints de gerar e restaurar backup apareçam corretamente no Swagger" />
     <MESSAGE value="Vigésimo sexto commit:&#10;&#10;Refatorado leito.py:&#10;&#10;- POST /leitos com campos separados via Form e validação de acesso ADMIN&#10;- PATCH /leitos/{leito_id} para atualização parcial, campos via Form&#10;- GET /leitos com response_model correto (LeitoResponse) para Swagger&#10;- DELETE /leitos/{leito_id} mantendo logs de auditoria&#10;- Corrigido problema de campos pré-preenchidos e erros de Swagger" />
     <MESSAGE value="Vigésimo sétimo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar&#10;- Adicionados docstrings detalhados e comentários explicativos&#10;- Mantida lógica de permissões por papel (Admin, Médico, Paciente)&#10;- Incluídos logs para todas as operações" />
-    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo sétimo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar&#10;- Adicionados docstrings detalhados e comentários explicativos&#10;- Mantida lógica de permissões por papel (Admin, Médico, Paciente)&#10;- Incluídos logs para todas as operações" />
+    <MESSAGE value="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar" />
+    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar" />
   </component>
 </project>

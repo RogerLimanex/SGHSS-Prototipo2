@@ -195,10 +195,10 @@ def atualizar_medico(
 
 
 # ----------------------------
-# Deletar médico (soft-delete)
+# Excluir médico (soft-delete)
 # ----------------------------
 @roteador.delete("/{medico_id}", status_code=status.HTTP_204_NO_CONTENT)
-def deletar_medico(
+def excluir_medico(
         medico_id: int,
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
@@ -223,7 +223,7 @@ def deletar_medico(
         tabela="medicos",
         registro_id=medico_id,
         acao="DELETE",
-        detalhes=f"Médico inativado: {db_medico.nome} por {usuario_atual.get('email')}"
+        detalhes=f"Médico excluído (inativado): {db_medico.nome} por {usuario_atual.get('email')}"
     )
 
     return None

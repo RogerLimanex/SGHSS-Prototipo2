@@ -7,7 +7,7 @@ from app.db import get_db
 from app import models as m
 from app.core import security
 from app.schemas import PrescricaoResponse
-from app.utils.logs import registrar_log  # Função utilitária para logs
+from app.utils.logs import registrar_log
 
 roteador = APIRouter()
 
@@ -33,21 +33,21 @@ def obter_usuario_atual(
 
 
 # ============================================================
-# ENDPOINT: Criar prescrição
+# 1️⃣ ENDPOINT: Criar prescrição
 # ============================================================
-@roteador.post("/prescricoes", response_model=PrescricaoResponse, status_code=status.HTTP_201_CREATED)
+@roteador.post("/prescricoes", response_model=PrescricaoResponse, status_code=status.HTTP_201_CREATED,
+               tags=["Prescrições"])
 def criar_prescricao(
-        paciente_id: int = Form(..., description="ID do paciente"),
-        medico_id: int = Form(..., description="ID do médico"),
-        medicamento: str = Form(..., description="Nome do medicamento"),
-        dosagem: str = Form(..., description="Dosagem prescrita"),
-        instrucoes: str = Form(..., description="Instruções para o paciente"),
+        paciente_id: int = Form(...),
+        medico_id: int = Form(...),
+        medicamento: str = Form(...),
+        dosagem: str = Form(...),
+        instrucoes: str = Form(...),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
     Cria uma nova prescrição médica para um paciente.
-
     - **Acesso:** apenas MEDICO ou ADMIN
     - **Registra log** da criação
     """
@@ -79,16 +79,15 @@ def criar_prescricao(
 
 
 # ============================================================
-# ENDPOINT: Listar prescrições
+# 2️⃣ ENDPOINT: Listar prescrições
 # ============================================================
-@roteador.get("/prescricoes", response_model=List[PrescricaoResponse])
+@roteador.get("/prescricoes", response_model=List[PrescricaoResponse], tags=["Prescrições"])
 def listar_prescricoes(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
     Lista todas as prescrições médicas cadastradas.
-
     - **Acesso:** apenas MEDICO ou ADMIN
     - **Registra log** da operação
     """
@@ -109,9 +108,9 @@ def listar_prescricoes(
 
 
 # ============================================================
-# ENDPOINT: Cancelar prescrição
+# 3️⃣ ENDPOINT: Cancelar prescrição
 # ============================================================
-@roteador.patch("/prescricoes/{prescricao_id}/cancelar", response_model=PrescricaoResponse)
+@roteador.patch("/prescricoes/{prescricao_id}/cancelar", response_model=PrescricaoResponse, tags=["Prescrições"])
 def cancelar_prescricao(
         prescricao_id: int,
         db: Session = Depends(get_db),
@@ -119,9 +118,7 @@ def cancelar_prescricao(
 ):
     """
     Cancela uma prescrição médica existente.
-
     - **Acesso:** apenas MEDICO ou ADMIN
-    - **Altera status da prescrição para 'CANCELADA'
     - **Registra log** do cancelamento
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
