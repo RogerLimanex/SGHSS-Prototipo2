@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\leito.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -27,7 +26,6 @@ class LeitoResponse(LeitoBase):
     Compatível com objetos SQLAlchemy (from_attributes=True).
     """
     id: int
-
     model_config = {"from_attributes": True}  # Pydantic v2
 
 
@@ -57,7 +55,7 @@ def obter_usuario_atual(
 
 
 # ============================================================
-# Endpoint: CRIAR LEITO
+# ENDPOINT: CRIAR LEITO
 # ============================================================
 @roteador.post("/leitos", response_model=LeitoResponse, status_code=status.HTTP_201_CREATED)
 def criar_leito(
@@ -96,7 +94,7 @@ def criar_leito(
 
 
 # ============================================================
-# Endpoint: LISTAR LEITOS
+# ENDPOINT: LISTAR LEITOS
 # ============================================================
 @roteador.get("/leitos", response_model=List[LeitoResponse])
 def listar_leitos(
@@ -125,7 +123,7 @@ def listar_leitos(
 
 
 # ============================================================
-# Endpoint: ATUALIZAR LEITO (PATCH)
+# ENDPOINT: ATUALIZAR LEITO
 # ============================================================
 @roteador.patch("/leitos/{leito_id}", response_model=LeitoResponse)
 def atualizar_leito(
@@ -172,7 +170,7 @@ def atualizar_leito(
 
 
 # ============================================================
-# Endpoint: REMOVER LEITO
+# ENDPOINT: REMOVER LEITO
 # ============================================================
 @roteador.delete("/leitos/{leito_id}")
 def remover_leito(

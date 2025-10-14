@@ -104,7 +104,7 @@ app.include_router(roteador_suprimento, prefix="/api/v1/suprimento", tags=["Supr
 app.include_router(roteador_financeiro, prefix="/api/v1/financeiro", tags=["Financeiro"])
 app.include_router(roteador_relatorios, prefix="/api/v1/relatorios", tags=["Relatórios"])
 app.include_router(roteador_auditoria, prefix="/api/v1/auditoria", tags=["Auditoria"])
-app.include_router(roteador_backup, prefix="/api/v1/backup")  # Sem parâmetro `tags=[]` para evitar duplicações
+app.include_router(roteador_backup, prefix="/api/v1/backup")
 
 
 # ----------------------------

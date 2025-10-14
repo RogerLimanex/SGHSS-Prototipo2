@@ -17,9 +17,9 @@ UPLOAD_DIR = "app/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-# ----------------------------
-# Obter usuário atual garantindo email
-# ----------------------------
+# ============================================================
+# FUNÇÃO AUXILIAR: Obter usuário atual
+# ============================================================
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
@@ -37,9 +37,9 @@ def obter_usuario_atual(
     return current_user
 
 
-# ----------------------------
-# Criar prontuário médico com upload opcional
-# ----------------------------
+# ============================================================
+# ENDPOINT: Criar prontuário
+# ============================================================
 @roteador.post("/prontuarios", response_model=ProntuarioMedicoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prontuario(
         request: Request,
@@ -52,14 +52,14 @@ def criar_prontuario(
 ):
     """
     Cria um novo prontuário médico para um paciente.
-    Permissão restrita a usuários MEDICO ou ADMIN.
-    Suporte para upload de arquivo opcional.
-    Registra log da operação.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - Suporte para upload de arquivo opcional
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    # --- Salvar arquivo no disco (se fornecido) ---
     caminho_arquivo = None
     if arquivo:
         nome_arquivo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{arquivo.filename}"
@@ -67,7 +67,6 @@ def criar_prontuario(
         with open(caminho_arquivo, "wb") as buffer:
             buffer.write(arquivo.file.read())
 
-    # --- Criar registro do prontuário ---
     novo_prontuario = m.Prontuario(
         paciente_id=paciente_id,
         medico_id=medico_id,
@@ -81,7 +80,6 @@ def criar_prontuario(
     db.commit()
     db.refresh(novo_prontuario)
 
-    # --- Registrar log ---
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -92,7 +90,6 @@ def criar_prontuario(
                  + (f" com anexo {arquivo.filename}" if arquivo else "")
     )
 
-    # --- Gerar URL pública do anexo ---
     anexo_url = None
     if novo_prontuario.anexo:
         nome_arquivo = os.path.basename(novo_prontuario.anexo)
@@ -109,9 +106,9 @@ def criar_prontuario(
     )
 
 
-# ----------------------------
-# Listar prontuários médicos
-# ----------------------------
+# ============================================================
+# ENDPOINT: Listar prontuários
+# ============================================================
 @roteador.get("/prontuarios", response_model=List[ProntuarioMedicoResponse])
 def listar_prontuarios(
         request: Request,
@@ -120,8 +117,10 @@ def listar_prontuarios(
 ):
     """
     Lista todos os prontuários médicos cadastrados.
-    Permissão restrita a usuários MEDICO ou ADMIN.
-    Retorna URLs públicas para anexos, se existirem.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - Retorna URLs públicas para anexos, se existirem
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -156,9 +155,9 @@ def listar_prontuarios(
     return lista_formatada
 
 
-# ----------------------------
-# Cancelar prontuário médico
-# ----------------------------
+# ============================================================
+# ENDPOINT: Cancelar prontuário
+# ============================================================
 @roteador.post("/prontuarios/{prontuario_id}/cancelar", response_model=ProntuarioMedicoResponse)
 def cancelar_prontuario(
         prontuario_id: int,
@@ -168,10 +167,11 @@ def cancelar_prontuario(
 ):
     """
     Cancela um prontuário médico existente.
-    Permissão restrita a usuários MEDICO ou ADMIN.
-    O status do prontuário é alterado para 'CANCELADO'.
-    Retorna URL pública do anexo se existir.
-    Registra log da operação.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - Altera status do prontuário para 'CANCELADO'
+    - Retorna URL pública do anexo se existir
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")

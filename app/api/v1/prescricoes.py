@@ -12,9 +12,9 @@ from app.utils.logs import registrar_log  # Função utilitária para logs
 roteador = APIRouter()
 
 
-# ----------------------------
-# Obter usuário atual com email garantido
-# ----------------------------
+# ============================================================
+# FUNÇÃO AUXILIAR: Obter usuário atual
+# ============================================================
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
@@ -32,23 +32,24 @@ def obter_usuario_atual(
     return current_user
 
 
-# ----------------------------
-# Criar prescrição médica
-# ----------------------------
+# ============================================================
+# ENDPOINT: Criar prescrição
+# ============================================================
 @roteador.post("/prescricoes", response_model=PrescricaoResponse, status_code=status.HTTP_201_CREATED)
 def criar_prescricao(
-        paciente_id: int = Form(...),
-        medico_id: int = Form(...),
-        medicamento: str = Form(...),
-        dosagem: str = Form(...),
-        instrucoes: str = Form(...),
+        paciente_id: int = Form(..., description="ID do paciente"),
+        medico_id: int = Form(..., description="ID do médico"),
+        medicamento: str = Form(..., description="Nome do medicamento"),
+        dosagem: str = Form(..., description="Dosagem prescrita"),
+        instrucoes: str = Form(..., description="Instruções para o paciente"),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
     Cria uma nova prescrição médica para um paciente.
-    Apenas usuários MEDICO ou ADMIN podem criar prescrições.
-    Registra log da criação.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Registra log** da criação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -77,9 +78,9 @@ def criar_prescricao(
     return nova_prescricao
 
 
-# ----------------------------
-# Listar prescrições médicas
-# ----------------------------
+# ============================================================
+# ENDPOINT: Listar prescrições
+# ============================================================
 @roteador.get("/prescricoes", response_model=List[PrescricaoResponse])
 def listar_prescricoes(
         db: Session = Depends(get_db),
@@ -87,7 +88,9 @@ def listar_prescricoes(
 ):
     """
     Lista todas as prescrições médicas cadastradas.
-    Apenas usuários MEDICO ou ADMIN podem acessar.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -105,9 +108,9 @@ def listar_prescricoes(
     return prescricoes
 
 
-# ----------------------------
-# Cancelar prescrição médica
-# ----------------------------
+# ============================================================
+# ENDPOINT: Cancelar prescrição
+# ============================================================
 @roteador.patch("/prescricoes/{prescricao_id}/cancelar", response_model=PrescricaoResponse)
 def cancelar_prescricao(
         prescricao_id: int,
@@ -116,9 +119,10 @@ def cancelar_prescricao(
 ):
     """
     Cancela uma prescrição médica existente.
-    Apenas usuários MEDICO ou ADMIN podem cancelar.
-    O status da prescrição é alterado para 'CANCELADA'.
-    Registra log do cancelamento.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Altera status da prescrição para 'CANCELADA'
+    - **Registra log** do cancelamento
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")

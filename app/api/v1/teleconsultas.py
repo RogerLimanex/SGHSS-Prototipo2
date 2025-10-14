@@ -1,4 +1,3 @@
-# D:\ProjectSGHSS\app\api\v1\teleconsultas.py
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,9 +12,9 @@ from app.utils.logs import registrar_log
 roteador = APIRouter()
 
 
-# ----------------------------
-# Obter usuário atual garantindo email
-# ----------------------------
+# ============================================================
+# FUNÇÃO AUXILIAR: Obter usuário atual
+# ============================================================
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
@@ -33,24 +32,25 @@ def obter_usuario_atual(
     return current_user
 
 
-# ----------------------------
-# Criar nova teleconsulta
-# ----------------------------
+# ============================================================
+# ENDPOINT: Criar teleconsulta
+# ============================================================
 @roteador.post(
     "/",
     response_model=TeleconsultaResponse,
     status_code=status.HTTP_201_CREATED
 )
 def criar_teleconsulta(
-        consulta_id: int = Form(...),
-        link_video: str = Form(...),
+        consulta_id: int = Form(..., description="ID da consulta associada"),
+        link_video: str = Form(..., description="Link para a videochamada"),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
     Cria uma nova teleconsulta associada a uma consulta existente.
-    Permissão restrita a usuários MEDICO e ADMIN.
-    Registra log da operação.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -77,9 +77,9 @@ def criar_teleconsulta(
     return nova_teleconsulta
 
 
-# ----------------------------
-# Listar todas as teleconsultas
-# ----------------------------
+# ============================================================
+# ENDPOINT: Listar teleconsultas
+# ============================================================
 @roteador.get(
     "/",
     response_model=List[TeleconsultaResponse]
@@ -89,9 +89,10 @@ def listar_teleconsultas(
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Retorna todas as teleconsultas cadastradas.
-    Permissão restrita a usuários MEDICO e ADMIN.
-    Registra log da operação.
+    Lista todas as teleconsultas cadastradas.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -110,9 +111,9 @@ def listar_teleconsultas(
     return teleconsultas
 
 
-# ----------------------------
-# Cancelar teleconsulta existente
-# ----------------------------
+# ============================================================
+# ENDPOINT: Cancelar teleconsulta
+# ============================================================
 @roteador.patch(
     "/{teleconsulta_id}/cancelar",
     response_model=TeleconsultaResponse
@@ -123,9 +124,10 @@ def cancelar_teleconsulta(
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Cancela uma teleconsulta pelo seu ID.
-    Permissão restrita a usuários MEDICO e ADMIN.
-    Registra log da operação.
+    Cancela uma teleconsulta existente pelo ID.
+
+    - **Acesso:** apenas MEDICO ou ADMIN
+    - **Registra log** da operação
     """
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
@@ -134,6 +136,7 @@ def cancelar_teleconsulta(
     if not teleconsulta:
         raise HTTPException(status_code=404, detail="Teleconsulta não encontrada")
 
+    # Atualiza status para CANCELADA
     teleconsulta.status = m.StatusConsulta.CANCELADA
     db.commit()
     db.refresh(teleconsulta)
