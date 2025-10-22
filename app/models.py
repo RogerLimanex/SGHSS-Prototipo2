@@ -1,17 +1,18 @@
 # D:\ProjectSGHSS\app\models.py
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, Enum
+    Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, Enum, Float
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db import Base  # import corrigido
+from app.db import Base
 import enum
 
 
-# -------------------
+# =========================================================
 # ENUMs
-# -------------------
+# =========================================================
 class StatusConsulta(str, enum.Enum):
+    """Enum de status possíveis de uma consulta médica."""
     AGENDADA = "agendada"
     CONFIRMADA = "confirmada"
     REALIZADA = "realizada"
@@ -19,15 +20,17 @@ class StatusConsulta(str, enum.Enum):
 
 
 class PapelUsuario(str, enum.Enum):
+    """Enum que define os papéis dos usuários do sistema."""
     ADMIN = "ADMIN"
     MEDICO = "MEDICO"
     PACIENTE = "PACIENTE"
 
 
-# -------------------
-# MODELOS
-# -------------------
+# =========================================================
+# MODELOS PRINCIPAIS
+# =========================================================
 class Usuario(Base):
+    """Representa um usuário do sistema (admin, médico ou paciente)."""
     __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -41,6 +44,7 @@ class Usuario(Base):
 
 
 class Paciente(Base):
+    """Dados cadastrais de pacientes."""
     __tablename__ = "pacientes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -59,6 +63,7 @@ class Paciente(Base):
 
 
 class Medico(Base):
+    """Dados de cadastro de médicos."""
     __tablename__ = "medicos"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -77,6 +82,7 @@ class Medico(Base):
 
 
 class Consulta(Base):
+    """Consultas médicas agendadas entre pacientes e médicos."""
     __tablename__ = "consultas"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -95,6 +101,7 @@ class Consulta(Base):
 
 
 class Prontuario(Base):
+    """Histórico clínico e registros de atendimento."""
     __tablename__ = "prontuarios"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -102,8 +109,8 @@ class Prontuario(Base):
     medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
     data_hora = Column(DateTime, nullable=True)
-    status = Column(String, default="ATIVO", nullable=True)
-    anexo = Column(Text, nullable=True)  # arquivo ou caminho do anexo
+    status = Column(String(20), default="ATIVO", nullable=True)
+    anexo = Column(Text, nullable=True)  # Caminho ou conteúdo de anexo (arquivo)
 
     paciente = relationship("Paciente", back_populates="prontuarios")
     medico = relationship("Medico", back_populates="prontuarios")
@@ -113,6 +120,7 @@ class Prontuario(Base):
 
 
 class Receita(Base):
+    """Prescrições médicas associadas a consultas."""
     __tablename__ = "prescricoes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -129,6 +137,7 @@ class Receita(Base):
 
 
 class Teleconsulta(Base):
+    """Consultas médicas realizadas de forma remota (videoconferência)."""
     __tablename__ = "teleconsultas"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -141,6 +150,7 @@ class Teleconsulta(Base):
 
 
 class LogAuditoria(Base):
+    """Registro de ações de usuários para fins de auditoria."""
     __tablename__ = "logs_auditoria"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -149,3 +159,6 @@ class LogAuditoria(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     usuario = relationship("Usuario", back_populates="logs_auditoria")
+
+
+

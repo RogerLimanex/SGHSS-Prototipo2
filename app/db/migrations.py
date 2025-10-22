@@ -1,14 +1,13 @@
-# D:\ProjectSGHSS\app\db\migrations.py
 from datetime import datetime
 from app.db.session import Base, engine, SessionLocal
-from app.models import Usuario, Medico, Paciente, StatusConsulta, AuditLog
+from app.models import Usuario, Medico, Paciente, StatusConsulta, AuditLog, Financeiro
 from app.core import security
 
 
 def criar_tabelas():
     """
     Cria todas as tabelas do banco caso não existam.
-    Inclui as tabelas de auditoria e entidades principais.
+    Inclui as tabelas de auditoria, entidades principais e financeiro.
     """
     Base.metadata.create_all(bind=engine)
     print("✅ Todas as tabelas foram criadas (se ainda não existiam)")
@@ -17,7 +16,7 @@ def criar_tabelas():
 def popular_dados():
     """
     Insere registros iniciais no banco, caso ainda não existam.
-    Cria o usuário admin e alguns registros de teste.
+    Cria o usuário admin, médicos e pacientes de teste.
     """
     with SessionLocal() as session:
         try:

@@ -50,24 +50,53 @@ def criar_paciente(
     Cria um novo paciente.
     Apenas ADMIN ou MEDICO podem criar pacientes.
     """
-    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
-        raise HTTPException(status_code=403, detail="Sem permissão")
 
+    # -----------------------------------
+    # Função auxiliar para tratar formatos de data
+    # Aceita: dd/mm/yyyy | dd-mm-yyyy | yyyy-mm-dd
+    # -----------------------------------
+    def parse_data(data_str: str):
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(data_str, fmt).date()
+            except ValueError:
+                continue
+        raise HTTPException(
+            status_code=400,
+            detail="Data inválida. Use o formato dd/mm/yyyy, dd-mm-yyyy ou yyyy-mm-dd."
+        )
+
+    # ----------------------------
+    # Validação de permissões
+    # ----------------------------
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
+        raise HTTPException(status_code=403, detail="Sem permissão para criar pacientes")
+
+    # ----------------------------
+    # Validação de email duplicado
+    # ----------------------------
     if db.query(m.Paciente).filter(m.Paciente.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
+    # ----------------------------
+    # Criação do novo paciente
+    # ----------------------------
     novo = m.Paciente(
         nome=nome,
         email=email,
         telefone=telefone,
         cpf=cpf,
-        data_nascimento=datetime.strptime(data_nascimento, "%Y-%m-%d").date(),
+        data_nascimento=parse_data(data_nascimento),
         endereco=endereco
     )
+
     db.add(novo)
     db.commit()
     db.refresh(novo)
 
+    # ----------------------------
+    # Registro de auditoria
+    # ----------------------------
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),

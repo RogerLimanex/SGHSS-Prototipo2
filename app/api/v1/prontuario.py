@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+# D:\ProjectSGHSS\app\api\v1\prontuario.py
+from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from pathlib import Path
 from datetime import datetime
 
 from app.db import get_db
@@ -33,57 +35,81 @@ def obter_usuario_atual(
 
 
 # ============================================================
-# ENDPOINT: Criar registro de prontuário
+# ENDPOINT: Criar Prontuário
 # ============================================================
-@roteador.post(
-    "/",
-    response_model=ProntuarioResponse,
-    status_code=status.HTTP_201_CREATED
-)
-def criar_prontuario(
-        consulta_id: int = Form(..., description="ID da consulta relacionada"),
-        anotacoes: str = Form(..., description="Anotações médicas e observações do prontuário"),
+@roteador.post("/", response_model=ProntuarioResponse, status_code=status.HTTP_201_CREATED)
+async def criar_prontuario(
+        paciente_id: int = Form(...),
+        medico_id: int = Form(...),
+        descricao: Optional[str] = Form(None),  # Alterado de 'observacoes' para 'descricao'
+        arquivo: Optional[UploadFile] = File(None),
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    Cria um novo registro de prontuário para uma consulta.
-
-    - **Acesso:** apenas MÉDICO ou ADMIN
-    - **Registra log** da operação
+    Cria um novo prontuário.
+    Apenas ADMIN ou MEDICO podem criar prontuários.
     """
-    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
+    # ----------------------------
+    # Verifica permissão
+    # ----------------------------
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    novo_prontuario = m.Prontuario(
-        consulta_id=consulta_id,
-        anotacoes=anotacoes,
-        data_registro=datetime.now()
+    # ----------------------------
+    # Verifica se paciente e médico existem
+    # ----------------------------
+    paciente = db.query(m.Paciente).filter(m.Paciente.id == paciente_id).first()
+    medico = db.query(m.Medico).filter(m.Medico.id == medico_id).first()
+
+    if not paciente or not medico:
+        raise HTTPException(status_code=404, detail="Paciente ou médico não encontrado")
+
+    # ----------------------------
+    # Se houver arquivo, salva em diretório local
+    # ----------------------------
+    caminho_arquivo = None
+    if arquivo:
+        diretorio_upload = Path("uploads/prontuarios")
+        diretorio_upload.mkdir(parents=True, exist_ok=True)
+        caminho_arquivo = diretorio_upload / arquivo.filename
+        with open(caminho_arquivo, "wb") as f:
+            f.write(await arquivo.read())
+
+    # ----------------------------
+    # Criação do prontuário
+    # ----------------------------
+    novo = m.Prontuario(
+        paciente_id=paciente_id,
+        medico_id=medico_id,
+        descricao=descricao,  # Correção aplicada
+        data_hora=datetime.now(),
+        anexo=str(caminho_arquivo) if caminho_arquivo else None  # Correção aplicada
     )
 
-    db.add(novo_prontuario)
+    db.add(novo)
     db.commit()
-    db.refresh(novo_prontuario)
+    db.refresh(novo)
 
+    # ----------------------------
+    # Registro de auditoria
+    # ----------------------------
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
-        tabela="Prontuario",
-        registro_id=novo_prontuario.id,
+        tabela="prontuarios",
+        registro_id=novo.id,
         acao="CREATE",
-        detalhes=f"Prontuário criado para consulta {consulta_id} por {usuario_atual.get('email')}"
+        detalhes=f"Prontuário criado para o paciente {paciente.nome} por {usuario_atual.get('email')}"
     )
 
-    return novo_prontuario
+    return novo
 
 
 # ============================================================
 # ENDPOINT: Listar prontuários
 # ============================================================
-@roteador.get(
-    "/",
-    response_model=List[ProntuarioResponse]
-)
+@roteador.get("/", response_model=List[ProntuarioResponse])
 def listar_prontuarios(
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
@@ -114,10 +140,7 @@ def listar_prontuarios(
 # ============================================================
 # ENDPOINT: Excluir (ou cancelar) prontuário
 # ============================================================
-@roteador.delete(
-    "/{prontuario_id}",
-    response_model=ProntuarioResponse
-)
+@roteador.delete("/{prontuario_id}", response_model=ProntuarioResponse)
 def excluir_prontuario(
         prontuario_id: int,
         db: Session = Depends(get_db),

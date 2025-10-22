@@ -1,10 +1,17 @@
+# D:\ProjectSGHSS\app\schemas\__init__.py
+"""
+📦 Módulo: app.schemas
+Centraliza a importação de todos os Schemas Pydantic do sistema SGHSS.
+Facilita o acesso e mantém consistência entre os módulos.
+"""
+
 # ============================================================
 # Paciente Schemas
 # ============================================================
 from .paciente import (
     PacienteCreate,
     PacienteUpdate,
-    PacienteResponse
+    PacienteResponse,
 )
 
 # ============================================================
@@ -13,7 +20,7 @@ from .paciente import (
 from .medico import (
     MedicoCreate,
     MedicoUpdate,
-    MedicoResponse
+    MedicoResponse,
 )
 
 # ============================================================
@@ -21,7 +28,7 @@ from .medico import (
 # ============================================================
 from .consulta import (
     ConsultaCreate,
-    ConsultaResponse
+    ConsultaResponse,
 )
 
 # ============================================================
@@ -29,7 +36,7 @@ from .consulta import (
 # ============================================================
 from .teleconsulta import (
     TeleconsultaCreate,
-    TeleconsultaResponse
+    TeleconsultaResponse,
 )
 
 # ============================================================
@@ -37,7 +44,7 @@ from .teleconsulta import (
 # ============================================================
 from .prescricao import (
     PrescricaoCreate,
-    PrescricaoResponse
+    PrescricaoResponse,
 )
 
 # ============================================================
@@ -45,7 +52,7 @@ from .prescricao import (
 # ============================================================
 from .prontuario import (
     ProntuarioMedicoCreate as ProntuarioCreate,
-    ProntuarioMedicoResponse as ProntuarioResponse
+    ProntuarioMedicoResponse as ProntuarioResponse,
 )
 
 # ============================================================
@@ -53,5 +60,14 @@ from .prontuario import (
 # ============================================================
 from .leito import (
     LeitoBase,
-    LeitoResponse
+    LeitoResponse,
+)
+
+# ============================================================
+# Financeiro Schemas
+# ============================================================
+from .financeiro import (
+    FinanceiroBase,
+    FinanceiroResponse,
+    ResumoFinanceiroResponse,
 )

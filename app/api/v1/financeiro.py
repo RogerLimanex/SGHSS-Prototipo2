@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, date
+
 from app.db import get_db
-from app import models as m
+from app import models as m  # Import correto para reconhecer Financeiro
 from app.core import security
 from app.schemas.financeiro import FinanceiroResponse, ResumoFinanceiroResponse
 from app.utils.logs import registrar_log
@@ -13,12 +14,16 @@ roteador = APIRouter()
 
 
 # ----------------------------
-# Obter usuário atual com email
+# Obter usuário atual com e-mail
 # ----------------------------
 def obter_usuario_atual(
         current_user=Depends(security.get_current_user),
         db: Session = Depends(get_db)
 ):
+    """
+    🔐 Retorna o usuário autenticado com o e-mail preenchido.
+    Garante compatibilidade com tokens que contêm apenas o ID do usuário.
+    """
     usuario_email = current_user.get("email")
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
@@ -49,26 +54,27 @@ def registrar_movimento(
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    tipo_upper = tipo.upper()
+    tipo_upper = tipo.strip().upper()
     if tipo_upper not in ["ENTRADA", "SAIDA"]:
         raise HTTPException(status_code=400, detail="Tipo deve ser ENTRADA ou SAIDA")
 
+    # Ajuste: campo correto é 'data' na model Financeiro
     novo = m.Financeiro(
         tipo=tipo_upper,
-        descricao=descricao,
-        valor=valor,
-        data_registro=datetime.now()
+        descricao=descricao.strip(),
+        valor=float(valor),
+        data=datetime.now()
     )
 
     db.add(novo)
     db.commit()
     db.refresh(novo)
 
-    # Log detalhado
+    # Log detalhado da operação
     registrar_log(
         db=db,
         usuario_email=usuario_atual["email"],
-        categoria="Financeiro",
+        tabela="Financeiro",
         registro_id=novo.id,
         acao="CREATE",
         detalhes=f"Movimentação '{tipo_upper}' registrada: {descricao} | Valor: {valor:.2f}"
@@ -89,7 +95,7 @@ def listar_movimentos(
         usuario_atual=Depends(obter_usuario_atual)
 ):
     """
-    📋 Listar movimentações financeiras, com filtros opcionais:
+    📋 Listar movimentações financeiras com filtros opcionais:
     - **tipo** (ENTRADA/SAIDA)
     - **data_inicial** e **data_final**
     """
@@ -97,18 +103,19 @@ def listar_movimentos(
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
     query = db.query(m.Financeiro)
-    if tipo:
-        query = query.filter(m.Financeiro.tipo == tipo.upper())
-    if data_inicial and data_final:
-        query = query.filter(m.Financeiro.data_registro.between(data_inicial, data_final))
 
-    lista = query.all()
+    if tipo:
+        query = query.filter(m.Financeiro.tipo == tipo.strip().upper())
+    if data_inicial and data_final:
+        query = query.filter(m.Financeiro.data.between(data_inicial, data_final))
+
+    lista = query.order_by(m.Financeiro.data.desc()).all()
 
     # Log padronizado
     registrar_log(
         db=db,
         usuario_email=usuario_atual["email"],
-        categoria="Financeiro",
+        tabela="Financeiro",
         acao="READ",
         detalhes=f"Listagem de movimentações | Tipo: {tipo or 'TODOS'} | "
                  f"Período: {data_inicial or '-'} até {data_final or '-'}"
@@ -134,18 +141,18 @@ def gerar_resumo(
     if usuario_atual.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    entradas = db.query(m.Financeiro).filter(m.Financeiro.tipo == "ENTRADA").all()
-    saidas = db.query(m.Financeiro).filter(m.Financeiro.tipo == "SAIDA").all()
+    entradas = db.query(m.Financeiro).filter(m.Financeiro.tipo == "ENTRADA").with_entities(m.Financeiro.valor).all()
+    saidas = db.query(m.Financeiro).filter(m.Financeiro.tipo == "SAIDA").with_entities(m.Financeiro.valor).all()
 
-    total_entradas = sum(e.valor for e in entradas)
-    total_saidas = sum(s.valor for s in saidas)
+    total_entradas = sum(v[0] for v in entradas)
+    total_saidas = sum(v[0] for v in saidas)
     saldo = total_entradas - total_saidas
 
     # Log padronizado
     registrar_log(
         db=db,
         usuario_email=usuario_atual["email"],
-        categoria="Financeiro",
+        tabela="Financeiro",
         acao="READ",
         detalhes=(
             f"Resumo financeiro gerado | Entradas: {total_entradas:.2f} | "
