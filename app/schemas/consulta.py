@@ -1,3 +1,4 @@
+#D:\ProjectSGHSS\app\schemas\consulta.py:
 from pydantic import BaseModel  # BaseModel para criar schemas e validar dados
 from datetime import datetime  # datetime para datas e horas
 from typing import Optional  # Optional permite campos que podem ser None

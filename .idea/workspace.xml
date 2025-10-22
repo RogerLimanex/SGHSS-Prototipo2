@@ -4,18 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Vigésimo nono commit:&#10;&#10;Padronizado endpoint DELETE de suprimentos: remover_suprimento → excluir_suprimento, com docstring, log e mensagem de retorno consistentes.">
-      <change afterPath="$PROJECT_DIR$/app/models/financeiro.py" afterDir="false" />
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/financeiro.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/consulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/consulta.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/financeiro.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/suprimento.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sghss.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db-shm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sghss.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db-wal" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -374,7 +371,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760461023254</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras.">
+      <option name="closed" value="true" />
+      <created>1761161992678</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1761161992678</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -389,7 +394,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Quinto commit:&#10;&#10;Backup antes da refatoração" />
     <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
     <MESSAGE value="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado" />
     <MESSAGE value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
@@ -414,6 +418,7 @@
     <MESSAGE value="Vigésimo sétimo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar&#10;- Adicionados docstrings detalhados e comentários explicativos&#10;- Mantida lógica de permissões por papel (Admin, Médico, Paciente)&#10;- Incluídos logs para todas as operações" />
     <MESSAGE value="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar" />
     <MESSAGE value="Vigésimo nono commit:&#10;&#10;Padronizado endpoint DELETE de suprimentos: remover_suprimento → excluir_suprimento, com docstring, log e mensagem de retorno consistentes." />
-    <option name="LAST_COMMIT_MESSAGE" value="Vigésimo nono commit:&#10;&#10;Padronizado endpoint DELETE de suprimentos: remover_suprimento → excluir_suprimento, com docstring, log e mensagem de retorno consistentes." />
+    <MESSAGE value="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras." />
+    <option name="LAST_COMMIT_MESSAGE" value="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras." />
   </component>
 </project>

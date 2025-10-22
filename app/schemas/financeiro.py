@@ -36,7 +36,7 @@ class FinanceiroResponse(FinanceiroBase):
     data_registro: datetime  # compatível com o modelo SQLAlchemy
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # substitui orm_mode
 
 
 # ----------------------------
@@ -46,3 +46,6 @@ class ResumoFinanceiroResponse(BaseModel):
     total_entradas: float
     total_saidas: float
     saldo: float
+
+    class Config:
+        from_attributes = True  # compatível com futuros modelos que possam usar atributos ORM
