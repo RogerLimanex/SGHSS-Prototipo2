@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from app.db import get_db
-from app import models as m
-from app.core import security
-from pydantic import BaseModel
-from app.utils.logs import registrar_log
+from fastapi import APIRouter, Depends, HTTPException, status, Form  # Importações FastAPI
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from typing import List, Optional  # Tipagens
+from app.db import get_db  # Função para obter sessão do banco
+from app import models as m  # Import dos models
+from app.core import security  # Autenticação e segurança
+from pydantic import BaseModel  # BaseModel Pydantic
+from app.utils.logs import registrar_log  # Função de log de auditoria
 
 
 # ============================================================
@@ -15,9 +15,9 @@ class LeitoBase(BaseModel):
     """
     Schema base para criação ou atualização de um leito.
     """
-    numero: str
-    status: str
-    paciente_id: Optional[int] = None
+    numero: str  # Número do leito
+    status: str  # Status do leito (Livre, Ocupado, etc.)
+    paciente_id: Optional[int] = None  # ID do paciente associado (opcional)
 
 
 class LeitoResponse(LeitoBase):
@@ -25,28 +25,28 @@ class LeitoResponse(LeitoBase):
     Schema de resposta de um leito, incluindo o ID.
     Compatível com objetos SQLAlchemy (from_attributes=True).
     """
-    id: int
-    model_config = {"from_attributes": True}  # Pydantic v2
+    id: int  # ID do leito
+    model_config = {"from_attributes": True}  # Pydantic v2, permite instanciar a partir de objetos SQLAlchemy
 
 
 # ============================================================
 # ROTEADOR
 # ============================================================
-roteador = APIRouter()
+roteador = APIRouter()  # Cria o roteador FastAPI
 
 
 # ============================================================
 # FUNÇÃO AUXILIAR: Obter usuário autenticado
 # ============================================================
 def obter_usuario_atual(
-        current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db)
+        current_user=Depends(security.get_current_user),  # Usuário obtido via token
+        db: Session = Depends(get_db)  # Sessão do banco
 ):
     """
     Obtém o usuário autenticado, garantindo que o campo `email` esteja presente
     no token JWT ou seja buscado no banco de dados.
     """
-    usuario_email = current_user.get("email")
+    usuario_email = current_user.get("email")  # Tenta obter o email do token
     if not usuario_email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
@@ -60,7 +60,7 @@ def obter_usuario_atual(
 # ============================================================
 @roteador.post(
     "/leitos",
-    response_model=LeitoResponse,
+    response_model=LeitoResponse,  # Retorna schema LeitoResponse
     status_code=status.HTTP_201_CREATED
 )
 def criar_leito(
@@ -78,20 +78,20 @@ def criar_leito(
     - **Campos obrigatórios:** numero, status
     - **Campos opcionais:** paciente_id
     """
-    if usuario_atual.get("papel") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":  # Verifica permissão
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode criar leitos")
 
-    novo_leito = m.Leito(
+    novo_leito = m.Leito(  # Cria objeto Leito
         numero=numero,
         status=status_leito,
         paciente_id=paciente_id
     )
 
-    db.add(novo_leito)
-    db.commit()
-    db.refresh(novo_leito)
+    db.add(novo_leito)  # Adiciona à sessão
+    db.commit()  # Salva alterações
+    db.refresh(novo_leito)  # Atualiza objeto com ID
 
-    registrar_log(
+    registrar_log(  # Log de auditoria
         db,
         usuario_atual["email"],
         "Leito",
@@ -100,7 +100,7 @@ def criar_leito(
         detalhes=f"Leito {numero} criado com status {status_leito}"
     )
 
-    return novo_leito
+    return novo_leito  # Retorna objeto criado
 
 
 # ============================================================
@@ -108,7 +108,7 @@ def criar_leito(
 # ============================================================
 @roteador.get(
     "/leitos",
-    response_model=List[LeitoResponse]
+    response_model=List[LeitoResponse]  # Lista de leitos
 )
 def listar_leitos(
         db: Session = Depends(get_db),
@@ -119,12 +119,12 @@ def listar_leitos(
 
     - **Acesso:** ADMIN ou MEDICO
     """
-    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:
+    if usuario_atual.get("papel") not in ["ADMIN", "MEDICO"]:  # Permissões
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    leitos = db.query(m.Leito).all()
+    leitos = db.query(m.Leito).all()  # Consulta todos os leitos
 
-    registrar_log(
+    registrar_log(  # Log de listagem
         db,
         usuario_atual["email"],
         "Leito",
@@ -132,7 +132,7 @@ def listar_leitos(
         detalhes="Listagem de leitos"
     )
 
-    return leitos
+    return leitos  # Retorna lista
 
 
 # ============================================================
@@ -140,7 +140,7 @@ def listar_leitos(
 # ============================================================
 @roteador.patch(
     "/leitos/{leito_id}",
-    response_model=LeitoResponse
+    response_model=LeitoResponse  # Retorna objeto atualizado
 )
 def atualizar_leito(
         leito_id: int,
@@ -156,24 +156,24 @@ def atualizar_leito(
     - **Acesso:** apenas ADMIN
     - **Campos opcionais:** numero, status, paciente_id
     """
-    if usuario_atual.get("papel") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":  # Verifica permissão
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    leito = db.query(m.Leito).filter(m.Leito.id == leito_id).first()
+    leito = db.query(m.Leito).filter(m.Leito.id == leito_id).first()  # Busca leito
     if not leito:
         raise HTTPException(status_code=404, detail="Leito não encontrado")
 
     if numero is not None:
-        leito.numero = numero
+        leito.numero = numero  # Atualiza número
     if status_leito is not None:
-        leito.status = status_leito
+        leito.status = status_leito  # Atualiza status
     if paciente_id is not None:
-        leito.paciente_id = paciente_id
+        leito.paciente_id = paciente_id  # Atualiza paciente
 
-    db.commit()
-    db.refresh(leito)
+    db.commit()  # Salva alterações
+    db.refresh(leito)  # Atualiza objeto
 
-    registrar_log(
+    registrar_log(  # Log de auditoria
         db,
         usuario_atual["email"],
         "Leito",
@@ -182,7 +182,7 @@ def atualizar_leito(
         detalhes=f"Leito {leito_id} atualizado"
     )
 
-    return leito
+    return leito  # Retorna objeto atualizado
 
 
 # ============================================================
@@ -202,17 +202,17 @@ def excluir_leito(
 
     - **Acesso:** apenas ADMIN
     """
-    if usuario_atual.get("papel") != "ADMIN":
+    if usuario_atual.get("papel") != "ADMIN":  # Verifica permissão
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode excluir leitos")
 
-    leito = db.query(m.Leito).filter(m.Leito.id == leito_id).first()
+    leito = db.query(m.Leito).filter(m.Leito.id == leito_id).first()  # Busca leito
     if not leito:
         raise HTTPException(status_code=404, detail="Leito não encontrado")
 
-    db.delete(leito)
-    db.commit()
+    db.delete(leito)  # Remove da sessão
+    db.commit()  # Salva alterações
 
-    registrar_log(
+    registrar_log(  # Log de auditoria
         db,
         usuario_atual["email"],
         "Leito",
@@ -221,4 +221,4 @@ def excluir_leito(
         detalhes=f"Leito excluído ID {leito_id} por {usuario_atual.get('email')}"
     )
 
-    return {"detail": "Leito excluído com sucesso"}
+    return {"detail": "Leito excluído com sucesso"}  # Confirmação

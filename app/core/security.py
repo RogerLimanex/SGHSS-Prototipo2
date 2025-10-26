@@ -1,21 +1,20 @@
-# D:\ProjectSGHSS\app\core\security.py
-from fastapi import Depends, HTTPException, Request
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from datetime import datetime, timedelta
-from app.db import get_db
-from app import models as m
-import os
-import bcrypt
+from fastapi import Depends, HTTPException, Request  # Dependências FastAPI
+from fastapi.security import OAuth2PasswordBearer  # OAuth2
+from jose import jwt, JWTError  # JWT
+from datetime import datetime, timedelta  # Datas
+from app.db import get_db  # Sessão do banco
+from app import models as m  # Models
+import os  # Variáveis de ambiente
+import bcrypt  # Hash de senhas
 
 # -------------------------------
 # Configurações do Token JWT
 # -------------------------------
-SECRET_KEY = os.getenv("SECRET_KEY", "CHAVE_SUPER_SECRETA_PADRAO")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_HOURS = int(os.getenv("ACCESS_TOKEN_EXPIRE_HOURS", 8))
+SECRET_KEY = os.getenv("SECRET_KEY", "CHAVE_SUPER_SECRETA_PADRAO")  # Chave secreta
+ALGORITHM = os.getenv("ALGORITHM", "HS256")  # Algoritmo JWT
+ACCESS_TOKEN_EXPIRE_HOURS = int(os.getenv("ACCESS_TOKEN_EXPIRE_HOURS", 8))  # Expiração
 
-# Esquema de autenticação OAuth2
+# Esquema OAuth2 para login
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/autenticacao/login")
 
 
@@ -24,9 +23,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/autenticacao/login")
 # -------------------------------
 def hash_password(password: str) -> str:
     """Gera o hash da senha usando bcrypt."""
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
-    return hashed.decode("utf-8")
+    salt = bcrypt.gensalt()  # Gera salt aleatório
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)  # Criptografa senha
+    return hashed.decode("utf-8")  # Retorna string
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -44,13 +43,13 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=A
     """Cria um token JWT com tempo de expiração."""
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire})  # Adiciona expiração
 
     # Adiciona "sub" (identificador padrão do usuário)
     if "email" in to_encode:
         to_encode["sub"] = to_encode["email"]
 
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # Gera token
     return encoded_jwt
 
 

@@ -1,6 +1,6 @@
 # 🏥 SGHSS - Sistema de Gestão Hospitalar e de Serviços de Saúde
 
-**Protótipo Back-end desenvolvido com FastAPI**, voltado à administração de pacientes, profissionais de saúde, consultas, prontuários, prescrições e telemedicina.  
+**Protótipo Back-end desenvolvido com FastAPI**, voltado à administração de pacientes, profissionais de saúde, consultas, prontuários, prescrições, telemedicina, leitos, suprimentos e finanças.  
 Inclui autenticação JWT, controle de acesso por perfil, auditoria LGPD e módulos administrativos.
 
 ---
@@ -12,8 +12,9 @@ Inclui autenticação JWT, controle de acesso por perfil, auditoria LGPD e módu
 - **SQLAlchemy**
 - **Pydantic**
 - **JWT (Autenticação e Controle de Acesso)**
-- **SQLite (banco padrão)**
+- **SQLite (banco padrão com WAL)**
 - **Uvicorn** (servidor)
+- **bcrypt** (hash de senhas)
 - **Logs e Auditoria com LGPD**
 
 ---
@@ -22,35 +23,55 @@ Inclui autenticação JWT, controle de acesso por perfil, auditoria LGPD e módu
 
 ```
 app/
- ├── api/v1/
- │   ├── autenticacao.py
- │   ├── pacientes.py
- │   ├── medicos.py
- │   ├── consultas.py
- │   ├── prescricoes.py
- │   ├── teleconsultas.py
- │   ├── prontuario.py
- │   ├── auditoria.py
- │   ├── financeiro.py
- │   ├── relatorios.py
- │   └── backup.py
- │
- ├── core/
- │   ├── security.py
- │   └── config.py
- │
- ├── db/
- │   ├── base.py
- │   ├── migrations.py
- │   └── session.py
- │
- ├── models/
- ├── schemas/
- ├── utils/
- │   └── logs.py
- │
- ├── uploads/
- └── main.py
+├── api/v1/
+│ ├── autenticacao.py
+│ ├── pacientes.py
+│ ├── medicos.py
+│ ├── consultas.py
+│ ├── prescricoes.py
+│ ├── teleconsultas.py
+│ ├── prontuario.py
+│ ├── auditoria.py
+│ ├── financeiro.py
+│ ├── relatorios.py
+│ └── backup.py
+│
+├── core/
+│ ├── init.py
+│ ├── security.py
+│ └── audit.py
+│
+├── db/
+│ ├── init.py
+│ ├── session.py
+│ └── migrations.py
+│
+├── models/
+│ ├── init.py
+│ ├── medical.py
+│ ├── audit.py
+│ ├── financeiro.py
+│ ├── leito.py
+│ └── suprimento.py
+│
+├── schemas/
+│ ├── init.py
+│ ├── paciente.py
+│ ├── medico.py
+│ ├── consulta.py
+│ ├── teleconsulta.py
+│ ├── prescricao.py
+│ ├── prontuario.py
+│ ├── leito.py
+│ ├── financeiro.py
+│ └── suprimento.py
+│
+├── utils/
+│ ├── init.py
+│ └── logs.py
+│
+├── uploads/
+└── main.py
 ```
 
 ---
@@ -59,9 +80,9 @@ app/
 
 | Perfil | Permissões principais |
 |--------|------------------------|
-| **ADMIN** | Acesso total a todos os módulos e relatórios |
-| **MEDICO** | CRUD de pacientes, consultas, prontuários e prescrições |
-| **PACIENTE** | Agendar consultas, acessar histórico, visualizar prescrições |
+| **ADMIN** | Acesso total a todos os módulos, relatórios e auditoria |
+| **MEDICO** | CRUD de pacientes, consultas, prontuários, prescrições e teleconsultas |
+| **PACIENTE** | Agendar consultas, visualizar histórico e prescrições próprias |
 
 ---
 
@@ -72,6 +93,7 @@ Para acessar os endpoints protegidos, obtenha um token via `/api/v1/autenticacao
 
 ```http
 Authorization: Bearer <seu_token_aqui>
+
 ```
 
 ---
@@ -188,6 +210,7 @@ Authorization: Bearer <seu_token_aqui>
 - Todos os CRUDs registram logs automáticos (tabela: **Auditoria**).
 - Campos sensíveis são protegidos e/ou criptografados.
 - Controle de acesso por **perfil de usuário**.
+- Histórico de ações acessível apenas a administradores.
 
 ---
 
@@ -201,6 +224,21 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ### 🌐 Acessar documentação
 - Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
 - Redoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+---
+
+🧾 Dados Iniciais
+
+- Usuário admin:
+  - Email: admin@teste.com
+  - Senha: 123456
+
+
+- Médicos de teste: Dr. João Silva, Dra. Maria Souza
+
+- Pacientes de teste: Carlos Alberto, Ana Paula
+
+Dados populados automaticamente via db/migrations.py.
 
 ---
 

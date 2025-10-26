@@ -1,37 +1,37 @@
 # D:\ProjectSGHSS\app\api\v1\prontuario.py
-from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from pathlib import Path
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File  # FastAPI imports
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from typing import List, Optional  # Tipagem
+from pathlib import Path  # Manipulação de diretórios/arquivos
+from datetime import datetime  # Para timestamp
 
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.schemas import ProntuarioResponse
-from app.utils.logs import registrar_log
+from app.db import get_db  # Função para obter sessão do banco
+from app import models as m  # Import dos models
+from app.core import security  # Autenticação e segurança
+from app.schemas import ProntuarioResponse  # Schema de resposta de prontuário
+from app.utils.logs import registrar_log  # Função utilitária para logs
 
-roteador = APIRouter()
+roteador = APIRouter()  # Criação do roteador FastAPI
 
 
 # ============================================================
 # FUNÇÃO AUXILIAR: Obter usuário atual
 # ============================================================
 def obter_usuario_atual(
-        current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db)
+        current_user=Depends(security.get_current_user),  # Usuário via token JWT
+        db: Session = Depends(get_db)  # Sessão do banco
 ):
     """
     Garante que o usuário autenticado possua o campo 'email'.
     Evita falhas nos logs quando o token JWT não contém email.
     """
-    usuario_email = current_user.get("email")
-    if not usuario_email:
+    usuario_email = current_user.get("email")  # Tenta obter email do token
+    if not usuario_email:  # Se não houver, busca no banco
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
             current_user["email"] = usuario.email
-    return current_user
+    return current_user  # Retorna usuário com email garantido
 
 
 # ============================================================
@@ -39,10 +39,10 @@ def obter_usuario_atual(
 # ============================================================
 @roteador.post("/", response_model=ProntuarioResponse, status_code=status.HTTP_201_CREATED)
 async def criar_prontuario(
-        paciente_id: int = Form(...),
-        medico_id: int = Form(...),
-        descricao: Optional[str] = Form(None),  # Alterado de 'observacoes' para 'descricao'
-        arquivo: Optional[UploadFile] = File(None),
+        paciente_id: int = Form(...),  # ID do paciente
+        medico_id: int = Form(...),  # ID do médico
+        descricao: Optional[str] = Form(None),  # Observações/descrição
+        arquivo: Optional[UploadFile] = File(None),  # Arquivo anexo opcional
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -70,11 +70,11 @@ async def criar_prontuario(
     # ----------------------------
     caminho_arquivo = None
     if arquivo:
-        diretorio_upload = Path("uploads/prontuarios")
-        diretorio_upload.mkdir(parents=True, exist_ok=True)
+        diretorio_upload = Path("uploads/prontuarios")  # Define pasta de uploads
+        diretorio_upload.mkdir(parents=True, exist_ok=True)  # Cria se não existir
         caminho_arquivo = diretorio_upload / arquivo.filename
         with open(caminho_arquivo, "wb") as f:
-            f.write(await arquivo.read())
+            f.write(await arquivo.read())  # Grava o arquivo
 
     # ----------------------------
     # Criação do prontuário
@@ -82,14 +82,14 @@ async def criar_prontuario(
     novo = m.Prontuario(
         paciente_id=paciente_id,
         medico_id=medico_id,
-        descricao=descricao,  # Correção aplicada
-        data_hora=datetime.now(),
-        anexo=str(caminho_arquivo) if caminho_arquivo else None  # Correção aplicada
+        descricao=descricao,
+        data_hora=datetime.now(),  # Timestamp atual
+        anexo=str(caminho_arquivo) if caminho_arquivo else None  # Salva caminho do arquivo se existir
     )
 
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
+    db.add(novo)  # Adiciona à sessão
+    db.commit()  # Salva no banco
+    db.refresh(novo)  # Atualiza objeto com ID gerado
 
     # ----------------------------
     # Registro de auditoria
@@ -103,7 +103,7 @@ async def criar_prontuario(
         detalhes=f"Prontuário criado para o paciente {paciente.nome} por {usuario_atual.get('email')}"
     )
 
-    return novo
+    return novo  # Retorna prontuário criado
 
 
 # ============================================================
@@ -123,7 +123,7 @@ def listar_prontuarios(
     if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    prontuarios = db.query(m.Prontuario).all()
+    prontuarios = db.query(m.Prontuario).all()  # Consulta todos os prontuários
 
     registrar_log(
         db=db,
@@ -134,7 +134,7 @@ def listar_prontuarios(
         detalhes=f"{usuario_atual.get('email')} listou todos os prontuários"
     )
 
-    return prontuarios
+    return prontuarios  # Retorna lista de prontuários
 
 
 # ============================================================
@@ -142,7 +142,7 @@ def listar_prontuarios(
 # ============================================================
 @roteador.delete("/{prontuario_id}", response_model=ProntuarioResponse)
 def excluir_prontuario(
-        prontuario_id: int,
+        prontuario_id: int,  # ID do prontuário
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -159,8 +159,8 @@ def excluir_prontuario(
     if not prontuario:
         raise HTTPException(status_code=404, detail="Prontuário não encontrado")
 
-    db.delete(prontuario)
-    db.commit()
+    db.delete(prontuario)  # Remove do banco
+    db.commit()  # Salva alterações
 
     registrar_log(
         db=db,
@@ -171,4 +171,4 @@ def excluir_prontuario(
         detalhes=f"Prontuário {prontuario_id} excluído por {usuario_atual.get('email')}"
     )
 
-    return prontuario
+    return prontuario  # Retorna prontuário excluído

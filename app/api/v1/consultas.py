@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from fastapi import APIRouter, Depends, HTTPException, status  # FastAPI
+from sqlalchemy.orm import Session  # Sessão ORM
+from sqlalchemy import and_, func  # Funções SQL para filtros avançados
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # Datas e manipulação de tempo
 
-from app.db import get_db
-from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario, Usuario
-from app.core import security
-from app.utils.logs import registrar_log
+from app.db import get_db  # Sessão do banco
+from app.models.medical import Consulta, Paciente, Medico, StatusConsulta, PapelUsuario, Usuario  # Modelos
+from app.core import security  # Autenticação e segurança
+from app.utils.logs import registrar_log  # Logs de auditoria
 
+# ----------------------------
+# Roteador FastAPI para consultas
+# ----------------------------
 roteador = APIRouter()
 
 
@@ -120,7 +123,7 @@ def criar_consulta(
     db.commit()
     db.refresh(nova_consulta)
 
-    # Log
+    # Log da criação
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -185,6 +188,7 @@ def listar_consultas(
     total = query.count()
     itens = query.offset((pagina - 1) * tamanho).limit(tamanho).all()
 
+    # Log de leitura
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -319,7 +323,7 @@ def atualizar_consulta(
 
 
 # ==========================
-# ENDPOINT: CANCELAR CONSULTA
+# CANCELAR CONSULTA
 # ==========================
 @roteador.patch("/{consulta_id}/cancelar", response_model=dict)
 def cancelar_consulta(

@@ -1,27 +1,25 @@
-# D:\ProjectSGHSS\app\schemas\financeiro.py
-from pydantic import BaseModel, validator
-from datetime import datetime
+from pydantic import BaseModel, validator  # BaseModel para schemas e validator para validações personalizadas
+from datetime import datetime  # datetime para datas
 
 
 # ----------------------------
 # Schema base para Financeiro
 # ----------------------------
 class FinanceiroBase(BaseModel):
-    tipo: str  # ENTRADA ou SAIDA
-    descricao: str
-    valor: float
+    tipo: str  # Tipo da movimentação: ENTRADA ou SAIDA
+    descricao: str  # Descrição da movimentação
+    valor: float  # Valor da movimentação
 
     @validator("valor", pre=True)
     def converter_valor(cls, v):
         """
-        🔢 Converte automaticamente valores com vírgula (ex: '2500,48')
-        para formato float válido (2500.48).
-        Também valida se o valor é numérico.
+        🔢 Converte valores com vírgula (ex: '2500,48') para float (2500.48)
+        e valida se o valor é numérico.
         """
         if v is None or v == "":
             raise ValueError("O campo 'valor' é obrigatório.")
         if isinstance(v, str):
-            v = v.replace(",", ".")
+            v = v.replace(",", ".")  # substitui vírgula por ponto
         try:
             return float(v)
         except ValueError:
@@ -32,20 +30,20 @@ class FinanceiroBase(BaseModel):
 # Resposta de movimentação financeira
 # ----------------------------
 class FinanceiroResponse(FinanceiroBase):
-    id: int
-    data_registro: datetime  # compatível com o modelo SQLAlchemy
+    id: int  # ID da movimentação
+    data_registro: datetime  # Data/hora da movimentação no modelo SQLAlchemy
 
     class Config:
-        from_attributes = True  # substitui orm_mode
+        from_attributes = True  # Compatível com Pydantic v2, substitui orm_mode
 
 
 # ----------------------------
 # Resumo financeiro (entradas, saídas e saldo)
 # ----------------------------
 class ResumoFinanceiroResponse(BaseModel):
-    total_entradas: float
-    total_saidas: float
-    saldo: float
+    total_entradas: float  # Soma das entradas
+    total_saidas: float  # Soma das saídas
+    saldo: float  # Saldo atual
 
     class Config:
-        from_attributes = True  # compatível com futuros modelos que possam usar atributos ORM
+        from_attributes = True  # Compatível com objetos ORM

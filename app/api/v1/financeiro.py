@@ -1,15 +1,16 @@
-# D:\ProjectSGHSS\app\api\v1\financeiro.py
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status  # FastAPI
+from sqlalchemy.orm import Session  # Sessão ORM
 from typing import List, Optional
-from datetime import datetime, date
+from datetime import datetime, date  # Datas e manipulação
+from app.db import get_db  # Sessão do banco
+from app import models as m  # Import de models (Financeiro, Usuario)
+from app.core import security  # Autenticação
+from app.schemas.financeiro import FinanceiroResponse, ResumoFinanceiroResponse  # Schemas de retorno
+from app.utils.logs import registrar_log  # Logs de auditoria
 
-from app.db import get_db
-from app import models as m  # Import correto para reconhecer Financeiro
-from app.core import security
-from app.schemas.financeiro import FinanceiroResponse, ResumoFinanceiroResponse
-from app.utils.logs import registrar_log
-
+# ----------------------------
+# Roteador FastAPI para financeiro
+# ----------------------------
 roteador = APIRouter()
 
 
@@ -58,7 +59,7 @@ def registrar_movimento(
     if tipo_upper not in ["ENTRADA", "SAIDA"]:
         raise HTTPException(status_code=400, detail="Tipo deve ser ENTRADA ou SAIDA")
 
-    # Ajuste: campo correto é 'data' na model Financeiro
+    # Criação do registro financeiro
     novo = m.Financeiro(
         tipo=tipo_upper,
         descricao=descricao.strip(),

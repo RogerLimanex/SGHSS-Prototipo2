@@ -1,8 +1,7 @@
-#D:\ProjectSGHSS\app\schemas\consulta.py:
 from pydantic import BaseModel  # BaseModel para criar schemas e validar dados
-from datetime import datetime  # datetime para datas e horas
+from datetime import datetime  # datetime para campos de data e hora
 from typing import Optional  # Optional permite campos que podem ser None
-from app.models.medical import StatusConsulta  # Enum com status de consulta
+from app.models.medical import StatusConsulta  # Enum com status da consulta
 
 
 # ----------------------------
@@ -13,7 +12,7 @@ class ConsultaBase(BaseModel):
     medico_id: int  # ID do médico vinculado à consulta, obrigatório
     data_hora: datetime  # Data e hora agendada da consulta, obrigatório
     duracao_minutos: Optional[int] = 30  # Duração da consulta (minutos), padrão 30
-    status: Optional[StatusConsulta] = StatusConsulta.AGENDADA  # Status inicial da consulta, padrão AGENDADA
+    status: Optional[StatusConsulta] = StatusConsulta.AGENDADA  # Status inicial, padrão AGENDADA
     observacoes: Optional[str] = None  # Observações adicionais, opcional
 
 

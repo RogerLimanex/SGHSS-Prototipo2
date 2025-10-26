@@ -1,13 +1,13 @@
-import shutil
-import os
-from datetime import datetime
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.utils.logs import registrar_log
+import shutil  # Para cópia de arquivos
+import os  # Operações de sistema (diretórios, caminhos)
+from datetime import datetime  # Para timestamp do backup
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException  # FastAPI
+from fastapi.responses import FileResponse  # Para download de arquivos
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from app.db import get_db  # Função para obter sessão do banco
+from app import models as m  # Modelos ORM
+from app.core import security  # Funções de segurança (JWT, auth)
+from app.utils.logs import registrar_log  # Registro de logs de auditoria
 
 # ----------------------------
 # Criação do roteador principal
@@ -60,21 +60,18 @@ def gerar_backup(
     o arquivo `.db` para download.
 
     **Somente usuários ADMIN podem executar esta ação.**
-
-    **Retorno:**
-    - Arquivo `.db` com o backup completo.
-
-    **Exemplo de uso:**
-    GET /api/v1/backup/exportar
     """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
+    # Define nome do arquivo com timestamp
     nome_arquivo = f"sghss_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
     caminho_destino = os.path.join(BACKUP_DIR, nome_arquivo)
 
+    # Copia banco de dados atual para backup
     shutil.copy("sghss.db", caminho_destino)
 
+    # Registra log do backup
     registrar_log(
         db,
         usuario_atual["email"],
@@ -83,6 +80,7 @@ def gerar_backup(
         detalhes=f"Backup gerado: {nome_arquivo}"
     )
 
+    # Retorna arquivo para download
     return FileResponse(
         caminho_destino,
         filename=nome_arquivo,
@@ -103,32 +101,23 @@ def restaurar_backup(
     🔄 **Restaurar Banco de Dados a partir de um Backup**
 
     Permite restaurar o banco de dados do sistema a partir de um arquivo `.db` de backup.
-    O arquivo enviado substituirá o banco de dados atual.
-
-    **Somente usuários ADMIN podem executar esta ação.**
-
-    **Parâmetros:**
-    - `arquivo`: arquivo `.db` do backup (enviado via formulário)
-
-    **Retorno:**
-    - Mensagem de sucesso confirmando a restauração
-
-    **Exemplo de uso:**
-    POST /api/v1/backup/importar
     """
     if usuario_atual["papel"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
+    # Valida extensão do arquivo
     if not arquivo.filename.endswith(".db"):
         raise HTTPException(status_code=400, detail="Arquivo inválido. Envie um .db")
 
+    # Salva arquivo temporário na pasta de backup
     caminho_temp = os.path.join(BACKUP_DIR, arquivo.filename)
-
     with open(caminho_temp, "wb") as buffer:
         buffer.write(arquivo.file.read())
 
+    # Substitui banco de dados atual pelo backup
     shutil.copy(caminho_temp, "sghss.db")
 
+    # Registra log da restauração
     registrar_log(
         db,
         usuario_atual["email"],

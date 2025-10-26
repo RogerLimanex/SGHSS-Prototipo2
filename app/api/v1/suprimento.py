@@ -1,13 +1,12 @@
-# D:\ProjectSGHSS\app\api\v1\suprimento.py
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.schemas.suprimento import SuprimentoResponse
-from app.utils.logs import registrar_log
+from fastapi import APIRouter, Depends, HTTPException, status  # FastAPI imports
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from typing import List, Optional  # Tipagens opcionais
+from datetime import datetime  # Manipulação de datas
+from app.db import get_db  # Sessão do banco
+from app import models as m  # Models do projeto
+from app.core import security  # Autenticação e segurança
+from app.schemas.suprimento import SuprimentoResponse  # Schema de resposta
+from app.utils.logs import registrar_log  # Função utilitária para logs
 
 roteador = APIRouter()  # Inicializa o roteador de endpoints desta rota
 
@@ -23,12 +22,12 @@ def obter_usuario_atual(
     Retorna o usuário autenticado garantindo que o campo 'email' esteja presente.
     """
     usuario_email = current_user.get("email")
-    if not usuario_email:
+    if not usuario_email:  # Se o token não tiver email
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
-            current_user["email"] = usuario.email
-    return current_user
+            current_user["email"] = usuario.email  # Atualiza dicionário
+    return current_user  # Retorna usuário com email garantido
 
 
 # ============================================================
@@ -67,7 +66,7 @@ def criar_suprimento(
     - **Campos obrigatórios:** nome, quantidade
     - **Campos opcionais:** data_validade (dd/mm/yyyy), descricao
     """
-    if usuario_atual["papel"] != "ADMIN":
+    if usuario_atual["papel"] != "ADMIN":  # Valida permissão
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
     # Converte data_validade de string para date
@@ -78,7 +77,7 @@ def criar_suprimento(
         except ValueError:
             raise HTTPException(status_code=422, detail="Data inválida, use o formato dd/mm/yyyy")
 
-    # Criação do registro
+    # Criação do registro ORM
     novo_suprimento = m.Suprimento(
         nome=nome,
         quantidade=quantidade,
@@ -87,7 +86,7 @@ def criar_suprimento(
     )
     db.add(novo_suprimento)
     db.commit()
-    db.refresh(novo_suprimento)
+    db.refresh(novo_suprimento)  # Atualiza objeto com ID gerado
 
     # Log de auditoria
     registrar_log(
@@ -99,7 +98,7 @@ def criar_suprimento(
         detalhes=f"Criado suprimento '{nome}' com quantidade {quantidade}"
     )
 
-    return formatar_data_retorno(novo_suprimento)
+    return formatar_data_retorno(novo_suprimento)  # Retorna dict formatado
 
 
 # ============================================================
@@ -116,10 +115,10 @@ def listar_suprimentos(
     - **Acesso restrito:** ADMIN ou MEDICO
     - **Retorno:** Lista de suprimentos com datas no formato dd/mm/yyyy
     """
-    if usuario_atual["papel"] not in ["ADMIN", "MEDICO"]:
+    if usuario_atual["papel"] not in ["ADMIN", "MEDICO"]:  # Valida permissão
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    suprimentos = db.query(m.Suprimento).all()
+    suprimentos = db.query(m.Suprimento).all()  # Busca todos
 
     registrar_log(
         db,
@@ -129,7 +128,7 @@ def listar_suprimentos(
         detalhes="Listagem de suprimentos"
     )
 
-    return [formatar_data_retorno(s) for s in suprimentos]
+    return [formatar_data_retorno(s) for s in suprimentos]  # Retorna lista formatada
 
 
 # ============================================================
@@ -152,11 +151,11 @@ def atualizar_suprimento(
     - **Campos opcionais:** nome, quantidade, data_validade, descricao
     - **Formatação de data:** dd/mm/yyyy
     """
-    if usuario_atual["papel"] != "ADMIN":
+    if usuario_atual["papel"] != "ADMIN":  # Valida permissão
         raise HTTPException(status_code=403, detail="Acesso negado")
 
     suprimento = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
-    if not suprimento:
+    if not suprimento:  # Se não existir
         raise HTTPException(status_code=404, detail="Suprimento não encontrado")
 
     if nome is not None and nome.strip():
@@ -204,7 +203,7 @@ def excluir_suprimento(
     - **Acesso restrito:** Apenas ADMIN
     - **Retorno:** Mensagem de confirmação
     """
-    if usuario_atual["papel"] != "ADMIN":
+    if usuario_atual["papel"] != "ADMIN":  # Valida permissão
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN pode excluir suprimentos")
 
     suprimento = db.query(m.Suprimento).filter(m.Suprimento.id == id).first()
@@ -223,4 +222,4 @@ def excluir_suprimento(
         detalhes=f"Suprimento excluído ID {id} por {usuario_atual.get('email')}"
     )
 
-    return {"detail": "Suprimento excluído com sucesso"}
+    return {"detail": "Suprimento excluído com sucesso"}  # Retorna mensagem de sucesso

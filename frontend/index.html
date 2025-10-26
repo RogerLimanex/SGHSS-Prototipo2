@@ -1,29 +1,30 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>SGHSS - Painel</title>
-    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <meta charset="utf-8"> <!-- Define o conjunto de caracteres UTF-8 -->
+    <meta name="viewport" content="width=device-width,initial-scale=1"> <!-- Responsividade em dispositivos móveis -->
+    <title>SGHSS - Painel</title> <!-- Título da aba do navegador -->
+    <link rel="stylesheet" href="/frontend/css/styles.css"> <!-- Importa o arquivo de estilos CSS -->
 </head>
 <body>
-<header class="header"><h1>SGHSS - Painel</h1></header>
+<header class="header"><h1>SGHSS - Painel</h1></header> <!-- Cabeçalho fixo da página -->
 <main class="container">
-    <button id="btnLista">Listar Pacientes</button>
-    <pre id="out"></pre>
+    <button id="btnLista">Listar Pacientes</button> <!-- Botão para listar pacientes -->
+    <pre id="out"></pre> <!-- Área para exibir o resultado JSON formatado -->
 </main>
 <script>
+    // Adiciona evento de clique no botão "Listar Pacientes"
     document.getElementById('btnLista').addEventListener('click', async ()=>{
-      const token = localStorage.getItem('access_token');
-      const res = await fetch('/api/v1/pacientes', {
-        headers: { 'Authorization': 'Bearer ' + token }
+      const token = localStorage.getItem('access_token'); // Recupera o token JWT armazenado no navegador
+      const res = await fetch('/api/v1/pacientes', { // Faz requisição à API de pacientes
+        headers: { 'Authorization': 'Bearer ' + token } // Envia o token no cabeçalho
       });
-      const out = document.getElementById('out');
-      if(res.ok){
-        const data = await res.json();
-        out.textContent = JSON.stringify(data, null, 2);
-      } else {
-        out.textContent = 'Erro: ' + res.status;
+      const out = document.getElementById('out'); // Seleciona o elemento <pre> de saída
+      if(res.ok){ // Se a resposta da API for bem-sucedida
+        const data = await res.json(); // Converte o resultado em JSON
+        out.textContent = JSON.stringify(data, null, 2); // Exibe formatado
+      } else { // Se houver erro na requisição
+        out.textContent = 'Erro: ' + res.status; // Mostra o código HTTP de erro
       }
     });
 </script>

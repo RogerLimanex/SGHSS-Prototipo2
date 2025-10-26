@@ -1,12 +1,11 @@
-# D:\ProjectSGHSS\app\db\__init__.py
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, text  # Engine do SQLAlchemy e execução de comandos SQL
+from sqlalchemy.orm import sessionmaker, declarative_base  # Sessão ORM e base declarativa para modelos
 
-# Caminho do banco SQLite
+# Caminho do banco SQLite local
 DATABASE_URL = "sqlite:///./sghss.db"
 
-# Criação da engine com:
-# - check_same_thread=False → permite uso em múltiplas threads (necessário no FastAPI)
+# Criação da engine SQLAlchemy
+# - check_same_thread=False → permite uso do mesmo banco em múltiplas threads (necessário no FastAPI)
 # - timeout=30 → espera até 30 segundos se o banco estiver bloqueado
 engine = create_engine(
     DATABASE_URL,
@@ -16,23 +15,23 @@ engine = create_engine(
     }
 )
 
-# Ativa o modo WAL (Write-Ahead Logging)
-# Esse modo permite múltiplas conexões simultâneas com menos bloqueios
+# Ativa o modo WAL (Write-Ahead Logging) do SQLite
+# Permite múltiplas conexões simultâneas com menos bloqueios
 with engine.connect() as conn:
     conn.execute(text("PRAGMA journal_mode=WAL;"))
 
-# Criação da sessão padrão
+# Criação da sessão padrão para manipulação de dados
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base para os modelos do SQLAlchemy
+# Base declarativa para criação dos modelos ORM
 Base = declarative_base()
 
 
-# Dependência para injetar sessão no FastAPI
+# Dependência FastAPI para injetar sessão automaticamente
 def get_db():
     """Cria e fecha a sessão do banco automaticamente a cada requisição."""
     db = SessionLocal()
     try:
-        yield db
+        yield db  # Fornece a sessão ao endpoint
     finally:
-        db.close()
+        db.close()  # Fecha a sessão ao final da requisição

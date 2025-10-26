@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from datetime import datetime, date
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.utils.logs import registrar_log
+from fastapi import APIRouter, Depends, HTTPException  # FastAPI imports
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from datetime import datetime, date  # Para manipulação de datas
+from app.db import get_db  # Sessão do banco
+from app import models as m  # Models do projeto
+from app.core import security  # Segurança e autenticação
+from app.utils.logs import registrar_log  # Função utilitária para logs
 
-roteador = APIRouter()
+roteador = APIRouter()  # Cria o roteador FastAPI
 
 
 # ----------------------------
@@ -18,12 +18,12 @@ def obter_usuario_atual(current_user=Depends(security.get_current_user), db: Ses
     Evita falhas nos logs quando o token JWT não contém o email.
     """
     usuario_email = current_user.get("email")
-    if not usuario_email:
+    if not usuario_email:  # Se não houver email no token
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
             current_user["email"] = usuario.email
-    return current_user
+    return current_user  # Retorna usuário com email garantido
 
 
 # ----------------------------
@@ -45,8 +45,8 @@ def parse_data_br(data_str: str) -> date:
 # ----------------------------
 @roteador.get("/relatorios/consultas")
 def relatorio_consultas(
-        data_inicial: str,
-        data_final: str,
+        data_inicial: str,  # Data inicial como string
+        data_final: str,  # Data final como string
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -55,15 +55,15 @@ def relatorio_consultas(
     Permissão restrita a usuários ADMIN.
     Retorna informações do médico, data/hora, duração, status e observações.
     """
-    if usuario_atual["papel"] != "ADMIN":
+    if usuario_atual["papel"] != "ADMIN":  # Verifica permissão
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
 
-    data_ini = parse_data_br(data_inicial)
-    data_fim = parse_data_br(data_final)
+    data_ini = parse_data_br(data_inicial)  # Converte data inicial
+    data_fim = parse_data_br(data_final)  # Converte data final
 
     consultas = db.query(m.Consulta).join(m.Medico).filter(
         m.Consulta.data_hora.between(data_ini, data_fim)
-    ).all()
+    ).all()  # Busca consultas entre datas
 
     retorno = []
     for c in consultas:
@@ -80,9 +80,9 @@ def relatorio_consultas(
         })
 
     registrar_log(db, usuario_atual["email"], "Relatorio", acao="READ",
-                  detalhes=f"Relatório de consultas de {data_inicial} a {data_final}")
+                  detalhes=f"Relatório de consultas de {data_inicial} a {data_final}")  # Log
 
-    return {"data_inicial": data_inicial, "data_final": data_final, "items": retorno}
+    return {"data_inicial": data_inicial, "data_final": data_final, "items": retorno}  # Retorno
 
 
 # ----------------------------
@@ -108,7 +108,7 @@ def relatorio_prontuarios(
 
     prontuarios = db.query(m.Prontuario).join(m.Paciente).join(m.Medico, isouter=True).filter(
         m.Prontuario.data_hora.between(data_ini, data_fim)
-    ).all()
+    ).all()  # Busca prontuários entre datas
 
     retorno = []
     for p in prontuarios:
@@ -152,7 +152,7 @@ def relatorio_teleconsultas(
 
     registros = db.query(m.Teleconsulta).join(m.Consulta).join(m.Paciente).join(m.Medico).filter(
         m.Teleconsulta.data_hora.between(data_ini, data_fim)
-    ).all()
+    ).all()  # Busca teleconsultas
 
     retorno = []
     for t in registros:
@@ -195,10 +195,10 @@ def relatorio_geral(
     total_medicos = db.query(m.Medico).count()
     total_prontuarios = db.query(m.Prontuario).count()
     total_consultas = db.query(m.Consulta).count()
-    total_teleconsultas = db.query(m.Teleconsulta).count()
+    total_teleconsultas = db.query(m.Teleconsulta).count()  # Conta registros
 
     registrar_log(db, usuario_atual["email"], "Relatorio", acao="READ",
-                  detalhes="Relatório geral gerado")
+                  detalhes="Relatório geral gerado")  # Log
 
     return {
         "total_pacientes": total_pacientes,

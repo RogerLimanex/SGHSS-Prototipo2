@@ -1,24 +1,24 @@
-from pydantic import BaseModel, EmailStr  # BaseModel para schemas, EmailStr para validação de emails
+from pydantic import BaseModel, EmailStr  # BaseModel para criar schemas, EmailStr valida emails
 from datetime import datetime  # Para campos de data/hora
 from typing import Optional  # Permite campos opcionais
 
 
 # ----------------------------
-# Classe base de Médico
+# Schema base de Médico
 # ----------------------------
 class MedicoBase(BaseModel):
     nome: str  # Nome completo do médico, obrigatório
     email: Optional[EmailStr] = None  # Email do médico, opcional para evitar erros de validação
     telefone: Optional[str] = None  # Telefone do médico, opcional
     crm: str  # Número do CRM do médico, obrigatório
-    especialidade: Optional[str] = None  # Especialidade médica, opcional para evitar erros de validação
+    especialidade: Optional[str] = None  # Especialidade médica, opcional
 
 
 # ----------------------------
 # Schema para criação de médico
 # ----------------------------
 class MedicoCreate(MedicoBase):
-    pass  # Mantém mesma estrutura do MedicoBase
+    pass  # Mantém a mesma estrutura de MedicoBase
 
 
 # ----------------------------
@@ -33,13 +33,13 @@ class MedicoUpdate(BaseModel):
 
 
 # ----------------------------
-# Schema para resposta de médico
+# Schema de resposta de médico
 # ----------------------------
 class MedicoResponse(MedicoBase):
     id: int  # ID único do médico no banco
     ativo: bool  # Status ativo/inativo
     criado_em: datetime  # Data/hora de criação do registro
-    atualizado_em: datetime  # Data/hora da última atualização do registro
+    atualizado_em: datetime  # Data/hora da última atualização
 
     class Config:
-        from_attributes = True  # Pydantic v2: compatibilidade com objetos ORM (substitui orm_mode)
+        from_attributes = True  # Compatível com objetos ORM (Pydantic v2)

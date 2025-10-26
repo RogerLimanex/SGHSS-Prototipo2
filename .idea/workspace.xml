@@ -4,15 +4,50 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras.">
+    <list default="true" id="8f46bdb9-ad20-4ed2-8f5c-dce7ecafd322" name="Changes" comment="Trigésimo primeiro commit:&#10;&#10;🔧 Atualização dos schemas para Pydantic V2&#10;&#10;- Substituído `orm_mode = True` por `from_attributes = True` em todos os schemas.&#10;- Ajustes realizados apenas dentro das classes internas `Config`, garantindo compatibilidade com Pydantic V2.&#10;- Mantidos todos os comentários explicativos e docstrings originais.&#10;- Removeu warnings de depreciação ao rodar a API.&#10;- Projetos agora 100% prontos para produção sem mensagens de aviso.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/auditoria.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/auditoria.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/autenticacao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/autenticacao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/backup.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/backup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/consultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/consultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/financeiro.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/medicos.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/medicos.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/pacientes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/pacientes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/prescricoes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prescricoes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/prontuario.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/relatorios.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/relatorios.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/suprimento.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/teleconsultas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/audit.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/audit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/migrations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/audit.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/audit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/financeiro.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/medical.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/medical.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/suprimento.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/consulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/consulta.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/financeiro.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/financeiro.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/leito.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/leito.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/medico.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/medico.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/paciente.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/paciente.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/prescricao.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prescricao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/prontuario.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/prontuario.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/suprimento.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/suprimento.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/teleconsulta.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/teleconsulta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/seed.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/seed.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sghss.db" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db-shm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sghss.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/sghss.db-wal" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,13 +100,16 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;http.proxy&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.grazie&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;stardust.markdown.MarkdownSplitEditorSuppressor:keyList&quot;: []
   }
 }</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-1f77c24022e5-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.26830.99" />
+        <option value="bundled-python-sdk-f69e5c277ee4-cbfc7b97e6b2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.27397.106" />
       </set>
     </attachedChunks>
   </component>
@@ -379,7 +417,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761161992678</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="Trigésimo primeiro commit:&#10;&#10;🔧 Atualização dos schemas para Pydantic V2&#10;&#10;- Substituído `orm_mode = True` por `from_attributes = True` em todos os schemas.&#10;- Ajustes realizados apenas dentro das classes internas `Config`, garantindo compatibilidade com Pydantic V2.&#10;- Mantidos todos os comentários explicativos e docstrings originais.&#10;- Removeu warnings de depreciação ao rodar a API.&#10;- Projetos agora 100% prontos para produção sem mensagens de aviso.">
+      <option name="closed" value="true" />
+      <created>1761164921235</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1761164921235</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -394,7 +440,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Sexto commit:&#10;&#10;Refatoração para português" />
     <MESSAGE value="Setimo commit:&#10;&#10;Erro 401 Unauthorized - Usuário não autorizado" />
     <MESSAGE value="Oitavo commit:&#10;&#10;Ajusta métodos HTTP das rotas:&#10;- Atualizar Consulta → PATCH (antes PUT)&#10;- Cancelar Consulta → PATCH (antes DELETE)&#10;- Cancelar Prescrição → PATCH (antes POST)&#10;- Cancelar Teleconsulta → PATCH (antes DELETE)" />
     <MESSAGE value="Nono commit:&#10;&#10;Ajustado o /api/v1/auth/login" />
@@ -419,6 +464,7 @@
     <MESSAGE value="Vigésimo oitavo commit:&#10;&#10;Reorganizado endpoints de consultas na ordem: Criar → Listar → Obter → Atualizar → Cancelar" />
     <MESSAGE value="Vigésimo nono commit:&#10;&#10;Padronizado endpoint DELETE de suprimentos: remover_suprimento → excluir_suprimento, com docstring, log e mensagem de retorno consistentes." />
     <MESSAGE value="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras." />
-    <option name="LAST_COMMIT_MESSAGE" value="Trigésimo commit:&#10;&#10;✅ Ajustes no módulo Financeiro&#10;&#10;- Corrigido `ResponseValidationError` adicionando `data_registro` no schema FinanceiroResponse.&#10;- Garantida compatibilidade entre modelo SQLAlchemy (`Financeiro.data`) e Pydantic.&#10;- Endpoints de financeiro (`POST`, `GET`, resumo) funcionando corretamente.&#10;- Mantidos logs de auditoria detalhados para todas as operações financeiras." />
+    <MESSAGE value="Trigésimo primeiro commit:&#10;&#10; Atualização dos schemas para Pydantic V2&#10;&#10;- Substituído `orm_mode = True` por `from_attributes = True` em todos os schemas.&#10;- Ajustes realizados apenas dentro das classes internas `Config`, garantindo compatibilidade com Pydantic V2.&#10;- Mantidos todos os comentários explicativos e docstrings originais.&#10;- Removeu warnings de depreciação ao rodar a API.&#10;- Projetos agora 100% prontos para produção sem mensagens de aviso." />
+    <option name="LAST_COMMIT_MESSAGE" value="Trigésimo primeiro commit:&#10;&#10; Atualização dos schemas para Pydantic V2&#10;&#10;- Substituído `orm_mode = True` por `from_attributes = True` em todos os schemas.&#10;- Ajustes realizados apenas dentro das classes internas `Config`, garantindo compatibilidade com Pydantic V2.&#10;- Mantidos todos os comentários explicativos e docstrings originais.&#10;- Removeu warnings de depreciação ao rodar a API.&#10;- Projetos agora 100% prontos para produção sem mensagens de aviso." />
   </component>
 </project>

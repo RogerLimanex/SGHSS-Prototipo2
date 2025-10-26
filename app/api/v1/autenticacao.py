@@ -1,17 +1,16 @@
-# D:\ProjectSGHSS\app\api\v1\autenticacao.py
-from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
-from typing import Optional
-from datetime import timedelta
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Response  # Importa funcionalidades do FastAPI
+from fastapi.responses import JSONResponse  # Resposta JSON customizada
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy para consultas
+from typing import Optional  # Para parâmetros opcionais
+from datetime import timedelta  # Para definir expiração do token JWT
+from pydantic import BaseModel  # Para schemas de validação
 
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.utils.logs import registrar_log
+from app.db import get_db  # Função para obter sessão do banco
+from app import models as m  # Modelos ORM
+from app.core import security  # Funções de segurança (hash, JWT)
+from app.utils.logs import registrar_log  # Função para registrar logs de auditoria
 
-roteador = APIRouter()
+roteador = APIRouter()  # Cria roteador FastAPI para este módulo
 
 
 # ----------------------------
@@ -27,21 +26,21 @@ class LoginSchema(BaseModel):
 # 🔐 Obter usuário atual com email garantido
 # ----------------------------
 def obter_usuario_atual(
-        current_user=Depends(security.get_current_user),
-        db: Session = Depends(get_db)
+        current_user=Depends(security.get_current_user),  # Obtém usuário do token JWT
+        db: Session = Depends(get_db)  # Sessão do banco
 ):
     """
     🔐 **Obter Usuário Atual**
 
     Garante que o usuário autenticado tenha o campo `email` disponível.
-    Caso o token JWT não contenha o e-mail, ele é recuperado do banco de dados.
+    Caso não esteja no token, é recuperado do banco.
 
     Retorna:
         dict: Dados do usuário autenticado (com campo `email` garantido).
     """
     email = current_user.get("email")
 
-    # Recupera o email do banco se não estiver no token
+    # Recupera email do banco caso não esteja no token
     if not email:
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
@@ -63,24 +62,18 @@ def login(
     """
     🔑 **Login de Usuário**
 
-    Autentica um usuário com **email e senha**, gera um **token JWT** e grava um cookie HTTP-only
-    contendo o token de acesso.
-
-    Retorno:
-    * `access_token`: Token de acesso JWT
-    * `token_type`: Tipo de autenticação
-    * `id`, `email`, `papel`: Dados do usuário autenticado
+    Autentica um usuário com email e senha, gera token JWT e grava cookie HTTP-only.
     """
-    # Busca o usuário pelo e-mail informado
+    # Busca usuário pelo email
     usuario = db.query(m.Usuario).filter(m.Usuario.email == username).first()
 
-    # Validações básicas
+    # Validações
     if not usuario or not security.verify_password(password, usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Email ou senha inválidos")
     if not usuario.ativo:
         raise HTTPException(status_code=403, detail="Usuário inativo")
 
-    # Geração do token de acesso
+    # Geração do token JWT
     token_data = {
         "id": usuario.id,
         "email": usuario.email,
@@ -88,7 +81,7 @@ def login(
     }
     access_token = security.create_access_token(token_data, expires_delta=timedelta(hours=1))
 
-    # Criação da resposta JSON com o token
+    # Resposta JSON com token
     response = JSONResponse(
         content={
             "message": "Login realizado com sucesso",
@@ -100,7 +93,7 @@ def login(
         }
     )
 
-    # Grava cookie seguro (não acessível via JS)
+    # Grava cookie seguro (HTTP-only)
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -110,7 +103,7 @@ def login(
         secure=False
     )
 
-    # Registra o log de login
+    # Registra log do login
     registrar_log(
         db=db,
         usuario_email=usuario.email,
@@ -131,7 +124,7 @@ def logout(response: Response):
     """
     🚪 **Logout de Usuário**
 
-    Remove o cookie `access_token` do navegador, encerrando a sessão atual.
+    Remove cookie `access_token`, encerrando a sessão.
     """
     response = JSONResponse(content={"message": "Logout realizado com sucesso"})
     response.delete_cookie("access_token")
@@ -152,28 +145,21 @@ def registrar(
     """
     🧾 **Registrar Novo Usuário**
 
-    Cria um novo usuário no sistema.
-    - Usuários **ADMIN** podem criar qualquer tipo (PACIENTE, MÉDICO, ADMIN).
-    - Usuários comuns só podem criar PACIENTES.
-
-    Campos esperados:
-    * `email`: Endereço de e-mail único
-    * `password`: Senha do usuário
-    * `papel`: Tipo de usuário (PACIENTE, MEDICO, ADMIN)
+    Cria novo usuário no sistema, respeitando permissões de ADMIN.
     """
-    # Impede duplicidade de email
+    # Verifica duplicidade de email
     if db.query(m.Usuario).filter(m.Usuario.email == email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
-    # Restringe criação de usuários especiais
+    # Restrição para criação de MEDICO ou ADMIN
     if papel in ["MEDICO", "ADMIN"] and (not current_user or current_user.get("papel") != "ADMIN"):
         raise HTTPException(status_code=403, detail="Apenas ADMIN pode criar usuários MEDICO ou ADMIN")
 
-    # Define papel padrão caso inválido
+    # Define papel padrão
     if papel not in ["PACIENTE", "MEDICO", "ADMIN"]:
         papel = "PACIENTE"
 
-    # Criptografa a senha e salva o novo usuário
+    # Criptografa senha e salva usuário
     hashed_password = security.hash_password(password)
     usuario = m.Usuario(email=email, hashed_password=hashed_password, papel=papel)
 
@@ -181,13 +167,13 @@ def registrar(
     db.commit()
     db.refresh(usuario)
 
-    # Identifica quem criou o usuário (ou "sistema" se automático)
+    # Identifica criador do usuário
     criador_email = "sistema"
     if current_user:
         criador = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         criador_email = criador.email if criador else "sistema"
 
-    # Log de criação
+    # Registra log de criação
     registrar_log(
         db=db,
         usuario_email=criador_email,
@@ -212,15 +198,6 @@ def listar_usuarios(
     👥 **Listar Todos os Usuários**
 
     Exibe todos os usuários cadastrados no sistema.
-
-    **Acesso:** Somente ADMIN.
-
-    Campos retornados:
-    * `id`
-    * `email`
-    * `papel`
-    * `ativo`
-    * `criado_em`
     """
     if current_user.get("papel") != "ADMIN":
         raise HTTPException(status_code=403, detail="Acesso negado: apenas ADMIN")
@@ -228,7 +205,7 @@ def listar_usuarios(
     usuarios = db.query(m.Usuario).all()
     admin_email = current_user.get("email") or "desconhecido"
 
-    # Registra log da leitura
+    # Log de leitura de usuários
     registrar_log(
         db=db,
         usuario_email=admin_email,
@@ -238,7 +215,7 @@ def listar_usuarios(
         detalhes=f"Usuário {admin_email} listou todos os usuários"
     )
 
-    # Retorna a lista formatada
+    # Retorna lista de usuários formatada
     return [
         {
             "id": u.id,
@@ -261,21 +238,14 @@ def obter_me(
     """
     🙋‍♂️ **Obter Dados do Usuário Logado**
 
-    Retorna os dados do usuário atualmente autenticado.
-
-    Campos retornados:
-    * `id`
-    * `email`
-    * `papel`
-    * `ativo`
-    * `criado_em`
+    Retorna dados do usuário atualmente autenticado.
     """
     usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
 
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    # Loga o acesso do próprio usuário às suas informações
+    # Loga acesso do próprio usuário
     registrar_log(
         db=db,
         usuario_email=usuario.email,

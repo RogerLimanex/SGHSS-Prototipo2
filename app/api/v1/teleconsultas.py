@@ -1,16 +1,15 @@
-# D:\ProjectSGHSS\app\api\v1\teleconsultas.py
-from fastapi import APIRouter, Depends, HTTPException, status, Form
-from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, status, Form  # FastAPI imports
+from sqlalchemy.orm import Session  # Sessão do SQLAlchemy
+from typing import List  # Tipagem para listas
+from datetime import datetime  # Datas e horários
 
-from app.db import get_db
-from app import models as m
-from app.core import security
-from app.schemas import TeleconsultaResponse
-from app.utils.logs import registrar_log
+from app.db import get_db  # Sessão do banco
+from app import models as m  # Models do projeto
+from app.core import security  # Segurança e autenticação
+from app.schemas import TeleconsultaResponse  # Schema de resposta
+from app.utils.logs import registrar_log  # Função utilitária de logs
 
-roteador = APIRouter()
+roteador = APIRouter()  # Inicializa roteador de endpoints
 
 
 # ============================================================
@@ -25,12 +24,12 @@ def obter_usuario_atual(
     Evita falhas nos logs quando o token JWT não contém email.
     """
     usuario_email = current_user.get("email")
-    if not usuario_email:
+    if not usuario_email:  # Se não houver email no token
         usuario = db.query(m.Usuario).filter(m.Usuario.id == int(current_user.get("id"))).first()
         if usuario:
             usuario_email = usuario.email
-            current_user["email"] = usuario.email
-    return current_user
+            current_user["email"] = usuario.email  # Atualiza dicionário do usuário
+    return current_user  # Retorna usuário com email garantido
 
 
 # ============================================================
@@ -43,8 +42,8 @@ def obter_usuario_atual(
     tags=["Teleconsultas"]
 )
 def criar_teleconsulta(
-        consulta_id: int = Form(..., description="ID da consulta associada"),
-        link_video: str = Form(..., description="Link para a videochamada"),
+        consulta_id: int = Form(..., description="ID da consulta associada"),  # ID da consulta vinculada
+        link_video: str = Form(..., description="Link para a videochamada"),  # Link da teleconsulta
         db: Session = Depends(get_db),
         usuario_atual=Depends(obter_usuario_atual)
 ):
@@ -54,19 +53,21 @@ def criar_teleconsulta(
     - **Acesso:** apenas MEDICO ou ADMIN
     - **Registra log** da operação
     """
-    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:  # Valida permissão
         raise HTTPException(status_code=403, detail="Sem permissão")
 
+    # Cria objeto ORM
     nova_teleconsulta = m.Teleconsulta(
         consulta_id=consulta_id,
         link_video=link_video,
-        data_hora=datetime.now(),
-        status=m.StatusConsulta.AGENDADA
+        data_hora=datetime.now(),  # Hora atual
+        status=m.StatusConsulta.AGENDADA  # Status inicial
     )
     db.add(nova_teleconsulta)
     db.commit()
-    db.refresh(nova_teleconsulta)
+    db.refresh(nova_teleconsulta)  # Atualiza objeto com ID gerado
 
+    # Log de auditoria
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -76,7 +77,7 @@ def criar_teleconsulta(
         detalhes=f"Teleconsulta criada para consulta {consulta_id} por {usuario_atual.get('email')}"
     )
 
-    return nova_teleconsulta
+    return nova_teleconsulta  # Retorna objeto criado
 
 
 # ============================================================
@@ -97,11 +98,12 @@ def listar_teleconsultas(
     - **Acesso:** apenas MEDICO ou ADMIN
     - **Registra log** da operação
     """
-    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:  # Valida permissão
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    teleconsultas = db.query(m.Teleconsulta).all()
+    teleconsultas = db.query(m.Teleconsulta).all()  # Busca todas teleconsultas
 
+    # Log de auditoria
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -111,7 +113,7 @@ def listar_teleconsultas(
         detalhes=f"{usuario_atual.get('email')} listou todas as teleconsultas"
     )
 
-    return teleconsultas
+    return teleconsultas  # Retorna lista completa
 
 
 # ============================================================
@@ -133,17 +135,18 @@ def cancelar_teleconsulta(
     - **Acesso:** apenas MEDICO ou ADMIN
     - **Registra log** da operação
     """
-    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:
+    if usuario_atual.get("papel") not in ["MEDICO", "ADMIN"]:  # Valida permissão
         raise HTTPException(status_code=403, detail="Sem permissão")
 
     teleconsulta = db.query(m.Teleconsulta).filter(m.Teleconsulta.id == teleconsulta_id).first()
-    if not teleconsulta:
+    if not teleconsulta:  # Se não existir
         raise HTTPException(status_code=404, detail="Teleconsulta não encontrada")
 
-    teleconsulta.status = m.StatusConsulta.CANCELADA
+    teleconsulta.status = m.StatusConsulta.CANCELADA  # Atualiza status
     db.commit()
     db.refresh(teleconsulta)
 
+    # Log de auditoria
     registrar_log(
         db=db,
         usuario_email=usuario_atual.get("email"),
@@ -153,4 +156,4 @@ def cancelar_teleconsulta(
         detalhes=f"Teleconsulta {teleconsulta_id} cancelada por {usuario_atual.get('email')}"
     )
 
-    return teleconsulta
+    return teleconsulta  # Retorna teleconsulta atualizada

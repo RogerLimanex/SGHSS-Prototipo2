@@ -4,30 +4,30 @@ from typing import Optional  # Permite campos opcionais
 
 
 # ----------------------------
-# Classe base de Prescrição
+# Schema base de Prescrição
 # ----------------------------
 class PrescricaoBase(BaseModel):
-    paciente_id: int  # ID do paciente que receberá a prescrição, obrigatório
-    medico_id: int  # ID do médico que prescreveu, obrigatório
+    paciente_id: int  # ID do paciente, obrigatório
+    medico_id: int  # ID do médico, obrigatório
     medicamento: str  # Nome do medicamento, obrigatório
     dosagem: str  # Dosagem do medicamento, obrigatório
-    instrucoes: Optional[str] = None  # Instruções adicionais (opcional)
+    instrucoes: Optional[str] = None  # Instruções adicionais, opcional
 
 
 # ----------------------------
 # Schema para criação de prescrição
 # ----------------------------
 class PrescricaoCreate(PrescricaoBase):
-    pass  # Mantém a mesma estrutura do PrescricaoBase, sem alterações
+    pass  # Mantém a mesma estrutura do PrescricaoBase
 
 
 # ----------------------------
 # Schema para resposta de prescrição
 # ----------------------------
 class PrescricaoResponse(PrescricaoBase):
-    id: int  # ID único da prescrição no banco
-    data_hora: datetime  # Data e hora da criação da prescrição
-    status: str  # Status da prescrição (ex: ATIVA, CANCELADA)
+    id: int  # ID único da prescrição
+    data_hora: datetime  # Data/hora da criação da prescrição
+    status: str  # Status atual da prescrição (ex: ATIVA, CANCELADA)
 
     class Config:
-        from_attributes = True  # Pydantic v2: permite compatibilidade com objetos ORM (substitui orm_mode)
+        from_attributes = True  # Compatível com objetos ORM (Pydantic v2)

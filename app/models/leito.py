@@ -1,20 +1,24 @@
-# D:\ProjectSGHSS\app\models\leito.py
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from app.db import Base
+# Modelo ORM para leitos hospitalares
+
+from sqlalchemy import Column, Integer, String, ForeignKey  # Tipos de coluna e FK
+from sqlalchemy.orm import relationship  # Para relacionamento ORM
+from app.db import Base  # Base declarativa para modelos
 
 
+# =============================================================
+# Classe Leito
+# =============================================================
 class Leito(Base):
     """
     Modelo de banco de dados que representa um leito hospitalar.
-    Guarda informações como número do leito, status e paciente associado.
+    Contém informações de número, status e paciente associado.
     """
-    __tablename__ = "leitos"
+    __tablename__ = "leitos"  # Nome da tabela no banco
 
-    id = Column(Integer, primary_key=True, index=True)
-    numero = Column(String(50), nullable=False)
-    status = Column(String(50), nullable=False)
-    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=True)
+    id = Column(Integer, primary_key=True, index=True)  # PK auto-increment
+    numero = Column(String(50), nullable=False)  # Número ou identificador do leito
+    status = Column(String(50), nullable=False)  # Status do leito (ex.: LIVRE, OCUPADO)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=True)  # FK opcional para paciente
 
-    # Relacionamento opcional com paciente, se existir tabela Paciente
+    # Relacionamento ORM opcional com o paciente
     paciente = relationship("Paciente", back_populates="leitos")

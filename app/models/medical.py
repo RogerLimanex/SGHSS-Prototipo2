@@ -1,18 +1,23 @@
+# D:\ProjectSGHSS\app\models\medical.py
+# Modelos principais do sistema: usuários, pacientes, médicos, consultas, prontuários, prescrições, teleconsultas
+# Inclui enums para status e papéis
+
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, Enum
-)
-from sqlalchemy.orm import relationship
-from datetime import datetime
-import enum
+)  # Colunas e tipos
+from sqlalchemy.orm import relationship  # Para relacionamentos ORM
+from datetime import datetime  # Datas e timestamps
+import enum  # Para definir enums
 
-from app.db import Base  # declarative_base do projeto
+from app.db import Base  # Base declarativa do projeto
 
 
 # ============================================================
-# ENUMs — Definem valores fixos para status e papéis do sistema
+# ENUMs — Status de consultas, prescrições e papéis de usuário
 # ============================================================
+
 class StatusConsulta(str, enum.Enum):
-    """Enum para representar o status de uma consulta médica."""
+    """Enum para status de uma consulta médica"""
     AGENDADA = "agendada"
     CONFIRMADA = "confirmada"
     REALIZADA = "realizada"
@@ -20,26 +25,26 @@ class StatusConsulta(str, enum.Enum):
 
 
 class StatusPrescricao(str, enum.Enum):
-    """Enum para representar o status de uma prescrição médica."""
+    """Enum para status de prescrição médica"""
     ATIVA = "ATIVA"
     CANCELADA = "CANCELADA"
 
 
 class PapelUsuario(str, enum.Enum):
-    """Enum que define os papéis dos usuários no sistema."""
+    """Enum para papéis do sistema"""
     ADMIN = "ADMIN"
     MEDICO = "MEDICO"
     PACIENTE = "PACIENTE"
 
 
 # ============================================================
-# MODELOS PRINCIPAIS DO SISTEMA
+# MODELOS PRINCIPAIS
 # ============================================================
 
 class Usuario(Base):
     """
-    Representa um usuário genérico do sistema (admin, médico ou paciente).
-    Inclui autenticação, papel e estado ativo/inativo.
+    Usuário genérico (admin, médico ou paciente).
+    Inclui email, senha hash, papel e status ativo.
     """
     __tablename__ = "usuarios"
 
@@ -56,9 +61,8 @@ class Usuario(Base):
 
 class Paciente(Base):
     """
-    Representa um paciente cadastrado no sistema.
-    Inclui dados pessoais, contato e relacionamentos com consultas,
-    prontuários, prescrições e leitos.
+    Paciente cadastrado.
+    Inclui dados pessoais, contatos e relacionamentos com consultas, prontuários, prescrições e leitos.
     """
     __tablename__ = "pacientes"
 
@@ -76,15 +80,13 @@ class Paciente(Base):
     consultas = relationship("Consulta", back_populates="paciente")
     prontuarios = relationship("Prontuario", back_populates="paciente")
     prescricoes = relationship("Receita", back_populates="paciente")
-
-    # 🔁 Novo relacionamento com o modelo Leito
     leitos = relationship("Leito", back_populates="paciente", cascade="all, delete-orphan")
 
 
 class Medico(Base):
     """
     Representa um médico cadastrado.
-    Contém CRM, especialidade e estado de atividade.
+    Inclui CRM, especialidade, contatos e status ativo.
     """
     __tablename__ = "medicos"
 
@@ -106,8 +108,8 @@ class Medico(Base):
 
 class Consulta(Base):
     """
-    Representa uma consulta médica agendada entre paciente e médico.
-    Inclui data, duração, status e observações.
+    Consulta médica entre paciente e médico.
+    Inclui data/hora, duração, status e observações.
     """
     __tablename__ = "consultas"
 
@@ -129,7 +131,7 @@ class Consulta(Base):
 
 class Prontuario(Base):
     """
-    Representa o registro clínico de um paciente.
+    Registro clínico de um paciente.
     Pode conter descrições, anexos e status.
     """
     __tablename__ = "prontuarios"
@@ -138,7 +140,7 @@ class Prontuario(Base):
     paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
     medico_id = Column(Integer, ForeignKey("medicos.id"), nullable=True)
     descricao = Column(Text, nullable=False)
-    anexo = Column(String(255), nullable=True)  # Arquivo de apoio (opcional)
+    anexo = Column(String(255), nullable=True)  # Arquivo opcional
     data_hora = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default="ATIVO")
 
@@ -149,8 +151,8 @@ class Prontuario(Base):
 
 class Receita(Base):
     """
-    Representa uma prescrição médica emitida por um médico a um paciente.
-    Inclui medicamento, dosagem, instruções e status.
+    Prescrição médica emitida por um médico a um paciente.
+    Contém medicamento, dosagem, instruções e status.
     """
     __tablename__ = "prescricoes"
 
@@ -172,8 +174,8 @@ class Receita(Base):
 
 class Teleconsulta(Base):
     """
-    Representa uma consulta realizada por videoconferência.
-    Relacionada diretamente à consulta principal.
+    Consulta médica realizada por videoconferência.
+    Relacionada à consulta principal.
     """
     __tablename__ = "teleconsultas"
 
@@ -189,7 +191,7 @@ class Teleconsulta(Base):
 
 class LogAuditoria(Base):
     """
-    Registra ações dos usuários no sistema para fins de auditoria e segurança.
+    Log de ações dos usuários para auditoria.
     """
     __tablename__ = "logs_auditoria"
 
